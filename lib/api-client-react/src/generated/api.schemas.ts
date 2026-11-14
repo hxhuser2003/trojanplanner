@@ -254,6 +254,95 @@ export interface PreferenceResult {
   warnings: string[];
 }
 
+export interface SectionRef {
+  /** @maxLength 40 */
+  courseId: string;
+  /** @maxLength 40 */
+  sectionId: string;
+}
+
+export type ExplainInputMode = typeof ExplainInputMode[keyof typeof ExplainInputMode];
+
+
+export const ExplainInputMode = {
+  section: 'section',
+  compare: 'compare',
+  conflict: 'conflict',
+} as const;
+
+export interface ExplainInput {
+  mode: ExplainInputMode;
+  input: PlannerInput;
+  /** @maxItems 10 */
+  selections: SectionRef[];
+  /** @maxItems 10 */
+  otherSelections?: SectionRef[];
+  /** @maxLength 40 */
+  courseId?: string;
+  useAi?: boolean;
+}
+
+export interface ExplainResult {
+  summary: string;
+  provider: string;
+  facts: string[];
+}
+
+export type ChatTurnRole = typeof ChatTurnRole[keyof typeof ChatTurnRole];
+
+
+export const ChatTurnRole = {
+  user: 'user',
+  assistant: 'assistant',
+} as const;
+
+export interface ChatTurn {
+  role: ChatTurnRole;
+  /** @maxLength 2000 */
+  text: string;
+}
+
+export interface Citation {
+  courseId: string;
+  label: string;
+  excerpt: string;
+  sourceUrl: string;
+}
+
+export interface ChatInput {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  message: string;
+  /** @maxItems 8 */
+  history: ChatTurn[];
+  current: PlannerInput;
+  /** @maxItems 10 */
+  selections?: SectionRef[];
+}
+
+export type ChatResultKind = typeof ChatResultKind[keyof typeof ChatResultKind];
+
+
+export const ChatResultKind = {
+  rules: 'rules',
+  clarify: 'clarify',
+  answer: 'answer',
+} as const;
+
+export interface ChatResult {
+  kind: ChatResultKind;
+  message: string;
+  provider: string;
+  proposedConstraints: Constraint[];
+  removeConstraintIds: string[];
+  updatedConstraints: Constraint[];
+  options: string[];
+  citations: Citation[];
+  warnings: string[];
+}
+
 export interface StarsInput {
   /**
      * @minLength 1

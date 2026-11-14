@@ -8,7 +8,7 @@ import {
   type Schedule,
   type SolveResult,
 } from '@workspace/api-client-react';
-import { errMessage } from './format';
+import { diffSchedules, errMessage, type ScheduleDiff } from './format';
 
 const KEY = 'trojanplanner.v2';
 const SOLVE_TIMEOUT_MS = 20000;
@@ -21,6 +21,9 @@ interface Persisted {
   chosenScheduleId: string | null;
   checklist: Record<string, boolean>;
   solvedInputJson: string | null;
+  onboarded: boolean;
+  /** What moved between the schedule before and after the latest re-solve. */
+  lastChange: ScheduleDiff | null;
 }
 
 interface Ctx {
@@ -36,24 +39,32 @@ interface Ctx {
   solveError: string | null;
   solve: (i?: PlannerInput) => Promise<void>;
   dirty: boolean;
+  /** The exact input the current result was solved with; explanations use this, not unsaved edits. */
+  solvedInput: PlannerInput | null;
   chosen: Schedule | null;
   chooseSchedule: (id: string) => void;
   checklist: Record<string, boolean>;
   toggleCheck: (k: string) => void;
   reset: () => void;
   storageError: string | null;
+  onboarded: boolean;
+  setOnboarded: (v: boolean) => void;
+  lastChange: ScheduleDiff | null;
+  dismissChange: () => void;
 }
+
+const EMPTY: Persisted = { input: null, result: null, chosenScheduleId: null, checklist: {}, solvedInputJson: null, onboarded: false, lastChange: null };
 
 const PlannerCtx = createContext<Ctx | null>(null);
 
 function load(): Persisted {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { input: null, result: null, chosenScheduleId: null, checklist: {}, solvedInputJson: null, ...JSON.parse(raw) };
+    if (raw) return { ...EMPTY, ...JSON.parse(raw) };
   } catch {
     /* ignore corrupt storage */
   }
-  return { input: null, result: null, chosenScheduleId: null, checklist: {}, solvedInputJson: null };
+  return EMPTY;
 }
 
 export function PlannerProvider({ children }: { children: ReactNode }) {
@@ -89,7 +100,13 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
         new Promise<never>((_, rej) => setTimeout(() => rej(new Error('__timeout__')), SOLVE_TIMEOUT_MS)),
       ]);
       if (id !== reqId.current) return;
-      setState((s) => ({ ...s, input, result: res, chosenScheduleId: res.schedules[0]?.id ?? null, solvedInputJson: JSON.stringify(input) }));
+      setState((s) => {
+        const before = s.result?.schedules.find((x) => x.id === s.chosenScheduleId) ?? s.result?.schedules[0] ?? null;
+        const after = res.schedules[0] ?? null;
+        // Only report a change when there was a previous plan to compare against.
+        const lastChange = s.result ? diffSchedules(before, after) : null;
+        return { ...s, input, result: res, chosenScheduleId: after?.id ?? null, solvedInputJson: JSON.stringify(input), lastChange };
+      });
       setSolveState(res.status === 'unknown' ? 'timeout' : 'done');
     } catch (e) {
       if (id !== reqId.current) return;
@@ -132,9 +149,9 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   }, [invalidatePending]);
 
   const reset = useCallback(() => {
-    localStorage.removeItem(KEY);
+    try { localStorage.removeItem(KEY); } catch { /* storage blocked */ }
     const input = catalogQ.data?.defaultInput ?? null;
-    setState({ input, result: null, chosenScheduleId: null, checklist: {}, solvedInputJson: null });
+    setState({ ...EMPTY, input });
     setSolveState('idle');
     if (input) void solveRef.current(input);
   }, [catalogQ.data]);
@@ -144,6 +161,10 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     if (!r) return null;
     return r.schedules.find((s) => s.id === state.chosenScheduleId) ?? r.schedules[0] ?? null;
   }, [state.result, state.chosenScheduleId]);
+
+  const solvedInput = useMemo<PlannerInput | null>(() => {
+    try { return state.solvedInputJson ? JSON.parse(state.solvedInputJson) : null; } catch { return null; }
+  }, [state.solvedInputJson]);
 
   const value: Ctx = {
     catalog: catalogQ.data,
@@ -158,12 +179,17 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     solveError,
     solve,
     dirty: !!state.input && JSON.stringify(state.input) !== state.solvedInputJson,
+    solvedInput,
     chosen,
     chooseSchedule: (id) => setState((s) => ({ ...s, chosenScheduleId: id })),
     checklist: state.checklist,
     toggleCheck: (k) => setState((s) => ({ ...s, checklist: { ...s.checklist, [k]: !s.checklist[k] } })),
     reset,
     storageError,
+    onboarded: state.onboarded,
+    setOnboarded: (v) => setState((s) => ({ ...s, onboarded: v })),
+    lastChange: state.lastChange,
+    dismissChange: () => setState((s) => ({ ...s, lastChange: null })),
   };
 
   return <PlannerCtx.Provider value={value}>{children}</PlannerCtx.Provider>;

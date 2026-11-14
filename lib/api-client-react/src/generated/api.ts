@@ -25,6 +25,10 @@ import type {
 
 import type {
   Catalog,
+  ChatInput,
+  ChatResult,
+  ExplainInput,
+  ExplainResult,
   HealthStatus,
   PlannerInput,
   PreferenceInput,
@@ -413,6 +417,170 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getParsePreferencesMutationOptions(options), queryClient);
+    }
+
+export const getExplainPlannerUrl = () => {
+
+
+
+
+  return `/api/planner/explain`
+}
+
+export const explainPlanner = async (explainInput: ExplainInput, options?: Parameters<typeof customFetch>[1]): Promise<ExplainResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ExplainResult>(getExplainPlannerUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(explainInput)
+  }
+);}
+
+
+
+
+
+export const getExplainPlannerMutationKey = () => ['explainPlanner'] as const;
+
+export const getExplainPlannerMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof explainPlanner>>, TError,ExplainPlannerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof explainPlanner>>, TError,ExplainPlannerMutationVariables, TContext> => {
+
+const mutationKey = getExplainPlannerMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof explainPlanner>>, ExplainPlannerMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  explainPlanner(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExplainPlannerMutationResult = NonNullable<Awaited<ReturnType<typeof explainPlanner>>>
+    export type ExplainPlannerMutationBody = BodyType<ExplainInput>
+    export type ExplainPlannerMutationError = ErrorType<unknown>
+    export type ExplainPlannerMutationVariables = {data: BodyType<ExplainInput>}
+
+    export const useExplainPlanner = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof explainPlanner>>, TError,ExplainPlannerMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof explainPlanner>>,
+        TError,
+        ExplainPlannerMutationVariables,
+        TContext
+      > => {
+      return useMutation(getExplainPlannerMutationOptions(options), queryClient);
+    }
+
+export const getChatCopilotUrl = () => {
+
+
+
+
+  return `/api/planner/chat`
+}
+
+export const chatCopilot = async (chatInput: ChatInput, options?: Parameters<typeof customFetch>[1]): Promise<ChatResult> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChatResult>(getChatCopilotUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(chatInput)
+  }
+);}
+
+
+
+
+
+export const getChatCopilotMutationKey = () => ['chatCopilot'] as const;
+
+export const getChatCopilotMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatCopilot>>, TError,ChatCopilotMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof chatCopilot>>, TError,ChatCopilotMutationVariables, TContext> => {
+
+const mutationKey = getChatCopilotMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof chatCopilot>>, ChatCopilotMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  chatCopilot(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ChatCopilotMutationResult = NonNullable<Awaited<ReturnType<typeof chatCopilot>>>
+    export type ChatCopilotMutationBody = BodyType<ChatInput>
+    export type ChatCopilotMutationError = ErrorType<unknown>
+    export type ChatCopilotMutationVariables = {data: BodyType<ChatInput>}
+
+    export const useChatCopilot = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof chatCopilot>>, TError,ChatCopilotMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof chatCopilot>>,
+        TError,
+        ChatCopilotMutationVariables,
+        TContext
+      > => {
+      return useMutation(getChatCopilotMutationOptions(options), queryClient);
     }
 
 export const getParseStarsUrl = () => {

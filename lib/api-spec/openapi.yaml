@@ -51,6 +51,34 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/PreferenceResult" }
+  /planner/explain:
+    post:
+      operationId: explainPlanner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ExplainInput" }
+      responses:
+        "200":
+          description: Explanation built only from catalog and validated solver facts
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExplainResult" }
+  /planner/chat:
+    post:
+      operationId: chatCopilot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatInput" }
+      responses:
+        "200":
+          description: Proposed rule edits, a clarifying question, or a grounded syllabus answer
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChatResult" }
   /planner/stars:
     post:
       operationId: parseStars
@@ -274,6 +302,90 @@ components:
         proposedConstraints:
           type: array
           items: { $ref: "#/components/schemas/Constraint" }
+        warnings:
+          type: array
+          items: { type: string }
+    SectionRef:
+      type: object
+      required: [courseId, sectionId]
+      properties:
+        courseId: { type: string, maxLength: 40 }
+        sectionId: { type: string, maxLength: 40 }
+    ExplainInput:
+      type: object
+      required: [mode, input, selections]
+      properties:
+        mode: { type: string, enum: [section, compare, conflict] }
+        input: { $ref: "#/components/schemas/PlannerInput" }
+        selections:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/SectionRef" }
+        otherSelections:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/SectionRef" }
+        courseId: { type: string, maxLength: 40 }
+        useAi: { type: boolean }
+    ExplainResult:
+      type: object
+      required: [summary, facts, provider]
+      properties:
+        summary: { type: string }
+        provider: { type: string }
+        facts:
+          type: array
+          items: { type: string }
+    ChatTurn:
+      type: object
+      required: [role, text]
+      properties:
+        role: { type: string, enum: [user, assistant] }
+        text: { type: string, maxLength: 2000 }
+    Citation:
+      type: object
+      required: [courseId, label, excerpt, sourceUrl]
+      properties:
+        courseId: { type: string }
+        label: { type: string }
+        excerpt: { type: string }
+        sourceUrl: { type: string }
+    ChatInput:
+      type: object
+      required: [message, history, current]
+      properties:
+        message: { type: string, minLength: 1, maxLength: 2000 }
+        history:
+          type: array
+          maxItems: 8
+          items: { $ref: "#/components/schemas/ChatTurn" }
+        current: { $ref: "#/components/schemas/PlannerInput" }
+        selections:
+          type: array
+          maxItems: 10
+          items: { $ref: "#/components/schemas/SectionRef" }
+    ChatResult:
+      type: object
+      required: [kind, message, proposedConstraints, removeConstraintIds, updatedConstraints, options, citations, warnings, provider]
+      properties:
+        kind: { type: string, enum: [rules, clarify, answer] }
+        message: { type: string }
+        provider: { type: string }
+        proposedConstraints:
+          type: array
+          items: { $ref: "#/components/schemas/Constraint" }
+        removeConstraintIds:
+          type: array
+          items: { type: string }
+        updatedConstraints:
+          type: array
+          items: { $ref: "#/components/schemas/Constraint" }
+        options:
+          type: array
+          items: { type: string }
+        citations:
+          type: array
+          items: { $ref: "#/components/schemas/Citation" }
         warnings:
           type: array
           items: { type: string }

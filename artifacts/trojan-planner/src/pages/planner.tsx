@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
-import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info, X } from 'lucide-react';
 import type { Catalog, Constraint, PlannerInput, Repair } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,9 +8,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { CatalogGate } from '@/components/gate';
 import { WeekCalendar } from '@/components/week-calendar';
 import { ConstraintEditor } from '@/components/constraint-editor';
-import { Copilot } from '@/components/copilot';
+import { Copilot, type RuleEdits } from '@/components/copilot';
+import { ExplainButton } from '@/components/explain';
+import { OptionCompare } from '@/components/compare';
+import { WhatIfPanel, WhatIfResult, type WhatIf } from '@/components/whatif';
+import { Onboarding, QuickRules } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
-import { fmtTime } from '@/lib/format';
+import { fmtTime, type ScheduleDiff } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -44,11 +48,36 @@ function Planner({ catalog }: { catalog: Catalog }) {
     toast({ title: 'Repair approved', description: r.title });
   };
 
-  const addProposals = (added: Constraint[], resolve: boolean) => {
-    const next: PlannerInput = { ...input, constraints: [...input.constraints, ...added] };
+  const applyEdits = ({ add, update, remove }: RuleEdits, resolve: boolean) => {
+    const kept = input.constraints.filter((c) => !remove.includes(c.id)).map((c) => update.find((u) => u.id === c.id) ?? c);
+    const next: PlannerInput = { ...input, constraints: [...kept, ...add].slice(0, 20) };
     p.setInput(next);
-    toast({ title: `Added ${added.length} rule${added.length === 1 ? '' : 's'}` });
+    const parts = [add.length && `${add.length} added`, update.length && `${update.length} changed`, remove.length && `${remove.length} removed`].filter(Boolean);
+    toast({ title: `Rules updated: ${parts.join(', ')}` });
     if (resolve) void p.solve(next);
+  };
+
+  // A simulation is only meaningful against the rules it was built from.
+  const [whatIf, setWhatIf] = useState<(WhatIf & { base: string }) | null>(null);
+  const [showWhatIf, setShowWhatIf] = useState(false);
+  const inputJson = JSON.stringify(input);
+  useEffect(() => { if (whatIf && whatIf.base !== inputJson) { setWhatIf(null); setShowWhatIf(false); } }, [inputJson, whatIf]);
+  const previewing = !!whatIf && showWhatIf && !!whatIf.result.schedules[0];
+  const applyWhatIf = () => {
+    if (!whatIf) return;
+    p.setInput(whatIf.input);
+    void p.solve(whatIf.input);
+    setWhatIf(null); setShowWhatIf(false);
+    toast({ title: 'What-if applied', description: whatIf.description });
+  };
+
+  const [setupOpen, setSetupOpen] = useState(!p.onboarded);
+  const onSetupOpen = (v: boolean) => { setSetupOpen(v); if (!v) p.setOnboarded(true); };
+  const applySetup = (constraints: Constraint[]) => {
+    const next: PlannerInput = { ...input, constraints };
+    p.setInput(next);
+    void p.solve(next);
+    toast({ title: 'Rules set from your answers', description: 'Edit them anytime in the Rules tab.' });
   };
 
   const sched = p.chosen;
@@ -91,7 +120,14 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4 min-w-0">
-          {result && result.schedules.length > 1 && !infeasible && (
+          {p.lastChange && !stale && !solving && !whatIf && <WhatChanged diff={p.lastChange} catalog={catalog} onDismiss={p.dismissChange} />}
+
+          {whatIf && (
+            <WhatIfResult catalog={catalog} current={infeasible ? null : sched} whatIf={whatIf} showing={showWhatIf}
+              onShow={setShowWhatIf} onApply={applyWhatIf} onDiscard={() => { setWhatIf(null); setShowWhatIf(false); }} />
+          )}
+
+          {result && result.schedules.length > 1 && !infeasible && !previewing && (
             <div className="inline-flex max-w-full overflow-x-auto rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
               {result.schedules.map((s) => (
                 <button key={s.id} role="tab" aria-selected={sched?.id === s.id} onClick={() => p.chooseSchedule(s.id)} data-testid={`tab-schedule-${s.id}`}
@@ -102,7 +138,7 @@ function Planner({ catalog }: { catalog: Catalog }) {
             </div>
           )}
 
-          {sched && !infeasible && (
+          {sched && !infeasible && !previewing && (
             <dl className="flex flex-wrap gap-x-8 gap-y-2" data-testid="stats-schedule">
               {[
                 ['Units', sched.units],
@@ -115,9 +151,18 @@ function Planner({ catalog }: { catalog: Catalog }) {
             </dl>
           )}
 
-          {infeasible && result && <Conflicts result={result} catalog={catalog} input={input} onApprove={applyRepair} solving={solving} stale={stale} />}
+          {infeasible && result && <Conflicts result={result} catalog={catalog} input={input} solvedInput={p.solvedInput} onApprove={applyRepair} solving={solving} stale={stale} />}
 
-          <WeekCalendar catalog={catalog} schedule={sched && !infeasible ? sched : null} constraints={input.constraints} lockedSectionIds={locked} onToggleLock={toggleLock} dim={solving} />
+          {previewing && whatIf?.result.schedules[0] ? (
+            <WeekCalendar catalog={catalog} schedule={whatIf.result.schedules[0]} constraints={whatIf.input.constraints} lockedSectionIds={locked} onToggleLock={() => undefined} />
+          ) : (
+            <WeekCalendar catalog={catalog} schedule={sched && !infeasible ? sched : null} constraints={input.constraints} lockedSectionIds={locked} onToggleLock={toggleLock} dim={solving}
+              input={!stale && p.solvedInput ? p.solvedInput : undefined} />
+          )}
+
+          {sched && !infeasible && result && result.schedules.length > 1 && p.solvedInput && !stale && (
+            <OptionCompare catalog={catalog} schedules={result.schedules} chosen={sched} input={p.solvedInput} />
+          )}
 
           {sched && !infeasible && (
             <Collapsible className="rounded-lg border">
@@ -149,19 +194,33 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
         <aside className="lg:sticky lg:top-20 self-start">
           <Tabs defaultValue="copilot">
-            <TabsList className="w-full grid grid-cols-2">
+            <TabsList className="w-full grid grid-cols-3">
               <TabsTrigger value="copilot" data-testid="tab-copilot">Ask</TabsTrigger>
               <TabsTrigger value="rules" data-testid="tab-rules">Rules <span className="ml-1.5 text-xs text-muted-foreground tabular-nums">{input.constraints.length}</span></TabsTrigger>
+              <TabsTrigger value="whatif" data-testid="tab-whatif">What if</TabsTrigger>
             </TabsList>
-            <TabsContent value="copilot" className="mt-3">
-              <Copilot catalog={catalog} input={input} onApply={addProposals} />
+            {/* forceMount keeps the conversation when switching tabs */}
+            <TabsContent value="copilot" forceMount className="mt-3 space-y-4 data-[state=inactive]:hidden">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-medium text-muted-foreground">Quick rules</h3>
+                  <button className="text-xs text-primary hover:underline" onClick={() => setSetupOpen(true)} data-testid="button-open-onboarding">Answer 3 questions</button>
+                </div>
+                <QuickRules constraints={input.constraints} onChange={p.updateConstraints} />
+              </div>
+              <Copilot catalog={catalog} input={input} onApply={applyEdits}
+                selections={sched && !infeasible ? sched.selections.map((x) => ({ courseId: x.courseId, sectionId: x.sectionId })) : []} />
             </TabsContent>
             <TabsContent value="rules" className="mt-3">
               <ConstraintEditor catalog={catalog} constraints={input.constraints} onChange={p.updateConstraints} />
             </TabsContent>
+            <TabsContent value="whatif" className="mt-3">
+              <WhatIfPanel input={input} onResult={(w) => { setWhatIf({ ...w, base: inputJson }); setShowWhatIf(true); }} />
+            </TabsContent>
           </Tabs>
         </aside>
       </div>
+      <Onboarding open={setupOpen} onOpenChange={onSetupOpen} current={input.constraints} onApply={applySetup} />
     </div>
   );
 }
@@ -183,7 +242,24 @@ function SolveStatus() {
   );
 }
 
-function Conflicts({ result, catalog, input, onApprove, solving, stale }: { result: NonNullable<ReturnType<typeof usePlanner>['result']>; catalog: Catalog; input: PlannerInput; onApprove: (r: Repair) => void; solving: boolean; stale: boolean }) {
+function WhatChanged({ diff, catalog, onDismiss }: { diff: ScheduleDiff; catalog: Catalog; onDismiss: () => void }) {
+  const code = (id: string) => catalog.courses.find((c) => c.id === id)?.code ?? id;
+  const parts = [
+    ...diff.added.map((x) => `added ${code(x.courseId)} §${x.sectionId}`),
+    ...diff.removed.map((x) => `dropped ${code(x.courseId)}`),
+    ...diff.moved.map((x) => `moved ${code(x.courseId)} §${x.from} → §${x.to}`),
+    ...diff.stats.map((x) => `${x.label.toLowerCase()} ${x.before} → ${x.after}`),
+  ];
+  return (
+    <div className="rounded-lg border bg-secondary/60 px-3 py-2 text-sm flex items-start gap-2 rise" data-testid="status-what-changed">
+      <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+      <p className="flex-1"><span className="font-medium">{diff.same ? 'Your schedule stayed the same.' : 'What changed:'}</span> {parts.join(' · ')}</p>
+      <button onClick={onDismiss} className="p-0.5 rounded hover:bg-background" aria-label="Dismiss"><X className="size-3.5" /></button>
+    </div>
+  );
+}
+
+function Conflicts({ result, catalog, input, solvedInput, onApprove, solving, stale }: { result: NonNullable<ReturnType<typeof usePlanner>['result']>; catalog: Catalog; input: PlannerInput; solvedInput: PlannerInput | null; onApprove: (r: Repair) => void; solving: boolean; stale: boolean }) {
   return (
     <div className="rounded-lg border border-primary/30 bg-card p-4 md:p-5 rise" data-testid="panel-conflicts">
       <div className="flex gap-3">
@@ -192,6 +268,7 @@ function Conflicts({ result, catalog, input, onApprove, solving, stale }: { resu
           <h2 className="font-semibold">No plan fits every rule</h2>
           <p className="text-sm text-muted-foreground mt-1">{result.message}</p>
           <ul className="mt-3 space-y-1">{result.conflicts.map((c, i) => <li key={i} className="text-sm flex gap-2"><span className="text-primary font-bold">·</span>{c}</li>)}</ul>
+          {solvedInput && !stale && <div className="mt-3"><ExplainButton label="Explain in plain words" request={{ mode: 'conflict', input: solvedInput, selections: [] }} /></div>}
         </div>
       </div>
       {stale && <p className="mt-3 text-xs font-semibold text-destructive" data-testid="text-repairs-stale">Your rules changed since these repairs were computed. Re-solve to get current repairs.</p>}

@@ -7,9 +7,9 @@ import type { z } from "zod";
 import { catalog } from "./catalog";
 
 export type PlannerInput = z.infer<typeof SolvePlannerBody>;
-type Constraint = PlannerInput["constraints"][number];
-type Course = typeof catalog.courses[number];
-type Section = Course["sections"][number];
+export type Constraint = PlannerInput["constraints"][number];
+export type Course = typeof catalog.courses[number];
+export type Section = Course["sections"][number];
 type RawSolution = { selected: [Course, Section][]; score: number };
 type WorkerResult = {
   status: "optimal" | "feasible" | "infeasible" | "unknown" | "invalid";
@@ -32,7 +32,7 @@ export function validateInput(input: PlannerInput): string | null {
   }
   return null;
 }
-function satisfies(section: Section, constraint: Constraint) {
+export function satisfies(section: Section, constraint: Constraint) {
   return section.meetings.every(m => {
     const applies = constraint.days.length === 0 || constraint.days.includes(m.day);
     if (constraint.kind === "no_day") return !constraint.days.includes(m.day);

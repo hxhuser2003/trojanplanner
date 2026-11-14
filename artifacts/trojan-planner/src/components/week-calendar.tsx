@@ -1,5 +1,9 @@
+import { Link } from 'wouter';
 import { Lock, LockOpen } from 'lucide-react';
-import type { Catalog, Constraint, Schedule } from '@workspace/api-client-react';
+import type { Catalog, Constraint, PlannerInput, Schedule } from '@workspace/api-client-react';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ExplainButton } from '@/components/explain';
 import { DAYS, fmtTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -14,9 +18,11 @@ interface Props {
   lockedSectionIds: Set<string>;
   onToggleLock: (courseId: string, sectionId: string) => void;
   dim?: boolean;
+  /** When set, clicking a block opens details with an Explain action. Omit for read-only previews. */
+  input?: PlannerInput;
 }
 
-export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds, onToggleLock, dim }: Props) {
+export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds, onToggleLock, dim, input }: Props) {
   const hours: number[] = [];
   for (let m = START; m < END; m += 60) hours.push(m);
   const height = (END - START) * PX;
@@ -63,21 +69,46 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
                 const section = course?.sections.find((s) => s.id === sel.sectionId);
                 if (!course || !section) return null;
                 const locked = lockedSectionIds.has(section.id);
-                return section.meetings.filter((m) => m.day === day).map((m, i) => (
-                  <button key={`${section.id}-${i}`} type="button"
-                    onClick={() => onToggleLock(course.id, section.id)}
-                    data-testid={`block-${course.id}-${day}-${i}`}
-                    aria-label={`${course.code} ${m.kind} ${fmtTime(m.start)} to ${fmtTime(m.end)}. ${locked ? 'Unlock section' : 'Lock section'}`}
-                    title={locked ? 'Locked. Click to unlock this section' : 'Click to lock this section'}
-                    className="group absolute inset-x-1 rounded-md px-2 py-1 text-left overflow-hidden text-foreground border-l-[3px] transition-colors hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring rise"
-                    style={{ top: top(m.start), height: Math.max(top(m.end) - top(m.start), 22), background: `color-mix(in srgb, ${course.color} 14%, transparent)`, borderLeftColor: course.color }}>
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-xs font-semibold">{course.code}</span>
-                      {locked ? <Lock className="size-3" /> : <LockOpen className="size-3 opacity-0 group-hover:opacity-80 transition-opacity" />}
-                    </div>
-                    <div className="text-[11px] text-muted-foreground leading-tight">{m.kind} · {fmtTime(m.start)}</div>
-                  </button>
-                ));
+                return section.meetings.filter((m) => m.day === day).map((m, i) => {
+                  const block = (
+                    <button key={`${section.id}-${i}`} type="button"
+                      onClick={input ? undefined : () => onToggleLock(course.id, section.id)}
+                      data-testid={`block-${course.id}-${day}-${i}`}
+                      aria-label={`${course.code} ${m.kind} ${fmtTime(m.start)} to ${fmtTime(m.end)}. ${input ? 'Show details' : locked ? 'Unlock section' : 'Lock section'}`}
+                      title={input ? 'Details, explain, lock' : locked ? 'Locked. Click to unlock this section' : 'Click to lock this section'}
+                      className="group absolute inset-x-1 rounded-md px-2 py-1 text-left overflow-hidden text-foreground border-l-[3px] transition-colors hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring rise"
+                      style={{ top: top(m.start), height: Math.max(top(m.end) - top(m.start), 22), background: `color-mix(in srgb, ${course.color} 14%, transparent)`, borderLeftColor: course.color }}>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-semibold">{course.code}</span>
+                        {locked ? <Lock className="size-3" /> : <LockOpen className="size-3 opacity-0 group-hover:opacity-80 transition-opacity" />}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground leading-tight">{m.kind} · {fmtTime(m.start)}</div>
+                    </button>
+                  );
+                  if (!input || !schedule) return block;
+                  return (
+                    <Popover key={`${section.id}-${i}`}>
+                      <PopoverTrigger asChild>{block}</PopoverTrigger>
+                      <PopoverContent className="w-80 space-y-3" side="right" align="start" data-testid={`popover-${course.id}`}>
+                        <div>
+                          <p className="font-semibold text-sm">{course.code} §{section.id}</p>
+                          <p className="text-xs text-muted-foreground">{course.title} · {section.instructor}</p>
+                          <ul className="mt-1.5 text-xs font-mono text-muted-foreground">
+                            {section.meetings.map((x, j) => <li key={j}>{DAYS[x.day]} {fmtTime(x.start)}–{fmtTime(x.end)} · {x.kind}</li>)}
+                          </ul>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => onToggleLock(course.id, section.id)} data-testid={`button-lock-${section.id}`}>
+                            {locked ? <><LockOpen className="size-3.5" />Unlock</> : <><Lock className="size-3.5" />Lock</>}
+                          </Button>
+                          <Button size="sm" variant="ghost" asChild><Link href={`/courses?c=${course.id}`}>Course details</Link></Button>
+                        </div>
+                        <ExplainButton label="Why this section?" variant="secondary"
+                          request={{ mode: 'section', input, courseId: course.id, selections: schedule.selections.map((x) => ({ courseId: x.courseId, sectionId: x.sectionId })) }} />
+                      </PopoverContent>
+                    </Popover>
+                  );
+                });
               })}
             </div>
           ))}

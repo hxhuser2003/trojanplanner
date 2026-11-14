@@ -6,11 +6,20 @@
  */
 
 export * from './catalog';
+export * from './chatInput';
+export * from './chatResult';
+export * from './chatResultKind';
+export * from './chatTurn';
+export * from './chatTurnRole';
+export * from './citation';
 export * from './constraint';
 export * from './constraintKind';
 export * from './course';
 export * from './evidence';
 export * from './evidenceStatus';
+export * from './explainInput';
+export * from './explainInputMode';
+export * from './explainResult';
 export * from './healthStatus';
 export * from './meeting';
 export * from './plannerInput';
@@ -20,6 +29,7 @@ export * from './repair';
 export * from './requirement';
 export * from './schedule';
 export * from './section';
+export * from './sectionRef';
 export * from './selection';
 export * from './solveResult';
 export * from './solveResultStatus';
