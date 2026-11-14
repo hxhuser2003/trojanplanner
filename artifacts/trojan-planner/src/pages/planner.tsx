@@ -12,7 +12,7 @@ import { Copilot, type RuleEdits } from '@/components/copilot';
 import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
 import { WhatIfPanel, WhatIfResult, type WhatIf } from '@/components/whatif';
-import { Onboarding, QuickRules } from '@/components/quick-rules';
+import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
 import { fmtTime, type ScheduleDiff } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -200,16 +200,10 @@ function Planner({ catalog }: { catalog: Catalog }) {
               <TabsTrigger value="whatif" data-testid="tab-whatif">What if</TabsTrigger>
             </TabsList>
             {/* forceMount keeps the conversation when switching tabs */}
-            <TabsContent value="copilot" forceMount className="mt-3 space-y-4 data-[state=inactive]:hidden">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-medium text-muted-foreground">Quick rules</h3>
-                  <button className="text-xs text-primary hover:underline" onClick={() => setSetupOpen(true)} data-testid="button-open-onboarding">Answer 3 questions</button>
-                </div>
-                <QuickRules constraints={input.constraints} onChange={p.updateConstraints} />
-              </div>
+            <TabsContent value="copilot" forceMount className="mt-3 space-y-3 data-[state=inactive]:hidden">
               <Copilot catalog={catalog} input={input} onApply={applyEdits}
                 selections={sched && !infeasible ? sched.selections.map((x) => ({ courseId: x.courseId, sectionId: x.sectionId })) : []} />
+              <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setSetupOpen(true)} data-testid="button-open-onboarding">Redo the 3 setup questions</button>
             </TabsContent>
             <TabsContent value="rules" className="mt-3">
               <ConstraintEditor catalog={catalog} constraints={input.constraints} onChange={p.updateConstraints} />

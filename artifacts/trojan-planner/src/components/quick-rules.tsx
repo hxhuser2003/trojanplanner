@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from 'react';
-import { Check } from 'lucide-react';
 import type { Constraint, ConstraintKind } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +21,7 @@ interface Chip {
 const rule = (kind: ConstraintKind, label: string, hard: boolean, patch: Partial<Constraint> = {}): Constraint =>
   ({ ...newConstraint(kind, hard), label, ...patch });
 
+/** Common single-tap rules, offered as hypothetical additions in the What-if tab. */
 export const CHIPS: Chip[] = [
   { key: 'no-fri', label: 'No Friday classes', make: () => rule('no_day', 'Keep Fridays free', true, { days: [4] }),
     matches: (c) => c.kind === 'no_day' && c.days.length === 1 && c.days[0] === 4 },
@@ -36,33 +36,6 @@ export const CHIPS: Chip[] = [
   { key: 'solo', label: 'Solo work', make: () => rule('prefer_individual', 'Prefer individual projects', false),
     matches: (c) => c.kind === 'prefer_individual' },
 ];
-
-/** One-tap rule toggles. Turning a chip off removes the matching rule; nothing re-solves automatically. */
-export function QuickRules({ constraints, onChange }: { constraints: Constraint[]; onChange: (fn: (c: Constraint[]) => Constraint[]) => void }) {
-  const full = constraints.length >= MAX_RULES;
-  const toggle = (chip: Chip) => {
-    onChange((cs) => {
-      if (cs.some((c) => c.enabled && chip.matches(c))) return cs.filter((c) => !chip.matches(c));
-      const kept = chip.replacesKind ? cs.filter((c) => c.kind !== chip.replacesKind) : cs;
-      return kept.length >= MAX_RULES ? cs : [...kept, chip.make()];
-    });
-  };
-  return (
-    <div className="flex flex-wrap gap-1.5" data-testid="panel-quick-rules">
-      {CHIPS.map((chip) => {
-        const on = constraints.some((c) => c.enabled && chip.matches(c));
-        return (
-          <button key={chip.key} type="button" onClick={() => toggle(chip)} aria-pressed={on} disabled={!on && full}
-            data-testid={`chip-${chip.key}`}
-            className={cn('inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors disabled:opacity-50',
-              on ? 'bg-primary text-primary-foreground border-primary' : 'bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30')}>
-            {on && <Check className="size-3" />}{chip.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 type Assess = 'projects' | 'solo' | 'both' | 'none';
 interface Answers {

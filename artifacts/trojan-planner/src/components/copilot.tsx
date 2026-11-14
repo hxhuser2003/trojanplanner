@@ -7,8 +7,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { describeConstraint, errMessage } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
-const EXAMPLES = ['I work Mon/Wed 9–11am', 'Remove the Friday rule', 'Does CSCI 310 have group projects?', 'Why is CSCI 271 in my plan?'];
-
 export interface RuleEdits {
   add: Constraint[];
   update: Constraint[];
@@ -80,20 +78,16 @@ export function Copilot({ catalog, input, selections, onApply }: Props) {
           <div ref={end} />
         </div>
       )}
-      {msgs.length === 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {EXAMPLES.map((e) => (
-            <button key={e} onClick={() => void send(e)} className="text-xs px-2 py-1 rounded-md bg-secondary text-muted-foreground hover:text-foreground transition-colors" data-testid="button-copilot-example">{e}</button>
-          ))}
-        </div>
-      )}
       <div className="relative">
         <Textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} rows={3}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(text); } }}
-          placeholder="Add or change rules, or ask about a course" aria-label="Message the copilot" data-testid="input-copilot" className="resize-none pr-11" />
-        <Button size="icon" className="absolute right-2 bottom-2 size-7" onClick={() => void send(text)} disabled={!text.trim() || chat.isPending} aria-label="Send" data-testid="button-copilot-ask">
-          <ArrowUp className="size-4" />
-        </Button>
+          placeholder="e.g. I work Tue/Thu 2–6pm, or: does CSCI 310 have group projects?" aria-label="Message the copilot" data-testid="input-copilot" className="resize-none pr-11" />
+        {/* Positioned wrapper: the button's hover-elevate style forces position: relative. */}
+        <div className="absolute right-2 bottom-2">
+          <Button size="icon" className="size-7" onClick={() => void send(text)} disabled={!text.trim() || chat.isPending} aria-label="Send" data-testid="button-copilot-ask">
+            <ArrowUp className="size-4" />
+          </Button>
+        </div>
       </div>
       {msgs.length > 0 && (
         <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setMsgs([])} data-testid="button-chat-clear">Clear conversation</button>
