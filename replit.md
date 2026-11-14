@@ -11,12 +11,12 @@ A local USC course-planning prototype with synthetic offerings, CP-SAT schedulin
 
 ## Running
 
-- Managed API workflow: `artifacts/api-server: API Server`.
-- Managed frontend workflow: `artifacts/trojan-planner: web`.
+- Install the workspace dependencies with `pnpm install --frozen-lockfile` and `uv sync --frozen`.
+- Start both managed workflows: `artifacts/api-server: API Server` and `artifacts/trojan-planner: web`.
+- The API workflow runs the Python solver through the project environment created by `uv sync`.
+- Anthropic preference extraction uses Replit-managed AI Integrations; no personal API key is needed.
 - `pnpm run typecheck` checks the workspace.
 - `pnpm --filter @workspace/api-spec run codegen` regenerates hooks and validation schemas.
-- Python 3.12 and dependencies in `pyproject.toml` / `uv.lock` provide OR-Tools.
-- AI preference extraction uses Replit-managed Anthropic access; secrets are managed through the integration.
 
 ## Implementation
 
