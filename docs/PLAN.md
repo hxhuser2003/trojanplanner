@@ -44,8 +44,12 @@ A web app focused on **next semester's course selection**, with a **visual weekl
    > "Option A: keep CSCI 270 and accept one Friday class. Option B: keep Fridays free and take a different course that fills the same requirement; save CSCI 270 for a later semester."
 7. **Explainable trade-offs.** Every course in a schedule comes with a reason and its cost. Example: "Fills your Core requirement and has a highly rated instructor, but it's your only class on Monday, so it adds a commute day."
 8. **Live editing via chat.** "Swap the 8 AM class for something later" → the solver re-runs and the calendar updates instantly.
+9. **Instructor and syllabus links.** Each section card links out for its instructor(s) and syllabus. Links only; no third-party data is scraped or rehosted.
+   - **RateMyProfessors:** every instructor gets a search link limited to USC; the 10–20 demo instructors get hand-curated direct profile links. Co-taught sections show one link per instructor; "TBA" shows none.
+   - **Syllabus:** the official link from the Schedule of Classes when available, otherwise a "Search syllabus" link limited to usc.edu.
 
 ## 6. Stretch Features
+- **AI syllabus insights:** pre-parse syllabi for demo courses into JSON (grading breakdown, exam dates, workload signals). They feed the workload soft constraint and enable **exam-week clash alerts** (e.g. "3 midterms in week 8"). Pluggable: courses without a syllabus skip this.
 - **Browser extension mode:** overlay fit badges (✅ fits requirements / ⚠️ conflict / 📊 difficulty) directly on the Schedule of Classes pages.
 - Backup sections for when a section fills up during registration.
 - Export to Google Calendar, or generate a registration checklist.
@@ -66,6 +70,7 @@ LLM agent (Claude API, tool use)
   ├─ search_courses(filters)     → next-semester courses and sections
   ├─ solve_schedule(constraints) → CP-SAT solver → top-k valid schedules
   ├─ explain_conflict(result)    → which requests clash + alternatives
+  ├─ get_syllabus_info(id)       → grading, exam dates, workload (pluggable)
   └─ get_course_stats(id)        → workload / grade data (pluggable)
         │
         ▼
@@ -85,6 +90,8 @@ Calendar UI + explanations + trade-off comparison
 | Courses and sections | USC Schedule of Classes (public), next semester | Confirm access method on-site; cache a subset (1–2 majors) early on Saturday |
 | Degree requirements | Program requirements for 1–2 majors | Encoded as rules for the demo |
 | Student progress | STARS report upload or manual entry | Parsed locally; no sensitive data stored |
+| Instructor reviews | RateMyProfessors (outbound links only) | Search link by default; direct links hand-curated for demo instructors |
+| Syllabi | Official links where available; pre-parsed JSON for demo courses | Link out, never rehost |
 | Workload / grade distribution | Sample data | Clearly labeled "sample"; no scraping of third-party sites |
 
 ## 10. Tech Stack
