@@ -9,33 +9,8 @@ import { cn } from '@/lib/utils';
 
 export const MAX_RULES = 20;
 
-interface Chip {
-  key: string;
-  label: string;
-  make: () => Constraint;
-  matches: (c: Constraint) => boolean;
-  // Rule kinds that only make sense once (a second "earliest" would shadow the first).
-  replacesKind?: ConstraintKind;
-}
-
 const rule = (kind: ConstraintKind, label: string, hard: boolean, patch: Partial<Constraint> = {}): Constraint =>
   ({ ...newConstraint(kind, hard), label, ...patch });
-
-/** Common single-tap rules, offered as hypothetical additions in the What-if tab. */
-export const CHIPS: Chip[] = [
-  { key: 'no-fri', label: 'No Friday classes', make: () => rule('no_day', 'Keep Fridays free', true, { days: [4] }),
-    matches: (c) => c.kind === 'no_day' && c.days.length === 1 && c.days[0] === 4 },
-  { key: 'after-10', label: 'Nothing before 10am', make: () => rule('earliest', 'Nothing before 10 AM', true, { start: 600 }),
-    matches: (c) => c.kind === 'earliest' && c.start === 600 && c.hard, replacesKind: 'earliest' },
-  { key: 'by-5', label: 'Done by 5pm', make: () => rule('latest', 'Done by 5 PM', true, { end: 1020 }),
-    matches: (c) => c.kind === 'latest' && c.end === 1020, replacesKind: 'latest' },
-  { key: 'fewer-days', label: 'Fewer campus days', make: () => rule('prefer_fewer_days', 'Prefer fewer campus days', false),
-    matches: (c) => c.kind === 'prefer_fewer_days' },
-  { key: 'projects', label: 'Projects over exams', make: () => rule('prefer_projects', 'Prefer project-based assessment', false),
-    matches: (c) => c.kind === 'prefer_projects' },
-  { key: 'solo', label: 'Solo work', make: () => rule('prefer_individual', 'Prefer individual projects', false),
-    matches: (c) => c.kind === 'prefer_individual' },
-];
 
 type Assess = 'projects' | 'solo' | 'both' | 'none';
 interface Answers {

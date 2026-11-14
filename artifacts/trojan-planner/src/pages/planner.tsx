@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info, X } from 'lucide-react';
 import type { Catalog, Constraint, PlannerInput, Repair } from '@workspace/api-client-react';
@@ -11,7 +11,6 @@ import { ConstraintEditor } from '@/components/constraint-editor';
 import { Copilot, type RuleEdits } from '@/components/copilot';
 import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
-import { WhatIfPanel, WhatIfResult, type WhatIf } from '@/components/whatif';
 import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
 import { fmtTime, type ScheduleDiff } from '@/lib/format';
@@ -55,20 +54,6 @@ function Planner({ catalog }: { catalog: Catalog }) {
     const parts = [add.length && `${add.length} added`, update.length && `${update.length} changed`, remove.length && `${remove.length} removed`].filter(Boolean);
     toast({ title: `Rules updated: ${parts.join(', ')}` });
     if (resolve) void p.solve(next);
-  };
-
-  // A simulation is only meaningful against the rules it was built from.
-  const [whatIf, setWhatIf] = useState<(WhatIf & { base: string }) | null>(null);
-  const [showWhatIf, setShowWhatIf] = useState(false);
-  const inputJson = JSON.stringify(input);
-  useEffect(() => { if (whatIf && whatIf.base !== inputJson) { setWhatIf(null); setShowWhatIf(false); } }, [inputJson, whatIf]);
-  const previewing = !!whatIf && showWhatIf && !!whatIf.result.schedules[0];
-  const applyWhatIf = () => {
-    if (!whatIf) return;
-    p.setInput(whatIf.input);
-    void p.solve(whatIf.input);
-    setWhatIf(null); setShowWhatIf(false);
-    toast({ title: 'What-if applied', description: whatIf.description });
   };
 
   const [setupOpen, setSetupOpen] = useState(!p.onboarded);
@@ -120,14 +105,9 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4 min-w-0">
-          {p.lastChange && !stale && !solving && !whatIf && <WhatChanged diff={p.lastChange} catalog={catalog} onDismiss={p.dismissChange} />}
+          {p.lastChange && !stale && !solving && <WhatChanged diff={p.lastChange} catalog={catalog} onDismiss={p.dismissChange} />}
 
-          {whatIf && (
-            <WhatIfResult catalog={catalog} current={infeasible ? null : sched} whatIf={whatIf} showing={showWhatIf}
-              onShow={setShowWhatIf} onApply={applyWhatIf} onDiscard={() => { setWhatIf(null); setShowWhatIf(false); }} />
-          )}
-
-          {result && result.schedules.length > 1 && !infeasible && !previewing && (
+          {result && result.schedules.length > 1 && !infeasible && (
             <div className="inline-flex max-w-full overflow-x-auto rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
               {result.schedules.map((s) => (
                 <button key={s.id} role="tab" aria-selected={sched?.id === s.id} onClick={() => p.chooseSchedule(s.id)} data-testid={`tab-schedule-${s.id}`}
@@ -138,7 +118,7 @@ function Planner({ catalog }: { catalog: Catalog }) {
             </div>
           )}
 
-          {sched && !infeasible && !previewing && (
+          {sched && !infeasible && (
             <dl className="flex flex-wrap gap-x-8 gap-y-2" data-testid="stats-schedule">
               {[
                 ['Units', sched.units],
@@ -153,12 +133,8 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
           {infeasible && result && <Conflicts result={result} catalog={catalog} input={input} solvedInput={p.solvedInput} onApprove={applyRepair} solving={solving} stale={stale} />}
 
-          {previewing && whatIf?.result.schedules[0] ? (
-            <WeekCalendar catalog={catalog} schedule={whatIf.result.schedules[0]} constraints={whatIf.input.constraints} lockedSectionIds={locked} onToggleLock={() => undefined} />
-          ) : (
-            <WeekCalendar catalog={catalog} schedule={sched && !infeasible ? sched : null} constraints={input.constraints} lockedSectionIds={locked} onToggleLock={toggleLock} dim={solving}
-              input={!stale && p.solvedInput ? p.solvedInput : undefined} />
-          )}
+          <WeekCalendar catalog={catalog} schedule={sched && !infeasible ? sched : null} constraints={input.constraints} lockedSectionIds={locked} onToggleLock={toggleLock} dim={solving}
+            input={!stale && p.solvedInput ? p.solvedInput : undefined} />
 
           {sched && !infeasible && result && result.schedules.length > 1 && p.solvedInput && !stale && (
             <OptionCompare catalog={catalog} schedules={result.schedules} chosen={sched} input={p.solvedInput} />
@@ -194,10 +170,9 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
         <aside className="lg:sticky lg:top-20 self-start">
           <Tabs defaultValue="copilot">
-            <TabsList className="w-full grid grid-cols-3">
+            <TabsList className="w-full grid grid-cols-2">
               <TabsTrigger value="copilot" data-testid="tab-copilot">Ask</TabsTrigger>
               <TabsTrigger value="rules" data-testid="tab-rules">Rules <span className="ml-1.5 text-xs text-muted-foreground tabular-nums">{input.constraints.length}</span></TabsTrigger>
-              <TabsTrigger value="whatif" data-testid="tab-whatif">What if</TabsTrigger>
             </TabsList>
             {/* forceMount keeps the conversation when switching tabs */}
             <TabsContent value="copilot" forceMount className="mt-3 space-y-3 data-[state=inactive]:hidden">
@@ -207,9 +182,6 @@ function Planner({ catalog }: { catalog: Catalog }) {
             </TabsContent>
             <TabsContent value="rules" className="mt-3">
               <ConstraintEditor catalog={catalog} constraints={input.constraints} onChange={p.updateConstraints} />
-            </TabsContent>
-            <TabsContent value="whatif" className="mt-3">
-              <WhatIfPanel input={input} onResult={(w) => { setWhatIf({ ...w, base: inputJson }); setShowWhatIf(true); }} />
             </TabsContent>
           </Tabs>
         </aside>
