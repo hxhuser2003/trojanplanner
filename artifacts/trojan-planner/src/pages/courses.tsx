@@ -106,7 +106,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-sm font-semibold" style={{ color: course.color }}>{course.code} · {course.units} units · {req?.title ?? course.requirement}</p>
-          <h2 className="font-display text-3xl font-extrabold mt-1">{course.title}</h2>
+          <h2 className="text-2xl font-semibold tracking-tight mt-1">{course.title}</h2>
           <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{course.description}</p>
           {course.prerequisites.length > 0 && <p className="text-xs mt-2"><span className="font-semibold">Prerequisites:</span> {course.prerequisites.join(', ')}</p>}
         </div>
@@ -115,7 +115,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
         </Button>
       </div>
 
-      <h3 className="font-display text-lg font-semibold mt-6 mb-2">Sections</h3>
+      <h3 className="text-base font-semibold mt-6 mb-2">Sections</h3>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Section</th><th className="p-2.5">Instructor</th><th className="p-2.5">Meetings</th><th className="p-2.5">Eligibility</th></tr></thead>
@@ -136,7 +136,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
 
       <div className="mt-6 grid md:grid-cols-[1fr_1.4fr] gap-6">
         <div>
-          <h3 className="font-display text-lg font-semibold mb-1">Assessment fit</h3>
+          <h3 className="text-base font-semibold mb-1">Assessment fit</h3>
           <p className="text-xs text-muted-foreground mb-3">From the {s.term} syllabus ({s.status}). Unknown is not zero.</p>
           <div className="space-y-3">
             <Bar label="Exams" v={s.examPercent} cls="bg-primary" />
@@ -155,7 +155,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
           </div>
         </div>
         <div>
-          <h3 className="font-display text-lg font-semibold mb-2">Evidence</h3>
+          <h3 className="text-base font-semibold mb-2">Evidence</h3>
           {s.evidence.length === 0 ? <p className="text-sm italic text-muted-foreground">No syllabus evidence on file. Treat all assessment details as unknown.</p> : (
             <ul className="space-y-2">
               {s.evidence.map((e, i) => (

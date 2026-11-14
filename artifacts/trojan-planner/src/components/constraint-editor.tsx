@@ -51,11 +51,11 @@ export function ConstraintEditor({ catalog, constraints, onChange }: Props) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-[11px] uppercase tracking-[0.18em] font-semibold text-muted-foreground mb-2">Must hold</h3>
+        <h3 className="text-xs font-medium text-muted-foreground mb-2">Required</h3>
         {hard.length ? <ul className="space-y-1.5">{hard.map(Row)}</ul> : <p className="text-xs text-muted-foreground italic">No hard rules. The solver can place anything anywhere.</p>}
       </div>
       <div>
-        <h3 className="text-[11px] uppercase tracking-[0.18em] font-semibold text-muted-foreground mb-2">Nice to have</h3>
+        <h3 className="text-xs font-medium text-muted-foreground mb-2">Preferred</h3>
         {soft.length ? <ul className="space-y-1.5">{soft.map(Row)}</ul> : <p className="text-xs text-muted-foreground italic">No preferences yet. Ask the copilot or add one.</p>}
       </div>
       <Select onValueChange={(k) => { setIsNew(true); setEditing(newConstraint(k as ConstraintKind, !k.startsWith('prefer'))); }} value="">
@@ -74,7 +74,7 @@ export function ConstraintEditor({ catalog, constraints, onChange }: Props) {
           {editing && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-display">{isNew ? 'New' : 'Edit'}: {KIND_META[editing.kind].label}</DialogTitle>
+                <DialogTitle>{isNew ? 'New' : 'Edit'}: {KIND_META[editing.kind].label}</DialogTitle>
                 <DialogDescription>{KIND_META[editing.kind].hint}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">

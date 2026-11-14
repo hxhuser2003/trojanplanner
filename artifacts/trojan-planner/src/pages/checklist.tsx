@@ -43,7 +43,7 @@ function Checklist({ catalog }: { catalog: Catalog }) {
     return (
       <div className="mx-auto max-w-md text-center py-16 px-4" data-testid="status-checklist-empty">
         <CalendarX className="size-10 mx-auto text-primary" />
-        <h1 className="font-display text-3xl font-bold mt-3">No plan chosen yet</h1>
+        <h1 className="text-2xl font-semibold tracking-tight mt-3">No plan chosen yet</h1>
         <p className="text-sm text-muted-foreground mt-2">{p.solveState === 'solving' ? 'The solver is still working on your week.' : 'Solve your week (and approve a repair if rules conflict) to build a registration checklist.'}</p>
         <Button asChild className="mt-4"><Link href="/" data-testid="link-back-planner">Go to planner</Link></Button>
       </div>
@@ -100,7 +100,7 @@ function Checklist({ catalog }: { catalog: Catalog }) {
       <div className="h-1.5 rounded-full bg-muted mb-6 overflow-hidden"><div className="h-full bg-primary transition-all duration-500" style={{ width: `${(done / total) * 100}%` }} /></div>
       <p className="text-sm mb-4"><strong>{sched.title}</strong> · {sched.units} units · {sched.campusDays} campus days. This list does not reserve seats.</p>
 
-      <h2 className="font-display text-xl font-bold mb-2">Sections to register</h2>
+      <h2 className="text-base font-semibold mb-2">Sections to register</h2>
       <div className="space-y-2 mb-6">
         {rows.map(({ sel, course, section }) => (
           <Item key={sel.sectionId} k={`sec:${sel.sectionId}`}>
@@ -109,10 +109,10 @@ function Checklist({ catalog }: { catalog: Catalog }) {
           </Item>
         ))}
       </div>
-      <h2 className="font-display text-xl font-bold mb-2">Before your window</h2>
+      <h2 className="text-base font-semibold mb-2">Before your window</h2>
       <div className="space-y-2 mb-6">{steps.map((s, i) => <Item key={i} k={`step:${i}`}>{s}</Item>)}</div>
 
-      <h2 className="font-display text-xl font-bold mb-2 flex items-center gap-2"><HelpCircle className="size-5 text-primary" />Unknowns ({unknowns.length})</h2>
+      <h2 className="text-base font-semibold mb-2 flex items-center gap-2"><HelpCircle className="size-5 text-primary" />Unknowns ({unknowns.length})</h2>
       <p className="text-xs text-muted-foreground mb-2">Unknown is not zero. These are gaps in the evidence, not good news.</p>
       {unknowns.length ? (
         <ul className="rounded-xl border bg-card divide-y" data-testid="list-unknowns">{unknowns.map((u, i) => <li key={i} className="px-4 py-2 text-sm">{u}</li>)}</ul>

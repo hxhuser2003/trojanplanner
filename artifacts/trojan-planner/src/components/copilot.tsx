@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { describeConstraint, errMessage } from '@/lib/format';
 
-const EXAMPLES = ['Keep Fridays free, I work at the library', 'Nothing before 10am please', 'I do better with projects than exams'];
+const EXAMPLES = ['Nothing before 10am', 'Prefer projects over exams'];
 
 interface Props {
   catalog: Catalog;
@@ -41,36 +41,29 @@ export function Copilot({ catalog, input, onApply }: Props) {
   };
 
   return (
-    <div className="rounded-xl border bg-gradient-to-b from-secondary/60 to-card p-4 space-y-3" data-testid="panel-copilot">
-      <div className="flex items-center gap-2">
-        <span className="grid place-items-center size-7 rounded-full bg-primary text-primary-foreground"><Sparkles className="size-3.5" /></span>
-        <div>
-          <p className="font-display font-semibold leading-none">Tell me about your week</p>
-          <p className="text-[11px] text-muted-foreground mt-1">I propose rules. You decide what gets added.</p>
-        </div>
-      </div>
-      <Textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} rows={3}
-        placeholder="e.g. I have practice Tue/Thu 3-5pm and want mornings off" aria-label="Describe your preferences" data-testid="input-copilot" className="bg-card resize-none" />
+    <div className="space-y-3" data-testid="panel-copilot">
+      <Textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} rows={4}
+        onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && text.trim() && !parse.isPending) void ask(); }}
+        placeholder="Describe your week, e.g. I work Tue/Thu 2–6pm and want Fridays free" aria-label="Describe your preferences" data-testid="input-copilot" className="resize-none" />
       <div className="flex flex-wrap gap-1.5">
         {EXAMPLES.map((e) => (
-          <button key={e} onClick={() => setText(e)} className="text-[11px] px-2 py-1 rounded-full border bg-card hover:border-primary hover:text-primary transition-colors" data-testid="button-copilot-example">{e}</button>
+          <button key={e} onClick={() => setText(e)} className="text-xs px-2 py-1 rounded-md bg-secondary text-muted-foreground hover:text-foreground transition-colors" data-testid="button-copilot-example">{e}</button>
         ))}
       </div>
-      <Button className="w-full" onClick={ask} disabled={!text.trim() || parse.isPending} data-testid="button-copilot-ask">
-        {parse.isPending ? 'Reading your note…' : 'Propose rules'}
+      <Button className="w-full" variant="secondary" onClick={ask} disabled={!text.trim() || parse.isPending} data-testid="button-copilot-ask">
+        <Sparkles className="size-4" />{parse.isPending ? 'Reading…' : 'Suggest rules'}
       </Button>
       {parse.isPending && <div className="space-y-2"><div className="h-10 rounded-lg bg-muted animate-pulse" /><div className="h-10 rounded-lg bg-muted animate-pulse w-4/5" /></div>}
       {parse.isError && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs flex gap-2" role="alert" data-testid="status-copilot-error">
           <AlertTriangle className="size-4 text-destructive shrink-0" />
-          <div className="flex-1">Copilot is unavailable: {errMessage(parse.error)}. You can still add rules by hand below.
+          <div className="flex-1">AI is unavailable: {errMessage(parse.error)}. You can still add rules in the Rules tab.
             <button className="block mt-1 underline font-medium" onClick={ask}>Try again</button></div>
         </div>
       )}
       {result && (
         <div className="space-y-2 rise" data-testid="panel-copilot-result">
           <p className="text-sm">{result.message}</p>
-          <p className="text-[10px] font-mono text-muted-foreground">via {result.provider}</p>
           {result.warnings.map((w, i) => (
             <p key={i} className="text-xs flex gap-1.5 text-amber-800 dark:text-amber-300"><AlertTriangle className="size-3.5 shrink-0 mt-0.5" />{w}</p>
           ))}

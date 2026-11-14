@@ -19,7 +19,7 @@ export function CatalogGate({ children }: { children: (catalog: Catalog) => Reac
     return (
       <div className="mx-auto max-w-md p-10 text-center" role="alert" data-testid="status-catalog-error">
         <AlertTriangle className="size-8 mx-auto text-destructive" />
-        <h2 className="font-display text-2xl font-bold mt-3">The catalog didn't load</h2>
+        <h2 className="text-xl font-semibold mt-3">The catalog didn't load</h2>
         <p className="text-sm text-muted-foreground mt-2">{catalogError ? errMessage(catalogError) : 'No catalog data returned.'} Your saved plan is still in this browser.</p>
         <Button className="mt-4" onClick={refetchCatalog} data-testid="button-retry-catalog">Try again</Button>
       </div>

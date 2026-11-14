@@ -72,6 +72,8 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    // Local runs outside Replit: forward /api to the API server.
+    proxy: process.env.API_PROXY ? { '/api': process.env.API_PROXY } : undefined,
   },
   preview: {
     port,
