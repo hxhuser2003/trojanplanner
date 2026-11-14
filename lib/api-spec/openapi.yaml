@@ -1,0 +1,298 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.2.0
+servers:
+  - url: /api
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+  /planner/catalog:
+    get:
+      operationId: getCatalog
+      responses:
+        "200":
+          description: Synthetic course catalog and default profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Catalog" }
+  /planner/solve:
+    post:
+      operationId: solvePlanner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PlannerInput" }
+      responses:
+        "200":
+          description: Validated schedules or conflict and tested repairs
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SolveResult" }
+  /planner/preferences:
+    post:
+      operationId: parsePreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PreferenceInput" }
+      responses:
+        "200":
+          description: Proposed constraints for user review
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PreferenceResult" }
+  /planner/stars:
+    post:
+      operationId: parseStars
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/StarsInput" }
+      responses:
+        "200":
+          description: Local text extraction proposals; never automatically applied
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StarsResult" }
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string }
+    Meeting:
+      type: object
+      required: [day, start, end, kind, location]
+      properties:
+        day: { type: integer, minimum: 0, maximum: 4 }
+        start: { type: integer, minimum: 0, maximum: 1439 }
+        end: { type: integer, minimum: 1, maximum: 1440 }
+        kind: { type: string }
+        location: { type: string }
+    Evidence:
+      type: object
+      required: [label, value, excerpt, page, status]
+      properties:
+        label: { type: string }
+        value: { type: string }
+        excerpt: { type: string }
+        page: { type: integer }
+        status: { type: string, enum: [synthetic, unknown, historical] }
+    Syllabus:
+      type: object
+      required: [term, status, projectMode, cadence, attendance, evidence, sourceUrl]
+      properties:
+        term: { type: string }
+        status: { type: string, enum: [synthetic, unknown, historical] }
+        examPercent: { type: [number, "null"] }
+        projectPercent: { type: [number, "null"] }
+        otherPercent: { type: [number, "null"] }
+        projectMode: { type: string, enum: [individual, group, mixed, unspecified] }
+        cadence: { type: string }
+        attendance: { type: string }
+        sourceUrl: { type: string }
+        evidence:
+          type: array
+          items: { $ref: "#/components/schemas/Evidence" }
+    Section:
+      type: object
+      required: [id, instructor, meetings, eligibility]
+      properties:
+        id: { type: string }
+        instructor: { type: string }
+        eligibility: { type: string }
+        meetings:
+          type: array
+          items: { $ref: "#/components/schemas/Meeting" }
+    Course:
+      type: object
+      required: [id, code, title, units, requirement, description, prerequisites, sections, syllabus, color, sourceUrl]
+      properties:
+        id: { type: string }
+        code: { type: string }
+        title: { type: string }
+        units: { type: integer }
+        requirement: { type: string }
+        description: { type: string }
+        color: { type: string }
+        sourceUrl: { type: string }
+        prerequisites:
+          type: array
+          items: { type: string }
+        sections:
+          type: array
+          items: { $ref: "#/components/schemas/Section" }
+        syllabus: { $ref: "#/components/schemas/Syllabus" }
+    Requirement:
+      type: object
+      required: [id, title, description, courseIds, needed]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        needed: { type: integer }
+        courseIds:
+          type: array
+          items: { type: string }
+    Constraint:
+      type: object
+      required: [id, label, kind, hard, enabled, value, days, start, end]
+      properties:
+        id: { type: string, minLength: 1, maxLength: 80 }
+        label: { type: string, maxLength: 200 }
+        kind:
+          type: string
+          enum: [no_day, earliest, latest, blocked, require_course, lock_section, prefer_projects, prefer_individual, prefer_fewer_days, prefer_less_frequent]
+        hard: { type: boolean }
+        enabled: { type: boolean }
+        value: { type: string, maxLength: 100 }
+        days:
+          type: array
+          maxItems: 5
+          items: { type: integer, minimum: 0, maximum: 4 }
+        start: { type: integer, minimum: 0, maximum: 1439 }
+        end: { type: integer, minimum: 0, maximum: 1440 }
+    PlannerInput:
+      type: object
+      required: [constraints, completedCourses, requirementIds, minUnits, maxUnits]
+      properties:
+        constraints:
+          type: array
+          maxItems: 20
+          items: { $ref: "#/components/schemas/Constraint" }
+        completedCourses:
+          type: array
+          maxItems: 100
+          items: { type: string }
+        requirementIds:
+          type: array
+          maxItems: 10
+          items: { type: string }
+        minUnits: { type: integer, minimum: 0, maximum: 20 }
+        maxUnits: { type: integer, minimum: 0, maximum: 20 }
+    Catalog:
+      type: object
+      required: [term, major, catalogYear, notice, sourceDate, courses, requirements, defaultInput, completedOptions]
+      properties:
+        term: { type: string }
+        major: { type: string }
+        catalogYear: { type: string }
+        notice: { type: string }
+        sourceDate: { type: string }
+        courses:
+          type: array
+          items: { $ref: "#/components/schemas/Course" }
+        requirements:
+          type: array
+          items: { $ref: "#/components/schemas/Requirement" }
+        completedOptions:
+          type: array
+          items: { type: string }
+        defaultInput: { $ref: "#/components/schemas/PlannerInput" }
+    Selection:
+      type: object
+      required: [courseId, sectionId, reason]
+      properties:
+        courseId: { type: string }
+        sectionId: { type: string }
+        reason: { type: string }
+    Schedule:
+      type: object
+      required: [id, title, selections, units, campusDays, classHours, gapMinutes, earliestStart, score, checks, warnings, assessmentSummary]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        selections:
+          type: array
+          items: { $ref: "#/components/schemas/Selection" }
+        units: { type: integer }
+        campusDays: { type: integer }
+        classHours: { type: number }
+        gapMinutes: { type: integer }
+        earliestStart: { type: integer }
+        score: { type: number }
+        assessmentSummary: { type: string }
+        checks:
+          type: array
+          items: { type: string }
+        warnings:
+          type: array
+          items: { type: string }
+    Repair:
+      type: object
+      required: [id, title, explanation, removedConstraintIds, input, preview]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        explanation: { type: string }
+        removedConstraintIds:
+          type: array
+          items: { type: string }
+        input: { $ref: "#/components/schemas/PlannerInput" }
+        preview: { $ref: "#/components/schemas/Schedule" }
+    SolveResult:
+      type: object
+      required: [status, message, schedules, repairs, conflicts, elapsedMs, engine]
+      properties:
+        status: { type: string, enum: [optimal, feasible, infeasible, unknown, invalid] }
+        message: { type: string }
+        engine: { type: string }
+        elapsedMs: { type: integer }
+        schedules:
+          type: array
+          items: { $ref: "#/components/schemas/Schedule" }
+        repairs:
+          type: array
+          items: { $ref: "#/components/schemas/Repair" }
+        conflicts:
+          type: array
+          items: { type: string }
+    PreferenceInput:
+      type: object
+      required: [text, current]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 2000 }
+        current: { $ref: "#/components/schemas/PlannerInput" }
+    PreferenceResult:
+      type: object
+      required: [message, proposedConstraints, warnings, provider]
+      properties:
+        message: { type: string }
+        provider: { type: string }
+        proposedConstraints:
+          type: array
+          items: { $ref: "#/components/schemas/Constraint" }
+        warnings:
+          type: array
+          items: { type: string }
+    StarsInput:
+      type: object
+      required: [text]
+      properties:
+        text: { type: string, minLength: 1, maxLength: 100000 }
+    StarsResult:
+      type: object
+      required: [completedCandidates, inProgressCandidates, warnings, detectedFormat]
+      properties:
+        detectedFormat: { type: string }
+        completedCandidates:
+          type: array
+          items: { type: string }
+        inProgressCandidates:
+          type: array
+          items: { type: string }
+        warnings:
+          type: array
+          items: { type: string }

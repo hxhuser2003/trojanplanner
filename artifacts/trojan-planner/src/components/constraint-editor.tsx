@@ -1,0 +1,144 @@
+import { useState } from 'react';
+import { Pencil, Plus, Trash2 } from 'lucide-react';
+import type { Catalog, Constraint, ConstraintKind } from '@workspace/api-client-react';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DAYS, KIND_META, describeConstraint, fromHHMM, newConstraint, toHHMM } from '@/lib/format';
+import { cn } from '@/lib/utils';
+
+interface Props {
+  catalog: Catalog;
+  constraints: Constraint[];
+  onChange: (fn: (c: Constraint[]) => Constraint[]) => void;
+}
+
+export function ConstraintEditor({ catalog, constraints, onChange }: Props) {
+  const [editing, setEditing] = useState<Constraint | null>(null);
+  const [isNew, setIsNew] = useState(false);
+  const hard = constraints.filter((c) => c.hard);
+  const soft = constraints.filter((c) => !c.hard);
+
+  const save = () => {
+    if (!editing) return;
+    onChange((cs) => (isNew ? [...cs, editing] : cs.map((c) => (c.id === editing.id ? editing : c))));
+    setEditing(null);
+  };
+
+  const Row = (c: Constraint) => (
+    <li key={c.id} className={cn('group flex items-center gap-3 rounded-lg border bg-card px-3 py-2 transition-colors', !c.enabled && 'opacity-55')} data-testid={`row-constraint-${c.id}`}>
+      <Switch checked={c.enabled} onCheckedChange={(v) => onChange((cs) => cs.map((x) => (x.id === c.id ? { ...x, enabled: v } : x)))}
+        aria-label={`${c.enabled ? 'Disable' : 'Enable'} ${c.label}`} data-testid={`switch-constraint-${c.id}`} />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium truncate">{c.label}</p>
+        <p className="text-xs text-muted-foreground truncate font-mono">{describeConstraint(c, catalog)}</p>
+      </div>
+      <button className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded border hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={c.kind.startsWith('prefer_')} title={c.kind.startsWith('prefer_') ? 'Preferences are always soft' : undefined}
+        onClick={() => onChange((cs) => cs.map((x) => (x.id === c.id ? { ...x, hard: !x.hard } : x)))}
+        aria-label={`Make ${c.hard ? 'soft' : 'hard'}`} data-testid={`button-hardness-${c.id}`}>{c.hard ? 'Hard' : 'Soft'}</button>
+      <button className="p-1.5 rounded hover:bg-secondary" aria-label={`Edit ${c.label}`} onClick={() => { setIsNew(false); setEditing({ ...c }); }} data-testid={`button-edit-${c.id}`}><Pencil className="size-3.5" /></button>
+      <button className="p-1.5 rounded hover:bg-destructive/10 text-destructive" aria-label={`Delete ${c.label}`} onClick={() => onChange((cs) => cs.filter((x) => x.id !== c.id))} data-testid={`button-delete-${c.id}`}><Trash2 className="size-3.5" /></button>
+    </li>
+  );
+
+  const uses = editing ? KIND_META[editing.kind].uses : [];
+  const sectionOptions = catalog.courses.flatMap((c) => c.sections.map((s) => ({ c, s })));
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-[11px] uppercase tracking-[0.18em] font-semibold text-muted-foreground mb-2">Must hold</h3>
+        {hard.length ? <ul className="space-y-1.5">{hard.map(Row)}</ul> : <p className="text-xs text-muted-foreground italic">No hard rules. The solver can place anything anywhere.</p>}
+      </div>
+      <div>
+        <h3 className="text-[11px] uppercase tracking-[0.18em] font-semibold text-muted-foreground mb-2">Nice to have</h3>
+        {soft.length ? <ul className="space-y-1.5">{soft.map(Row)}</ul> : <p className="text-xs text-muted-foreground italic">No preferences yet. Ask the copilot or add one.</p>}
+      </div>
+      <Select onValueChange={(k) => { setIsNew(true); setEditing(newConstraint(k as ConstraintKind, !k.startsWith('prefer'))); }} value="">
+        <SelectTrigger className="w-full border-dashed" data-testid="select-add-constraint" disabled={constraints.length >= 20}>
+          <span className="flex items-center gap-2 text-sm"><Plus className="size-4" />{constraints.length >= 20 ? 'Limit of 20 reached' : 'Add a rule or time block'}</span>
+        </SelectTrigger>
+        <SelectContent>
+          {(Object.keys(KIND_META) as ConstraintKind[]).map((k) => (
+            <SelectItem key={k} value={k}>{KIND_META[k].label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent>
+          {editing && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="font-display">{isNew ? 'New' : 'Edit'}: {KIND_META[editing.kind].label}</DialogTitle>
+                <DialogDescription>{KIND_META[editing.kind].hint}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="c-label">Label</Label>
+                  <Input id="c-label" maxLength={200} value={editing.label} onChange={(e) => setEditing({ ...editing, label: e.target.value })} data-testid="input-constraint-label" />
+                </div>
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div><p className="text-sm font-medium">Hard rule</p><p className="text-xs text-muted-foreground">Hard rules are never relaxed without your approval.</p></div>
+                  <Switch checked={editing.hard} disabled={editing.kind.startsWith('prefer_')} onCheckedChange={(v) => setEditing({ ...editing, hard: v })} data-testid="switch-constraint-hard" />
+                </div>
+                {uses.includes('days') && (
+                  <div className="space-y-1.5">
+                    <Label>Days</Label>
+                    <div className="flex gap-1.5" role="group" aria-label="Days">
+                      {DAYS.map((d, i) => {
+                        const on = editing.days.includes(i);
+                        return (
+                          <button key={d} type="button" aria-pressed={on} data-testid={`toggle-day-${i}`}
+                            onClick={() => setEditing({ ...editing, days: on ? editing.days.filter((x) => x !== i) : [...editing.days, i].sort() })}
+                            className={cn('flex-1 py-2 rounded-md border text-xs font-semibold transition-all active:scale-95', on ? 'bg-primary text-primary-foreground border-primary' : 'hover:bg-secondary')}>{d}</button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {(uses.includes('time') || uses.includes('start') || uses.includes('end')) && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {(uses.includes('time') || uses.includes('start')) && (
+                      <div className="space-y-1.5"><Label htmlFor="c-start">{uses.includes('start') ? 'Earliest' : 'From'}</Label>
+                        <Input id="c-start" type="time" value={toHHMM(editing.start)} onChange={(e) => setEditing({ ...editing, start: fromHHMM(e.target.value) })} data-testid="input-constraint-start" /></div>
+                    )}
+                    {(uses.includes('time') || uses.includes('end')) && (
+                      <div className="space-y-1.5"><Label htmlFor="c-end">{uses.includes('end') ? 'Latest' : 'To'}</Label>
+                        <Input id="c-end" type="time" value={toHHMM(editing.end)} onChange={(e) => setEditing({ ...editing, end: fromHHMM(e.target.value) })} data-testid="input-constraint-end" /></div>
+                    )}
+                  </div>
+                )}
+                {uses.includes('course') && (
+                  <div className="space-y-1.5"><Label>Course</Label>
+                    <Select value={editing.value} onValueChange={(v) => setEditing({ ...editing, value: v })}>
+                      <SelectTrigger data-testid="select-constraint-course"><SelectValue placeholder="Choose a course" /></SelectTrigger>
+                      <SelectContent>{catalog.courses.map((c) => <SelectItem key={c.id} value={c.id}>{c.code} · {c.title}</SelectItem>)}</SelectContent>
+                    </Select></div>
+                )}
+                {uses.includes('section') && (
+                  <div className="space-y-1.5"><Label>Section</Label>
+                    <Select value={editing.value} onValueChange={(v) => setEditing({ ...editing, value: v })}>
+                      <SelectTrigger data-testid="select-constraint-section"><SelectValue placeholder="Choose a section" /></SelectTrigger>
+                      <SelectContent>{sectionOptions.map(({ c, s }) => <SelectItem key={s.id} value={s.id}>{c.code} §{s.id} · {s.instructor}</SelectItem>)}</SelectContent>
+                    </Select></div>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
+                <Button onClick={save} data-testid="button-save-constraint"
+                  disabled={!editing.label.trim() || ((uses.includes('course') || uses.includes('section')) && !editing.value) || (uses.includes('days') && !editing.days.length) || (uses.includes('time') && editing.end <= editing.start)}>
+                  Save rule
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

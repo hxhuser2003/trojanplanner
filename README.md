@@ -1,69 +1,69 @@
-# TrojanPlanner
+# TrojanPlanner — local prototype
 
-AI course registration copilot for USC students · AI@USC Hackathon, November 14–15, 2026.
+A USC course-planning demo that turns preferences into checked schedules, explains conflicts, and offers explicitly approved repairs. All course offerings, degree rules, instructor names, and syllabus excerpts are **synthetic**.
 
-**When your courses, degree requirements, and life conflict, see what must change—and choose the trade-off yourself.**
+## Implemented
 
-> Status: project plan / pre-implementation. The features below describe the intended MVP, not verified working functionality or confirmed USC integrations.
+- Weekly calendar, searchable course catalog, degree/profile controls, and registration checklist.
+- Anthropic-powered natural-language proposals with editable hard/soft constraints and confirmation before application.
+- Google OR-Tools CP-SAT scheduling with linked meeting bundles, known prerequisites, completed-course exclusions, unit bounds, required courses, locked sections, and illustrative requirement groups.
+- Three distinct feasible alternatives where available, with exact-set exclusions.
+- Proven-infeasible diagnosis, sufficient conflict sets, and solver-checked single-constraint repairs. No hard constraint changes without approval.
+- Separate TypeScript output validator. Solver timeouts are not reported as infeasibility.
+- Syllabus assessment breakdowns, individual/group project preferences, source excerpts, and clear unknowns. Source pages are synthetic, not purported USC syllabi.
+- PDF text extraction and optional browser-local OCR for scanned STARS reports; reviewed completed-course candidates remain separate from current registrations.
+- Browser-local saved planner state, stale-result safeguards, reset, printable checklist, and text export.
 
-## The experience
+## Start and develop
 
-Tell TrojanPlanner what next semester needs to look like: “Protect my Tuesday/Thursday work hours, cover these requirements, and prefer individual projects over exam-heavy classes.”
+In Replit, use the managed API Server and TrojanPlanner workflows.
 
-1. Review the AI's interpretation as editable hard constraints and soft preferences.
-2. See a weekly calendar checked against the loaded course data and confirmed constraints.
-3. If the request is infeasible, inspect the conflicting requirements and solver-checked repairs. Nothing hard is relaxed without your approval.
-4. Compare genuinely different feasible schedules by campus days, start times, requirements, and evidence-backed assessment preferences.
-5. Open the source behind a claim, then use a registration checklist to continue in USC's official system.
+For a conventional local setup, install Node.js, pnpm, Python 3.12, and uv:
 
-## What “checked” means
+```sh
+pnpm install
+uv sync
+pnpm --filter @workspace/api-spec run codegen
+```
 
-| Check | Scope |
-|---|---|
-| Schedule fit | Meeting overlaps, confirmed blocked times, linked meetings, and unit bounds |
-| Degree fit | Verified rules for the supported major and catalog year |
-| Registration eligibility | Prerequisites, restrictions, and availability when verified; otherwise explicitly unknown |
+Run the API with port 8080 and the frontend with port 25650, supplying `PORT` and frontend `BASE_PATH=/`. The Python executable used by the API must have the dependencies from `pyproject.toml` available. A local reverse proxy must route `/api` to the API and `/` to the frontend; Replit's managed preview already does this.
 
-**Conflict-free against the loaded data and confirmed constraints—not a guarantee of enrollment or a replacement for academic advising.** Show the semester, source timestamp, and unchecked rules. A solver guarantees only the model it receives.
+The API uses Replit-managed `AI_INTEGRATIONS_ANTHROPIC_BASE_URL` and `AI_INTEGRATIONS_ANTHROPIC_API_KEY`. A non-Replit installation needs an appropriate Anthropic configuration. Never commit credentials.
 
-## Syllabus-based course fit
+```sh
+pnpm run typecheck
+pnpm --filter @workspace/api-spec run codegen
+```
 
-Use factual assessment information rather than invented study hours or grade-based difficulty estimates:
+The shared Express API invokes a bounded Python CP-SAT worker, rather than introducing an additional FastAPI service. The calendar is a custom React weekly grid. No database is required for this single-browser prototype.
 
-- Grading percentages and assessment formats: exams, quizzes, projects, participation.
-- Explicit individual versus group projects and stated assignment cadence.
-- Attendance and participation policies, distinguished from one another.
-- Source syllabus, page, supporting excerpt, instructor, and term for each extracted claim.
+## Try the conflict demo
 
-Labels such as “project-heavy” are transparent derived interpretations, not syllabus quotations; always show the underlying breakdown and labeling rule. Missing information is **Not specified**, not zero. Historical syllabi are labeled historical and do not establish next semester's policies. Ambiguous or contradictory facts need review before ranking.
+1. Start with the default plan: Fridays free, Tuesday/Thursday afternoon work, and three illustrative requirement groups.
+2. In Courses, add **CSCI 270** as required. Its synthetic section includes Friday discussion.
+3. Inspect the Friday/required-course conflict.
+4. Approve either removing the Friday rule or removing the required-course rule. The selected requirements and other constraints remain unchanged.
+5. Compare the resulting plans and open the synthetic syllabus evidence.
 
-For the demo, manually verify a small set of legitimately available syllabi. Use exam/project emphasis, solo/group work, and assessment frequency as soft preferences. Missing syllabi must not make a course look better. Do not invent an overall semester difficulty score.
+## Privacy and limits
 
-## Focused hackathon MVP
+- Uploaded report PDFs stay in the browser. OCR downloads its engine/language data from a public CDN.
+- Clicking “Find course candidates” sends extracted text to this app's backend parser; it is not sent to the LLM, logged, or saved server-side.
+- Confirmed course codes and planning state are saved in that browser's local storage. Raw documents/text are not persisted.
+- Import is conservative course-row extraction, not an official STARS degree-audit parser. Repeated courses, exceptions, transfer-credit applicability, and graduate requirements require manual review.
+- The sample is an undergraduate CS subset, not a reproduction of the supplied graduate report or a verified USC catalog.
+- No live seat availability, registration, official requirement certification, or real syllabus ingestion pipeline is implemented.
+- Registration eligibility stays explicitly unknown. Neither CP-SAT nor synthetic evidence guarantees enrollment.
+- No account system is included. Before public release, add abuse/rate controls for the paid AI endpoint and review privacy/security requirements.
 
-**One major, one catalog year, one semester, and a verified course subset.** Start with a synthetic student profile or manual completed-course selection.
+## Needed for a real campus pilot
 
-- Natural language → editable constraints → deterministic solver → independent validation → grounded explanation.
-- One feasible schedule first; additional options only when genuinely distinct.
-- Conflict explanation, explicit approval of a repair, and a visible calendar update.
-- Small, evidence-backed syllabus comparison and course-level source links.
-- Instructor links and official syllabus links; no scraping of third-party reviews.
-- Registration checklist with unknown eligibility checks clearly marked.
+1. A verified target program and catalog year, including requirement and prerequisite rules.
+2. Authorized course/section data for the intended term.
+3. Current syllabi with instructor/section associations and permission to process them.
+4. Representative, redacted STARS samples and advisor-reviewed expected results.
+5. Full browser workflow testing, especially OCR across different report scans.
 
-Defer general STARS parsing, broad major coverage, the browser extension, and calendar integrations. Dated exam-cluster alerts and backup sections are stretch features. Grade-distribution-based difficulty prediction is outside this MVP.
+The initial build was checked with workspace typechecking, API smoke requests (solve, conflict, approved repair, AI extraction, synthetic STARS parsing), and a rendered preview. Full browser interaction testing and real-report OCR accuracy have not been verified.
 
-## Technical approach and safeguards
-
-- React + Tailwind + FullCalendar frontend; FastAPI + Google OR-Tools CP-SAT backend; Claude API for structured extraction and explanations; JSON or SQLite data.
-- Validate extracted schemas and references. Treat syllabus content as untrusted data, not agent instructions.
-- Preserve confirmed hard constraints and locked courses during edits; approval changes only the selected constraint.
-- Require explicit solution diversity instead of assuming new objective weights produce different schedules.
-- Distinguish feasible, optimal, proven infeasible, timeout/unknown, and invalid-model results. A timeout is not proof of impossibility.
-- Explain a sufficient verified conflict without claiming the mathematically smallest conflict set.
-- Independently validate solver output and test linked sections, overlaps, prerequisites, infeasible requests, repairs, and missing syllabus data.
-
-## Demo and adoption
-
-Lead with a scheduling conflict, compare verified repairs, approve one, then compare assessment styles and open their source evidence. End with a realistic one-department, advisor-reviewed pilot—not a promise of campus-wide integration.
-
-See [docs/PLAN.md](docs/PLAN.md) for the detailed scope, data contracts, acceptance checks, risks, and three-minute demo.
+No Git commit or GitHub push was made for this build.
