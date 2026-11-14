@@ -1,149 +1,201 @@
-# TrojanPlanner (working name): AI Course Registration Copilot
+# TrojanPlanner: AI Course Registration Copilot
 
-AI@USC Hackathon · Nov 14–15, 2026 · Track: Academic Success
+AI@USC Hackathon · November 14–15, 2026
 
-## 1. One-liner
-Tell it what you want next semester ("no Friday classes, light workload, cover my core requirements"), and it builds a conflict-free schedule that fits your degree requirements, with the reasons and trade-offs explained.
+> Planning document. Features and safeguards below are requirements, not claims of implemented functionality. Data access, the supported major/catalog year/semester, and syllabus availability still need verification. Confirm any named event track, judging weights, and sponsor-prize eligibility against official rules.
 
-## 2. Problem
-Every semester, USC students spend hours before Web Registration jumping between the Schedule of Classes, their STARS degree progress report, professor reviews, and spreadsheets. They have to:
-- figure out which courses actually count toward their degree,
-- find sections that don't conflict with each other or with work, internships, or commutes,
-- balance workload without any reliable data.
+## 1. Product promise
 
-The result is stress, bad schedules, and missed requirements that can delay graduation.
+**When your courses, degree requirements, and life conflict, see what must change—and choose the trade-off yourself.**
 
-## 3. Target Users
-- **Primary:** USC undergraduate and graduate students choosing courses for next semester.
-- **Secondary:** academic advisors, who get better-prepared students in advising appointments.
+A next-semester planning assistant with a visual weekly calendar and conversational sidebar. The LLM interprets preferences and explains grounded results; deterministic code validates facts, solves constraints, and checks output. It does not invent course times, rules, syllabus facts, or eligibility.
 
-## 4. Solution
-A web app focused on **next semester's course selection**, with a **visual weekly calendar** as the main view and an **AI copilot in a sidebar**.
-1. The student states their preferences in plain language.
-2. The AI turns them into constraints.
-3. A constraint solver builds schedules that are guaranteed to be valid.
-4. The AI explains each option and its trade-offs.
+Promise: **Conflict-free against the loaded data and confirmed constraints.** Not guaranteed enrollment, universal degree certification, or a replacement for an advisor.
 
-**Key principle:** the LLM understands and explains; the solver guarantees correctness. The LLM never invents course times or rules.
+## 2. Problem and initial audience
 
-## 5. Core Features
-1. **Natural-language preferences.** Examples: "No classes on Friday", "Keep workload light", "Nothing before 10 AM", "I work Tue/Thu 2–6 PM". The AI classifies each one:
-   - **Hard constraint:** must be satisfied (e.g. no Friday, work hours).
-   - **Soft constraint:** satisfied as much as possible (e.g. light workload, later start times).
-2. **Degree-aware course selection.** Upload a STARS report → see remaining requirements → the solver only picks next-semester courses that count toward the degree.
-3. **Guaranteed conflict-free schedules.** The solver enforces no time overlaps, unit limits, and requirement coverage.
-4. **2–3 distinct schedule options, compared side by side:**
-   - 🎯 Most requirements covered
-   - 😌 Lightest workload
-   - 📅 Best fit for your time preferences
+Students must reconcile course offerings, degree progress, work hours, and assessment preferences across multiple sources. The core problem is not merely creating a timetable: it is understanding and repairing incompatible requests without silently sacrificing something important.
 
-   Each option shows total units, estimated weekly study hours, requirements covered, and how many preferences it satisfies.
-5. **Conflict detection and explanation.** When the student's requests can't all be met, the copilot doesn't fail silently or return a broken schedule. It pinpoints exactly which requests clash and why. Example:
-   > "You asked for no Friday classes and CSCI 270 this semester, but CSCI 270's only section meets on Friday."
-6. **Smart alternatives.** For every conflict, the copilot offers concrete ways forward and shows what each one costs; the student picks one and the calendar updates. Example:
-   > "Option A: keep CSCI 270 and accept one Friday class. Option B: keep Fridays free and take a different course that fills the same requirement; save CSCI 270 for a later semester."
-7. **Explainable trade-offs.** Every course in a schedule comes with a reason and its cost. Example: "Fills your Core requirement and has a highly rated instructor, but it's your only class on Monday, so it adds a commute day."
-8. **Live editing via chat.** "Swap the 8 AM class for something later" → the solver re-runs and the calendar updates instantly.
-9. **Instructor and syllabus links.** Each section card links out for its instructor(s) and syllabus. Links only; no third-party data is scraped or rehosted.
-   - **RateMyProfessors:** every instructor gets a search link limited to USC; the 10–20 demo instructors get hand-curated direct profile links. Co-taught sections show one link per instructor; "TBA" shows none.
-   - **Syllabus:** the official link from the Schedule of Classes when available, otherwise a "Search syllabus" link limited to usc.edu.
+Initial scope: **one major, one catalog year, one semester, and a verified course/section subset**. Use one synthetic student profile or manual completed-course selection. Broader undergraduate/graduate coverage is future work. Academic advisors are potential pilot partners, not assumed endorsers.
 
-## 6. Stretch Features
-- **AI syllabus insights:** pre-parse syllabi for demo courses into JSON (grading breakdown, exam dates, workload signals). They feed the workload soft constraint and enable **exam-week clash alerts** (e.g. "3 midterms in week 8"). Pluggable: courses without a syllabus skip this.
-- **Browser extension mode:** overlay fit badges (✅ fits requirements / ⚠️ conflict / 📊 difficulty) directly on the Schedule of Classes pages.
-- Backup sections for when a section fills up during registration.
-- Export to Google Calendar, or generate a registration checklist.
+Before building broadly, ask three students to walk through their last registration experience. Establish whether choosing courses, interpreting requirements, or repairing conflicts is the strongest pain point.
 
-## 7. UI Layout
-- **Left:** profile, preferences, and requirement progress bars.
-- **Center:** weekly calendar, with option tabs A / B / C.
-- **Right:** AI copilot chat sidebar.
+## 3. Core workflow
 
-## 8. System Architecture
-```
-Student (chat / profile / STARS upload)
-        │
-        ▼
-LLM agent (Claude API, tool use)
-  ├─ parse_preferences(text)     → hard and soft constraints (JSON)
-  ├─ get_requirements(profile)   → remaining degree requirements
-  ├─ search_courses(filters)     → next-semester courses and sections
-  ├─ solve_schedule(constraints) → CP-SAT solver → top-k valid schedules
-  ├─ explain_conflict(result)    → which requests clash + alternatives
-  ├─ get_syllabus_info(id)       → grading, exam dates, workload (pluggable)
-  └─ get_course_stats(id)        → workload / grade data (pluggable)
-        │
-        ▼
-Calendar UI + explanations + trade-off comparison
-```
+1. Load the supported student profile, completed courses, and verified remaining requirements.
+2. Parse natural language into editable hard-constraint and soft-preference chips. Let the student confirm the interpretation; “prefer” must not silently become “must.”
+3. Solve and independently validate a schedule against the loaded data.
+4. If proven infeasible, show a verified conflicting set and individually tested repairs. Never silently relax hard constraints.
+5. The student approves a specific repair. Re-solve while preserving all other hard constraints and locked courses; show what changed and what stayed protected.
+6. Compare genuinely distinct schedules by measurable benefits and syllabus evidence.
+7. Open course sources and produce a registration checklist for use in USC's official system. No automatic registration.
 
-- **Solver:** Google OR-Tools CP-SAT.
-  - Hard constraints: no time overlap, hard preferences, unit cap, prerequisites (if available).
-  - Objective: maximize requirement coverage + weighted soft-preference satisfaction − workload penalty.
-  - Generate diverse top-k solutions by changing the objective weights.
-- **Conflict handling:** if the solver finds no solution, relax constraints one at a time to find the smallest set of clashing requests, then let the LLM explain it in plain language and propose alternatives.
-- **Grounding:** every course fact shown to the user comes from the dataset; the copilot cites the section number.
+## 4. Three separate validation claims
 
-## 9. Data Sources
-| Data | Source | Notes |
-|---|---|---|
-| Courses and sections | USC Schedule of Classes (public), next semester | Confirm access method on-site; cache a subset (1–2 majors) early on Saturday |
-| Degree requirements | Program requirements for 1–2 majors | Encoded as rules for the demo |
-| Student progress | STARS report upload or manual entry | Parsed locally; no sensitive data stored |
-| Instructor reviews | RateMyProfessors (outbound links only) | Search link by default; direct links hand-curated for demo instructors |
-| Syllabi | Official links where available; pre-parsed JSON for demo courses | Link out, never rehost |
-| Workload / grade distribution | Sample data | Clearly labeled "sample"; no scraping of third-party sites |
-
-## 10. Tech Stack
-- **Frontend:** React + Tailwind, FullCalendar.
-- **Backend:** FastAPI (Python), OR-Tools.
-- **LLM:** Claude API with tool use.
-- **Data:** JSON or SQLite.
-- **Deploy:** Vercel (frontend) + Render or Replit (backend). Using Replit makes the team eligible for Best Use of Replit.
-
-## 11. Demo Script (3 minutes)
-1. **Hook (20s):** "It's the night before registration. Six tabs open, and you still don't know if this class counts toward your degree."
-2. **Setup (20s):** upload a STARS report → remaining requirements appear.
-3. **Ask (40s):** "Cover my core requirements, no Friday classes, keep it light; I work Tue/Thu afternoons." → three schedule options appear, compared side by side.
-4. **Wow moment (40s):** "I also want CSCI 270 this semester." → the copilot explains the conflict and offers two alternatives → the student picks one → the calendar updates.
-5. **Trust (20s):** click a course to see its reason, trade-off, and source section; show the sample grade-distribution module.
-6. **Adoption (20s):** "It works with USC's public data today. With Student Government, it can integrate official data and reach every Trojan next semester."
-
-## 12. Judging Criteria Fit
-| Criterion | How we score |
+| Check | Evidence and limitations |
 |---|---|
-| Impact (30%) | Every Trojan registers every semester; saves hours and prevents missed requirements |
-| Technical & AI (25%) | LLM + constraint solver: accurate, explainable, never hallucinates schedules; real trade-off reasoning |
-| Feasibility (25%) | Core features run on public USC data today; grade data is an optional module unlocked through Student Government |
-| UX (20%) | Visual calendar + conversational sidebar + side-by-side option comparison |
+| Schedule fit | Check all required meeting intervals, linked lecture/lab/discussion combinations, confirmed blocked times, and minimum/maximum units |
+| Degree fit | Apply only verified requirement rules for the supported catalog year; track assignment of courses to requirements and prevent disallowed double counting |
+| Registration eligibility | Verify prerequisites, co-requisites, restrictions, and availability where data supports it; mark missing checks unknown |
 
-## 13. Differentiation (vs. other course-planner teams)
-| | Typical team | Us |
+Every result displays the semester, source links, retrieval timestamp, supported scope, and unchecked rules. Cached seat counts do not guarantee availability. Unknown or TBA meeting times prevent a complete conflict-free claim for the affected schedule. A mathematically valid solution may still rely on incomplete data.
+
+Alternative courses must be verified to satisfy the intended requirement. Do not infer equivalence from similar names. If postponing a course, disclose that downstream prerequisite and graduation effects are unverified unless explicitly modeled.
+
+## 5. Syllabus-based course fit
+
+Replace grade-derived difficulty predictions and invented study-hour estimates with evidence about how a course is assessed and organized.
+
+### Extracted facts
+
+| Dimension | Examples | Guardrail |
 |---|---|---|
-| Scheduling | LLM generates a schedule directly | LLM understands preferences + solver guarantees validity |
-| Conflicting requests | Wrong output or ignored | Pinpoints the conflict and offers alternatives with their costs |
-| Output | One schedule | 2–3 distinct options, compared side by side |
-| Data | Made up or minimal | Real USC data + degree requirements |
+| Grading breakdown | Exams 60%, projects 30%, participation 10% | Preserve actual weights; do not invent missing percentages |
+| Assessment format | Two midterms, final, weekly quizzes | Frequency is not difficulty |
+| Project structure | Individual assignments, semester-long group project | Separate individual, group, mixed, and unspecified |
+| Assignment cadence | Weekly problem sets | Use only explicitly supported frequency |
+| Attendance policy | Required attendance, graded participation | Distinguish obligations from grade contributions |
+| Assessment dates | Explicit dated exams/deadlines | Stretch use only; retain tentative status and term |
 
-## 14. Risks and Mitigations
+Store each fact with the course/section association, instructor, term, syllabus source URL, page, brief supporting excerpt, extraction status, and review status. Preserve exceptions such as optional finals, dropped scores, or alternative grading schemes rather than flattening them into misleading percentages.
+
+### Facts versus interpretations
+
+“Projects account for 60% of the grade” can be a sourced fact. “Project-heavy” is a derived label: define and display its rule and show the underlying weights. Prefer neutral “mixed assessments” to “well-rounded.” Define thresholds before use and test boundary cases; do not imply pedagogical quality.
+
+Historical syllabi must be labeled historical and cannot establish current-offering facts. Verify instructor/term matches. Missing values remain **Not specified**, never zero or an inferred absence of exams/group work. Flag ambiguous tables, contradictory text, or unexpected totals for manual review. Do not force percentages to total 100 when bonus or conditional policies explain otherwise.
+
+### Ranking and UI
+
+For the demo, manually verify a small set of legitimately available syllabi. Support three soft preferences: exam/project emphasis, solo/group work, and assessment frequency. Display course-level evidence rather than an unexplained semester difficulty score. Missing or unverified data must not earn a favorable score; show evidence coverage and avoid definitive comparisons when coverage is insufficient.
+
+Example request: “Protect my work hours and prefer individual projects over exam-heavy courses.” Both output schedules must still satisfy the confirmed hard constraints. Explain assessment trade-offs with the verified course facts and visible scoring rules.
+
+## 6. Meaningfully different options
+
+Return one valid schedule first. Offer a second or third only when genuinely distinct. Changing objective weights alone does not ensure diversity: add exclusion constraints and, where useful, a minimum difference in selected courses/sections or meaningful schedule attributes.
+
+Label alternatives by observed benefits: “Fewest campus days,” “Later mornings,” or “Better match for assessment preferences.” Report units, requirement coverage, campus days, earliest/latest meetings, scheduled class hours, gaps, and preference matches. Scheduled class hours are not estimated study hours.
+
+If only one feasible option is established, show one. Do not claim uniqueness unless the search proves it; if search was limited, say no further alternatives were found within the search budget.
+
+## 7. Instructor and syllabus links
+
+Preserve outbound links alongside evidence-backed syllabus facts:
+
+- RateMyProfessors: USC-limited search link per instructor; optionally hand-curated direct links for 10–20 demo instructors. Co-taught sections show one per instructor; TBA shows none. No scraping or rehosting of reviews, and no unsupported “highly rated” claims.
+- Syllabus: official Schedule of Classes link where available; otherwise a clearly labeled usc.edu-limited search link. A search result is not verified evidence.
+- Link to original syllabi; do not rehost full documents. Process only legitimately accessible or authorized materials, retain minimal supporting excerpts as permitted, and verify association with the intended offering.
+
+## 8. Architecture
+
+Use a bounded pipeline rather than an open-ended agent loop:
+
+Student input → structured preference extraction → schema/reference validation → user-confirmed constraints → CP-SAT solve → independent result validation → grounded explanation → calendar and comparison UI.
+
+Syllabus pipeline: authorized source → structured extraction with evidence → deterministic checks → manual review for the demo → confirmed course attributes → transparent soft-preference scoring.
+
+Suggested functions:
+- parse_preferences(text): typed hard/soft constraints and proposed edits.
+- get_requirements(profile): supported, sourced requirement rules.
+- search_courses(filters): verified course/section records.
+- get_syllabus_info(section): sourced, reviewed facts and unknowns.
+- solve_schedule(constraints): status, candidate schedules, objective values, and diagnostics.
+- validate_schedule(result): independent invariant checks.
+- diagnose_conflict(constraints): verified sufficient conflict and tested repair candidates.
+- explain_result(validated_result): source-bound explanations, differences, and limitations.
+
+Treat retrieved documents and syllabi as untrusted data, not tool instructions. Validate model-produced JSON, IDs, enums, dates, and numeric values. Unknown course IDs or unsupported claims must be rejected, not filled in by the model. Explanations may only use validated facts and solver results.
+
+### Solver requirements
+
+- Enforce all modeled hard constraints: meeting compatibility, linked components, blocked times, unit bounds, confirmed requirements, locked selections, and verified eligibility rules.
+- Optimize transparent requirement priorities and soft time/assessment preferences. Avoid a workload penalty based on invented data.
+- Keep hard constraints separate from preferences; repair approval changes only the explicitly approved constraints.
+- Distinguish optimal, feasible, proven infeasible, unknown/time-limit, and model-invalid outcomes. A timeout is not proof of infeasibility; a feasible incumbent is not necessarily optimal. Validate incumbents before display.
+- For conflict diagnosis, compute and verify a sufficient conflicting set. One-at-a-time relaxation does not generally establish a minimum-cardinality conflict. Do not claim the “smallest” conflict or repair unless proven.
+- Re-solve every proposed repair before offering it as feasible. If no verified repair is found within budget, say so. Protect non-negotiable constraints; user approval is required before changing any hard constraint.
+
+## 9. Data and privacy
+
+| Data | Source | MVP policy |
+|---|---|---|
+| Offerings and sections | USC Schedule of Classes | Verify access method, cache supported subset, retain term/source/timestamp |
+| Degree rules | Official program requirements | One major/catalog year; manually reviewed rules |
+| Student progress | Synthetic profile or manual selection | Minimal information needed for the demo |
+| Syllabus facts | Legitimately available or authorized syllabi | Small manually verified set, provenance per fact, no full-document rehosting |
+| Instructor reviews | Outbound RateMyProfessors links | No scraped reviews or inferred ratings |
+
+General STARS upload is deferred. If added, show extracted requirements for student confirmation before solving; minimize/redact identifiers, define retention/deletion, prevent sensitive content in logs, and disclose any external model transmission. Do not claim “local-only” or “no sensitive data stored” without verifying the full processing path.
+
+## 10. Stack and implementation order
+
+- Frontend: React, Tailwind, FullCalendar.
+- Backend: FastAPI/Python and Google OR-Tools CP-SAT.
+- LLM: Claude API for constrained extraction and grounded explanation.
+- Data: JSON or SQLite.
+- Hosting: choose the simplest deployment the team can verify; existing candidates are Vercel plus Render/Replit, or a consolidated Replit deployment. Hosting does not establish sponsor-prize eligibility.
+
+Build order:
+1. Verify the bounded course dataset, requirement rules, and demo syllabus availability.
+2. Produce and independently validate a schedule from structured inputs.
+3. Implement proven-infeasible handling, tested repairs, and approval-driven updates.
+4. Add natural-language parsing and editable chips.
+5. Add a genuinely distinct option and evidence-backed assessment comparison.
+6. Polish sources, checklist, deployed demo, recording, and submission materials.
+
+## 11. MVP versus stretch
+
+Must ship: supported profile and course subset; editable constraints; calendar; a validated schedule; verified conflict explanation and approved repair; meaningful alternative where feasible; small syllabus comparison; source links; registration checklist.
+
+Defer: general STARS parsing, broad major coverage, browser extension, Google Calendar integration, and multi-semester planning. Grade-distribution-based difficulty estimation is outside the MVP and not a dependency.
+
+Stretch: backup sections and exam/deadline clustering from explicit current-term dates. Historical or tentative dates cannot support confident current-term clash alerts; missing dates do not imply no clashes.
+
+## 12. Verification and acceptance checks
+
+- Overlapping meetings and blocked work periods cannot pass validation.
+- Required lecture/lab/discussion combinations are selected together and checked.
+- Unit minimums/maximums and modeled requirement allocation are respected.
+- Known unmet prerequisites are rejected; unknown eligibility is visibly flagged.
+- Infeasible requests produce a verified explanation, not an invented schedule.
+- Timeouts and invalid models do not produce claims of impossibility.
+- Every offered repair is checked, requires approval, and preserves all other hard constraints/locked courses.
+- Distinct options differ meaningfully; duplicate solutions are suppressed.
+- Edits preserve prior confirmed constraints unless explicitly changed.
+- Syllabus claims resolve to the correct source/page/term/instructor and supporting excerpt.
+- Missing, historical, contradictory, and conditional syllabus facts are displayed accurately and cannot falsely improve ranking.
+- Derived labels have visible rules; no grade-derived difficulty or fabricated study-hour claims.
+- Unsupported course IDs and prompt-like instructions inside source documents are rejected/ignored.
+- End-to-end demo works with the cached dataset and clearly discloses stale or unchecked information.
+
+## 13. Three-minute demo
+
+1. 0:00–0:25: Introduce one student, a required course, and fixed work hours using the verified demo data.
+2. 0:25–0:50: Enter preferences; show editable hard/soft interpretation.
+3. 0:50–1:20: Reveal a genuine conflict in the demo dataset and open its supporting source.
+4. 1:20–2:00: Compare tested repairs; approve one and show the calendar change without silently changing other constraints.
+5. 2:00–2:30: Compare assessment styles for feasible alternatives and open syllabus evidence; show checks and unknowns.
+6. 2:30–3:00: Show the registration checklist and propose a one-department, advisor-reviewed pilot.
+
+Do not present hypothetical course meeting patterns as actual USC facts. Use a synthetic student but verified course information, or label fixtures explicitly. Do not promise campus-wide integration next semester.
+
+## 14. Event fit and submission
+
+Emphasize campus impact, useful AI, feasible adoption, and clear UX without asserting unverified rubric percentages or claims about competing teams. Differentiation: transparent conflict repair, validated scheduling, student-controlled trade-offs, and evidence-backed assessment fit.
+
+The supplied event brief requires a working prototype link, public GitHub repository, project description, video of at most three minutes, short slide deck, and at least one screenshot, with teammates added. The listed deadline is November 15, 2026 at 11:00 AM PT. Verify official rules and any changes before submission. Do not change repository visibility without explicit owner approval.
+
+## 15. Risks and adoption
+
 | Risk | Mitigation |
 |---|---|
-| Many course-planner teams | Win on correctness, conflict handling, and trade-off reasoning |
-| Data access issues | Cache the demo dataset early Saturday; limit to 1–2 majors |
-| STARS report hard to parse | Fallback: manual entry of completed courses |
-| Solver too slow or complex | Small dataset; simple objective first, add weights later |
-| LLM mis-parses preferences | Show parsed constraints as editable chips the user can confirm |
-| Policy and terms of service | No scraping of third-party review sites; sample data clearly labeled |
+| Missing course or syllabus access | Verify early; reduce the supported subset rather than fabricate evidence |
+| Incomplete eligibility/degree rules | Bound claims, show unknowns, seek advisor review |
+| Solver complexity or slow search | Small dataset, time limits, honest status handling, validated incumbents |
+| Misparsed preferences | Editable chips and confirmation before use |
+| Historical or ambiguous syllabus | Visible provenance, manual review, no unsupported ranking |
+| Demo overreach | One conflict-repair workflow before optional features |
+| Privacy and source permissions | Minimal data, documented processing, authorized sources, no scraped reviews |
 
-## 15. Future Implementation
-- Partner with the Registrar and academic advising for official data access.
-- Expand from next-semester selection to multi-semester planning.
-- Expand to all majors; add advisor review and sharing; ship a browser extension.
-
-## 16. Extension Module: Grade Distribution & Semester Difficulty Balance
-*Unlocked by Student Government · demo with sample data*
-
-- Per-instructor grade distributions, plus an overall difficulty check for the semester. Example: "You have 3 historically tough courses this semester. Consider swapping one."
-- Framed as **balancing workload**, not hunting for easy A's.
-- **Pluggable data layer:** the app works fully without this data.
-- Pitch line: "Students at UIUC and UT can already see grade distributions. If Student Government pushes for anonymized USC data, it plugs right in."
+Pilot with one department and advisor-reviewed requirements. Measure time to a usable schedule, manual corrections required, and whether students understand the trade-offs. Seek Registrar/advising collaboration for maintained official data rather than assuming access or endorsement. Expand majors, advisor sharing, multi-semester reasoning, and integrations only after validating the core workflow.
