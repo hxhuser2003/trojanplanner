@@ -200,35 +200,10 @@ The supplied event brief requires a working prototype link, public GitHub reposi
 
 Pilot with one department and advisor-reviewed requirements. Measure time to a usable schedule, manual corrections required, and whether students understand the trade-offs. Seek Registrar/advising collaboration for maintained official data rather than assuming access or endorsement. Expand majors, advisor sharing, multi-semester reasoning, and integrations only after validating the core workflow.
 
-## 16. Next step: real courses, synthetic student, synthetic syllabi
+## 16. Current data status
 
-Status: planned. Finish the core features on the current synthetic catalog first; do this swap afterwards.
+Nine Spring 2027 CSCI courses are cached in `artifacts/api-server/src/planner/usc-spring-2027.json` from USC's public Schedule of Classes course API. Run `python scripts/sync_usc_courses.py` to refresh them. The snapshot records a UTC retrieval timestamp and each course links to its official listing.
 
-The current prototype runs entirely on synthetic fixtures. That works for the demo, but real course data strengthens the feasibility story and avoids pairing real USC course codes (e.g. CSCI 270, CSCI 201) with invented times and instructors. Target mix:
+The loader creates complete lecture/lab/discussion/quiz combinations for matching USC link codes and sessions, and the solver checks their published meeting times. TBA components remain attached to each combination and are disclosed as unchecked times. Prerequisite alternatives are modeled as groups in which at least one listed course must be completed. Seat counts are deliberately not treated as enrollment guarantees.
 
-| Data | Source | Notes |
-|---|---|---|
-| Courses and sections | Real: USC Schedule of Classes public JSON API, Spring 2027 (term code `20271`) | Fetch once, cache as JSON, record the retrieval timestamp; never call the API live during the demo |
-| Student profile | Synthetic | Protects privacy; designed to trigger a real conflict |
-| Syllabi | Synthetic, clearly labeled | Spring 2027 syllabi are not yet published |
-| Degree rules | Real if switching to the CS General MS; otherwise keep the labeled synthetic rules | See below |
-
-Endpoints (public, no login):
-- All CSCI courses: `https://classes.usc.edu/api/Courses/CoursesByTermSchoolProgram?termCode=20271&school=ENGV&program=CSCI`
-- One course: `https://classes.usc.edu/api/Courses/Course?termCode=20271&courseCode=CSCI-570`
-
-Field mapping to `catalog.ts`:
-- `sections[].sisSectionId` → section ID; `rnrMode` → meeting kind (Lecture, Discussion, Quiz, Lab).
-- `schedule[].days`, `startTime`, `endTime` → meetings (day 0–4, minutes after midnight).
-- `linkCode` → sections that must be taken together (same letter); `notes` states the link in plain text.
-- `instructors[]` → instructor names (may be empty).
-- `units`, `prerequisiteCourseCodes`, `corequisiteCourseCodes`, `majorRestrictions`, `courseRestrictions`, `hasDClearance`, `isCancelled` → units and eligibility flags.
-- `syllabus` → official Simple Syllabus link (content may be unpublished).
-
-Candidate real conflict: in CSCI 570 link group B, the lecture meets Wednesday but the linked quiz meets Friday 6:00–7:50 PM, which clashes with "Keep Fridays free." Verify the other link groups before using it in the demo.
-
-Optional degree switch to the CS General MS (source: https://www.cs.usc.edu/academic-programs/masters/computer-science-general/): 32 units; CSCI 570 required; remaining units from 500-level CSCI courses; at most 4 units of 400-level, two 600-level courses, and one non-CS course; GPA of at least 3.0. Official pages disagree on some limits, so cite the source and confirm against the USC Catalogue.
-
-Minimum fallback if time runs out: rename synthetic courses to codes that clearly do not exist at USC (e.g. DEMO 101) so fixtures are not mistaken for real offerings.
-
-Estimated effort: 1–2 hours (fetch-and-convert script plus a catalog loader); the solver and UI should not need changes.
+The default completed-course profile and course-planning goals remain illustrative and are clearly labeled. No official degree requirement has been encoded. Syllabus assessment fields are unknown and receive no scoring benefit; the USC Simple Syllabus link may be unpublished. Before a campus pilot, confirm degree rules, registration eligibility, and current syllabi with the relevant USC offices.

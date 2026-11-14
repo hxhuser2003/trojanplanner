@@ -1,0 +1,789 @@
+{
+  "term": "Spring 2027",
+  "termCode": "20271",
+  "retrievedAt": "2026-11-14T23:12:40+00:00",
+  "source": "USC Schedule of Classes public course API",
+  "courses": [
+    {
+      "id": "CSCI-201",
+      "code": "CSCI 201",
+      "title": "Principles of Software Development",
+      "units": 4,
+      "description": "Object-Oriented Programming in Java; using Java threads, Web Services and SQL to write client/server applications; team project; vibe coding with AI tools.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-104",
+          "CSCI-114"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "30381+30317+29981",
+          "componentIds": [
+            "30381",
+            "30317",
+            "29981"
+          ],
+          "instructor": "Marco Papa",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 0,
+              "start": 600,
+              "end": 710,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 29981 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/201/30381"
+        },
+        {
+          "id": "30381+30383+29981",
+          "componentIds": [
+            "30381",
+            "30383",
+            "29981"
+          ],
+          "instructor": "Marco Papa",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 0,
+              "start": 840,
+              "end": 950,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 29981 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/201/30381"
+        },
+        {
+          "id": "30381+29931+29981",
+          "componentIds": [
+            "30381",
+            "29931",
+            "29981"
+          ],
+          "instructor": "Marco Papa",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 1,
+              "start": 960,
+              "end": 1070,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 29981 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/201/30381"
+        },
+        {
+          "id": "30381+29990+29981",
+          "componentIds": [
+            "30381",
+            "29990",
+            "29981"
+          ],
+          "instructor": "Marco Papa",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 480,
+              "end": 590,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 29981 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/201/30381"
+        },
+        {
+          "id": "30381+30380+29981",
+          "componentIds": [
+            "30381",
+            "30380",
+            "29981"
+          ],
+          "instructor": "Marco Papa",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 660,
+              "end": 740,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 720,
+              "end": 830,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 29981 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/201/30381"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI201"
+    },
+    {
+      "id": "CSCI-270",
+      "code": "CSCI 270",
+      "title": "Introduction to Algorithms and Theory of Computing",
+      "units": 4,
+      "description": "Algorithm analysis. Greedy algorithms, divide and conquer, dynamic programming, graph algorithms. NP-completeness and basic recursion theory and undecidability. Sorting lower bounds. Number-theory based cryptography.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-104",
+          "CSCI-114"
+        ],
+        [
+          "CSCI-170"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "30009+30268+30033",
+          "componentIds": [
+            "30009",
+            "30268",
+            "30033"
+          ],
+          "instructor": "Aaron Cote",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 930,
+              "end": 1010,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 930,
+              "end": 1010,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 720,
+              "end": 830,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 1080,
+              "end": 1190,
+              "kind": "Quiz",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/270/30009"
+        },
+        {
+          "id": "30009+30269+30033",
+          "componentIds": [
+            "30009",
+            "30269",
+            "30033"
+          ],
+          "instructor": "Aaron Cote",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 930,
+              "end": 1010,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 930,
+              "end": 1010,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 840,
+              "end": 950,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 1080,
+              "end": 1190,
+              "kind": "Quiz",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/270/30009"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI270"
+    },
+    {
+      "id": "CSCI-310",
+      "code": "CSCI 310",
+      "title": "Software Engineering",
+      "units": 4,
+      "description": "Introduction to the software engineering process and software lifecycle. Covers project management, requirements, architecture, design, implementation, testing, and maintenance phase activities in team based projects. Prerequisites: CSCI 201. Duplicates credit in former CSCI 377.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-201"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "29967",
+          "componentIds": [
+            "29967"
+          ],
+          "instructor": "William Halfond",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 600,
+              "end": 710,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 600,
+              "end": 710,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/310/29967"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI310"
+    },
+    {
+      "id": "CSCI-350",
+      "code": "CSCI 350",
+      "title": "Fundamentals of Operating Systems",
+      "units": 4,
+      "description": "Basic issues in concurrency, deadlock control, synchronization scheduling, memory management, protection and access control, inter-process communication, and structured design. Laboratory experiences with Unix-like operating system.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-356",
+          "EE-354"
+        ],
+        [
+          "CSCI-201",
+          "EE-250"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "29993+29965",
+          "componentIds": [
+            "29993",
+            "29965"
+          ],
+          "instructor": "Tatyana Ryutov",
+          "meetings": [
+            {
+              "day": 4,
+              "start": 780,
+              "end": 980,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 29965 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/350/29993"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI350"
+    },
+    {
+      "id": "CSCI-353",
+      "code": "CSCI 353",
+      "title": "Internetworking",
+      "units": 4,
+      "description": "Global Internet: design principles, layering, protocol design/analysis. Networked applications, Internet structure/architecture, Protocols for transport/congestion control, network layer/routing, link layer/MAC. Network security.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-201"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "30050+30051",
+          "componentIds": [
+            "30050",
+            "30051"
+          ],
+          "instructor": "William Cheng",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 750,
+              "end": 830,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 750,
+              "end": 830,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 540,
+              "end": 590,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/353/30050"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI353"
+    },
+    {
+      "id": "CSCI-356",
+      "code": "CSCI 356",
+      "title": "Computer Systems",
+      "units": 4,
+      "description": "Computer organization; entity abstraction and representation; program execution; code optimization; memory usage; exception handling; processing control; computer performance; hands-on work done in C and assembly.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-104"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "30160+30171+30391",
+          "componentIds": [
+            "30160",
+            "30171",
+            "30391"
+          ],
+          "instructor": "Andrew Goodney",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 570,
+              "end": 650,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 570,
+              "end": 650,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 600,
+              "end": 710,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 960,
+              "end": 1070,
+              "kind": "Quiz",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/356/30160"
+        },
+        {
+          "id": "30160+30172+30391",
+          "componentIds": [
+            "30160",
+            "30172",
+            "30391"
+          ],
+          "instructor": "Andrew Goodney",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 570,
+              "end": 650,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 570,
+              "end": 650,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 720,
+              "end": 830,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 960,
+              "end": 1070,
+              "kind": "Quiz",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/356/30160"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI356"
+    },
+    {
+      "id": "CSCI-360",
+      "code": "CSCI 360",
+      "title": "Artificial Intelligence: Principles and Foundations",
+      "units": 4,
+      "description": "Concepts and algorithms underlying the understanding and construction of intelligent systems. Agents, problem solving, search, representation, reasoning, planning, machine learning.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-104",
+          "CSCI-114"
+        ],
+        [
+          "CSCI-170"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "30304+30280",
+          "componentIds": [
+            "30304",
+            "30280"
+          ],
+          "instructor": "Mohammad Reza Rajati",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 1020,
+              "end": 1130,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 1020,
+              "end": 1130,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 30280 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/360/30304"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI360"
+    },
+    {
+      "id": "CSCI-445",
+      "code": "CSCI 445",
+      "title": "Foundations of Robotics",
+      "units": 4,
+      "description": "Designing and programming mobile robots; sensors, effectors, basic control theory, control architectures, planning, some advanced topics, illustrations of state-of-the-art. Weekly robot programming labs; final project.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-104",
+          "CSCI-114",
+          "EE-355"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "30386+29910",
+          "componentIds": [
+            "30386",
+            "29910"
+          ],
+          "instructor": "Erdem Biyik, Daniel Seita",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 510,
+              "end": 590,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 510,
+              "end": 590,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 1,
+              "start": 600,
+              "end": 770,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/445/30386"
+        },
+        {
+          "id": "30386+29911",
+          "componentIds": [
+            "30386",
+            "29911"
+          ],
+          "instructor": "Erdem Biyik, Daniel Seita",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 510,
+              "end": 590,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 510,
+              "end": 590,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 600,
+              "end": 770,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/445/30386"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI445"
+    },
+    {
+      "id": "CSCI-455",
+      "code": "CSCI 455",
+      "title": "Introduction to Programming Systems Design",
+      "units": 4,
+      "description": " Intensive introduction to programming principles, discrete mathematics for computing, software design and software engineering concepts. Not available for credit to computer sciencemajors, graduate or undergraduate. ",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30327+30029",
+          "componentIds": [
+            "30327",
+            "30029"
+          ],
+          "instructor": "William Cheng",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 600,
+              "end": 680,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 600,
+              "end": 680,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 780,
+              "end": 890,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/455/30327"
+        },
+        {
+          "id": "30327+30329",
+          "componentIds": [
+            "30327",
+            "30329"
+          ],
+          "instructor": "William Cheng",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 600,
+              "end": 680,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 600,
+              "end": 680,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 900,
+              "end": 1010,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/455/30327"
+        },
+        {
+          "id": "29934+30023",
+          "componentIds": [
+            "29934",
+            "30023"
+          ],
+          "instructor": "William Cheng",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 600,
+              "end": 680,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 600,
+              "end": 680,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 780,
+              "end": 890,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/455/29934"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI455"
+    }
+  ]
+}

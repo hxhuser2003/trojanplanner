@@ -8,7 +8,9 @@ import type { Meeting } from './meeting';
 
 export interface Section {
   id: string;
+  componentIds: string[];
   instructor: string;
   eligibility: string;
+  unknownScheduleComponents: string[];
   meetings: Meeting[];
 }

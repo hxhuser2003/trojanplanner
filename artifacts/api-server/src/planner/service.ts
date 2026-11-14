@@ -62,7 +62,7 @@ function validateSolution(raw: RawSolution, input: PlannerInput): [Course, Secti
     }
   }
   for (const [c, s] of selected) {
-    if (completed.has(c.id) || c.prerequisites.some(p => !completed.has(p))) throw new Error("Completed course or prerequisite violation.");
+    if (completed.has(c.id) || !c.prerequisiteGroups.every(group => group.some(option => completed.has(option)))) throw new Error("Completed course or prerequisite violation.");
     for (const rule of input.constraints.filter(x => x.enabled && x.hard)) {
       if (!satisfies(s, rule)) throw new Error("Hard time constraint violated.");
     }
@@ -86,7 +86,7 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     const list = meetings.filter(m => m.day === day).sort((a, b) => a.start - b.start);
     for (let i = 1; i < list.length; i++) gapMinutes += list[i]!.start - list[i - 1]!.end;
   }
-  const known = selected.filter(([c]) => c.syllabus.status === "synthetic");
+  const known = selected.filter(([c]) => c.syllabus.status !== "unknown");
   const individual = known.filter(([c]) => c.syllabus.projectMode === "individual").length;
   const projectHeavy = known.filter(([c]) => (c.syllabus.projectPercent ?? -1) >= 50).length;
   const days = new Set(meetings.map(m => m.day)).size;
@@ -96,13 +96,14 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     title: index === 0 ? "Best preference fit" : `${days} campus days · alternative ${index}`,
     selections: selected.map(([c, s]) => ({
       courseId: c.id, sectionId: s.id,
-      reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. All linked meetings included. ${c.syllabus.status === "unknown" ? "Assessment information not specified." : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (synthetic).`}`,
+      reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. Published linked meeting times checked. ${c.syllabus.status === "unknown" ? "Assessment information not specified." : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (${c.syllabus.status}).`}`,
     })),
     units: selected.reduce((sum, [c]) => sum + c.units, 0), campusDays: days,
     classHours: Math.round(meetings.reduce((sum, m) => sum + m.end - m.start, 0) / 6) / 10,
     gapMinutes, earliestStart: earliest, score: raw.score,
-    checks: ["No overlapping meetings in the loaded data", "All enabled hard constraints respected", "Unit bounds and selected illustrative requirements checked", "Linked meetings and known prerequisites checked"],
-    warnings: ["Synthetic data only—not an official degree audit.", "Seat availability, restrictions, real prerequisites, and current USC degree eligibility remain unverified.",
+    checks: ["No overlapping published meetings in the loaded data", "All enabled hard constraints respected for published times", "Unit bounds and selected illustrative goals checked", "Published linked meetings and listed prerequisite groups checked against entered completions"],
+    warnings: ["USC offerings are a cached snapshot; recheck the Schedule of Classes before registration.", "Planning goals and completed courses are illustrative, not an official degree audit. Seat availability, restrictions, and actual prerequisite clearance remain unverified.",
+      ...selected.filter(([, s]) => s.unknownScheduleComponents.length > 0).map(([c, s]) => `${c.code} §${s.id}: ${s.unknownScheduleComponents.join(", ")}; full conflict check is not possible.`),
       ...(known.length < selected.length ? ["Some syllabi are missing; absence of evidence does not mean fewer exams or projects."] : [])],
     assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${individual} individual-project courses. Evidence coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
   };
@@ -111,8 +112,10 @@ let activeSolves = 0;
 async function worker(input: PlannerInput): Promise<WorkerResult> {
   const local = path.resolve("src/planner/solver.py");
   const script = existsSync(local) ? local : path.resolve("artifacts/api-server/src/planner/solver.py");
+  const venvPython = [path.resolve(".venv/Scripts/python.exe"), path.resolve("../../.venv/Scripts/python.exe")].find(existsSync);
+  const python = process.env.PYTHON_BIN || venvPython || "python";
   return new Promise((resolve, reject) => {
-    const process = spawn("python", [script], { stdio: ["pipe", "pipe", "pipe"] });
+    const process = spawn(python, [script], { stdio: ["pipe", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     const timeout = setTimeout(() => { process.kill("SIGKILL"); reject(new Error("SOLVER_TIMEOUT")); }, 15000);
@@ -146,7 +149,7 @@ export async function solve(input: PlannerInput) {
       status: result.status, engine: "Google OR-Tools CP-SAT + independent validator",
       elapsedMs: result.elapsedMs, schedules, repairs, conflicts: result.conflicts,
       message: result.status === "infeasible"
-        ? "No schedule satisfies all confirmed constraints in this synthetic dataset. This is a sufficient conflict explanation, not a guaranteed smallest conflict."
+        ? "No schedule satisfies all confirmed constraints in the cached USC subset. This is a sufficient conflict explanation, not a guaranteed smallest conflict."
         : result.status === "unknown" ? "Search ended without establishing a solution or impossibility. Your constraints were not changed."
         : result.status === "invalid" ? "The solver rejected the model. No schedule has been accepted."
         : `${schedules.length} distinct schedule${schedules.length === 1 ? "" : "s"} validated against the loaded data. ${result.status === "optimal" ? "First result is optimal for the modeled preference score." : "A feasible result was found; optimality was not proven."}`,

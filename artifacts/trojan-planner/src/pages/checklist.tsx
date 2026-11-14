@@ -30,7 +30,8 @@ function buildItems(catalog: Catalog, sched: Schedule) {
     if (s.projectMode === 'unspecified') unknowns.push(`${course.code}: individual vs group work not specified`);
     if (!s.cadence) unknowns.push(`${course.code}: assignment cadence unknown`);
     s.evidence.filter((e) => e.status === 'unknown').forEach((e) => unknowns.push(`${course.code}: ${e.label} unknown`));
-    if (section?.eligibility) unknowns.push(`${course.code} §${section.id}: confirm eligibility (${section.eligibility}) and seat availability`);
+    if (section?.eligibility) unknowns.push(`${course.code} §${section.id}: ${section.eligibility}`);
+    section?.unknownScheduleComponents.forEach((item) => unknowns.push(`${course.code}: ${item}; time conflicts cannot be fully checked`));
   });
   sched.warnings.forEach((w) => unknowns.push(w));
   return { rows, unknowns };
@@ -58,12 +59,12 @@ function Checklist({ catalog }: { catalog: Catalog }) {
   const exportText = () => {
     const lines = [
       `TrojanPlanner registration checklist — ${catalog.term}`,
-      'SYNTHETIC DEMO DATA. Not an enrollment guarantee or degree audit.',
+      `USC course snapshot retrieved ${catalog.sourceDate}. Illustrative planning goals; not an enrollment guarantee or degree audit.`,
       '',
       `Plan: ${sched.title} · ${sched.units} units · ${sched.campusDays} campus days`,
       '',
       'SECTIONS',
-      ...rows.map(({ sel, course, section }) => `[${p.checklist[`sec:${sel.sectionId}`] ? 'x' : ' '}] ${course?.code ?? sel.courseId} §${sel.sectionId} ${course?.title ?? ''} — ${section?.meetings.map((m) => `${DAYS[m.day]} ${fmtTime(m.start)}-${fmtTime(m.end)}`).join(', ') ?? ''} — ${section?.instructor ?? ''}`),
+      ...rows.map(({ sel, course, section }) => `[${p.checklist[`sec:${sel.sectionId}`] ? 'x' : ' '}] ${course?.code ?? sel.courseId} sections ${section?.componentIds.join(', ') ?? sel.sectionId} ${course?.title ?? ''} — ${section?.meetings.map((m) => `${DAYS[m.day]} ${fmtTime(m.start)}-${fmtTime(m.end)}`).join(', ') ?? ''} — ${section?.instructor ?? ''}`),
       '',
       'STEPS',
       ...steps.map((s, i) => `[${p.checklist[`step:${i}`] ? 'x' : ' '}] ${s}`),
@@ -104,8 +105,9 @@ function Checklist({ catalog }: { catalog: Catalog }) {
       <div className="space-y-2 mb-6">
         {rows.map(({ sel, course, section }) => (
           <Item key={sel.sectionId} k={`sec:${sel.sectionId}`}>
-            <span className="font-mono font-semibold" style={{ color: course?.color }}>{course?.code ?? sel.courseId} §{sel.sectionId}</span> {course?.title}
+            <span className="font-mono font-semibold" style={{ color: course?.color }}>{course?.code ?? sel.courseId} sections {section?.componentIds.join(' + ') ?? sel.sectionId}</span> {course?.title}
             <span className="block text-xs text-muted-foreground">{section?.meetings.map((m) => `${DAYS[m.day]} ${fmtTime(m.start)}–${fmtTime(m.end)} (${m.kind})`).join(' · ')} · {section?.instructor}</span>
+            {section?.unknownScheduleComponents.map((item) => <span key={item} className="block text-xs font-semibold text-amber-700">{item}</span>)}
           </Item>
         ))}
       </div>

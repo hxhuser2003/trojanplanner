@@ -33,7 +33,10 @@ def run_solver(catalog, request, excluded=None):
     for course in catalog["courses"]:
         indexes = [i for i, (c, _) in enumerate(rows) if c["id"] == course["id"]]
         model.add(sum(variables[i] for i in indexes) <= 1)
-        if course["id"] in completed or not set(course["prerequisites"]).issubset(completed):
+        if course["id"] in completed or not all(
+            any(option in completed for option in group)
+            for group in course["prerequisiteGroups"]
+        ):
             for i in indexes:
                 model.add(variables[i] == 0)
     for i, (_, section) in enumerate(rows):

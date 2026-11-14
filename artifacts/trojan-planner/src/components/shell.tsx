@@ -70,7 +70,7 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="bg-accent/25 border-b border-accent/50 text-[12px]">
         <div className="mx-auto max-w-[1440px] px-4 md:px-6 py-1.5 flex items-center gap-2" data-testid="text-synthetic-notice">
           <FlaskConical className="size-3.5 text-primary shrink-0" />
-          <span><strong className="font-semibold">Synthetic data.</strong> {catalog?.notice ?? 'Sections, syllabi and times are sample data for planning practice.'} Nothing here reserves a seat or guarantees enrollment.</span>
+          <span><strong className="font-semibold">USC course snapshot.</strong> {catalog?.notice ?? 'Course data is loading.'} Nothing here reserves a seat or guarantees enrollment.</span>
         </div>
       </div>
       {storageError && (

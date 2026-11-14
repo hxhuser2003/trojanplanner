@@ -82,8 +82,10 @@ export interface Syllabus {
 
 export interface Section {
   id: string;
+  componentIds: string[];
   instructor: string;
   eligibility: string;
+  unknownScheduleComponents: string[];
   meetings: Meeting[];
 }
 
@@ -96,7 +98,7 @@ export interface Course {
   description: string;
   color: string;
   sourceUrl: string;
-  prerequisites: string[];
+  prerequisiteGroups: string[][];
   sections: Section[];
   syllabus: Syllabus;
 }

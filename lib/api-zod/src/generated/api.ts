@@ -66,11 +66,13 @@ export const GetCatalogResponse = zod.object({
   "description": zod.string(),
   "color": zod.string(),
   "sourceUrl": zod.string(),
-  "prerequisites": zod.array(zod.string()),
+  "prerequisiteGroups": zod.array(zod.array(zod.string())),
   "sections": zod.array(zod.object({
   "id": zod.string(),
+  "componentIds": zod.array(zod.string()),
   "instructor": zod.string(),
   "eligibility": zod.string(),
+  "unknownScheduleComponents": zod.array(zod.string()),
   "meetings": zod.array(zod.object({
   "day": zod.number().int().min(getCatalogResponseCoursesItemSectionsItemMeetingsItemDayMin).max(getCatalogResponseCoursesItemSectionsItemMeetingsItemDayMax),
   "start": zod.number().int().min(getCatalogResponseCoursesItemSectionsItemMeetingsItemStartMin).max(getCatalogResponseCoursesItemSectionsItemMeetingsItemStartMax),

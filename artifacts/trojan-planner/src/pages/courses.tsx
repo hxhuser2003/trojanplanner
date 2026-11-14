@@ -51,7 +51,7 @@ function Courses({ catalog }: { catalog: Catalog }) {
                   <span className="min-w-0">
                     <span className="font-mono text-xs font-semibold">{c.code} · {c.units}u</span>
                     <span className="block text-sm font-medium truncate">{c.title}</span>
-                    <span className="block text-[11px] text-muted-foreground">{c.sections.length} section{c.sections.length === 1 ? '' : 's'} · {projectLabel(c)}</span>
+                    <span className="block text-[11px] text-muted-foreground">{c.sections.length} registration combination{c.sections.length === 1 ? '' : 's'} · {projectLabel(c)}</span>
                   </span>
                 </button>
               </li>
@@ -108,31 +108,31 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
           <p className="font-mono text-sm font-semibold" style={{ color: course.color }}>{course.code} · {course.units} units · {req?.title ?? course.requirement}</p>
           <h2 className="font-display text-3xl font-extrabold mt-1">{course.title}</h2>
           <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{course.description}</p>
-          {course.prerequisites.length > 0 && <p className="text-xs mt-2"><span className="font-semibold">Prerequisites:</span> {course.prerequisites.join(', ')}</p>}
+          {course.prerequisiteGroups.length > 0 && <p className="text-xs mt-2"><span className="font-semibold">Published prerequisites:</span> {course.prerequisiteGroups.map((group) => `(${group.join(' or ')})`).join(' and ')}</p>}
         </div>
         <Button onClick={addRequired} disabled={required} data-testid="button-add-required">
           {required ? <><Check className="size-4" />Required</> : <><Plus className="size-4" />Add as required</>}
         </Button>
       </div>
 
-      <h3 className="font-display text-lg font-semibold mt-6 mb-2">Sections</h3>
+      <h3 className="font-display text-lg font-semibold mt-6 mb-2">Registration combinations</h3>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Section</th><th className="p-2.5">Instructor</th><th className="p-2.5">Meetings</th><th className="p-2.5">Eligibility</th></tr></thead>
           <tbody>
             {course.sections.map((sec) => (
               <tr key={sec.id} className="border-t" data-testid={`row-section-${sec.id}`}>
-                <td className="p-2.5 font-mono">{sec.id}</td>
-                <td className="p-2.5">{sec.instructor} <span className="text-[9px] uppercase tracking-wider text-muted-foreground border rounded px-1">demo name</span>
+                <td className="p-2.5 font-mono">{sec.componentIds.join(' + ')}</td>
+                <td className="p-2.5">{sec.instructor}
                   <a href={`https://www.google.com/search?q=${encodeURIComponent(`"${sec.instructor}" site:usc.edu`)}`} target="_blank" rel="noreferrer" className="block text-[11px] text-primary hover:underline" data-testid={`link-instructor-${sec.id}`}>Search usc.edu</a></td>
-                <td className="p-2.5 text-xs">{sec.meetings.map((m, i) => <div key={i}>{DAYS[m.day]} {fmtTime(m.start)}–{fmtTime(m.end)} · {m.kind} · {m.location}</div>)}</td>
+                <td className="p-2.5 text-xs">{sec.meetings.map((m, i) => <div key={i}>{DAYS[m.day]} {fmtTime(m.start)}–{fmtTime(m.end)} · {m.kind} · {m.location}</div>)}{sec.unknownScheduleComponents.map((item) => <div key={item} className="font-semibold text-amber-700">{item}</div>)}</td>
                 <td className="p-2.5 text-xs text-muted-foreground">{sec.eligibility}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="text-[11px] text-muted-foreground mt-2">Instructor names are synthetic demo labels. No ratings or reviews are shown or scraped; the search link only opens a usc.edu-restricted web search.</p>
+      <p className="text-[11px] text-muted-foreground mt-2">Section combinations and instructor names come from the cached USC listing. TBA components are shown but cannot be checked for time conflicts. Confirm the combination and seats in Web Registration.</p>
 
       <div className="mt-6 grid md:grid-cols-[1fr_1.4fr] gap-6">
         <div>
@@ -150,7 +150,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
             <p><span className="font-semibold">Attendance:</span> {s.attendance || 'Unknown'}</p>
           </div>
           <div className="mt-3 flex flex-col gap-1.5 text-xs">
-            <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline" data-testid="link-syllabus-source"><FileText className="size-3.5" />Open syllabus source<ExternalLink className="size-3" /></a>
+            <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline" data-testid="link-syllabus-source"><FileText className="size-3.5" />Open syllabus listing (may be unpublished)<ExternalLink className="size-3" /></a>
             <a href={course.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-muted-foreground hover:underline" data-testid="link-course-source">Course listing provenance<ExternalLink className="size-3" /></a>
           </div>
         </div>

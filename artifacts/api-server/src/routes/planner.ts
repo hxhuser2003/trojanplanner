@@ -42,7 +42,6 @@ router.post("/planner/stars", (req, res) => {
 router.get("/planner/sources/:id", (req, res) => {
   const course = catalog.courses.find(c => c.id === req.params.id);
   if (!course) { res.status(404).send("Source not found."); return; }
-  const escape = (s: string) => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-  res.type("html").send(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(course.code)} — Synthetic evidence</title><style>body{font:17px/1.7 system-ui;max-width:760px;margin:4rem auto;padding:1rem;background:#faf7f1;color:#29201c}header{border-left:5px solid #8d2436;padding:1rem;background:#f3e8d0}article{padding:1rem 0;border-bottom:1px solid #ddd}small{color:#665}</style><header><strong>SYNTHETIC DEMO SOURCE — NOT A USC SYLLABUS</strong><p>This fixture demonstrates traceability. All facts below were authored for this prototype. Do not use them for real course registration.</p></header><h1>${escape(course.code)} · ${escape(course.title)}</h1><p>Spring 2027 · Synthetic page 1 · Fixture version 2026-11-14</p>${course.syllabus.evidence.map(e => `<article><strong>${escape(e.label)}: ${escape(e.value)}</strong><blockquote>${escape(e.excerpt)}</blockquote><small>Page ${e.page} · ${e.status}</small></article>`).join("") || "<p>No syllabus evidence available. Unknown is not zero.</p>"}<h2>Illustrative section meetings</h2><pre>${escape(JSON.stringify(course.sections, null, 2))}</pre><p>These fixtures do not establish current USC offerings, equivalences, prerequisites, or degree eligibility.</p></html>`);
+  res.redirect(302, course.sourceUrl);
 });
 export default router;
