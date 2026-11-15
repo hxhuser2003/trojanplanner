@@ -36,6 +36,8 @@ export const KIND_META: Record<ConstraintKind, { label: string; hint: string; us
   prefer_less_frequent: { label: 'Less frequent meetings', hint: 'Favor 2x/week over 3x/week', uses: [] },
   prefer_no_quizzes: { label: 'Avoid graded quizzes', hint: 'Favor courses without graded quizzes', uses: [] },
   prefer_no_attendance: { label: 'Avoid graded attendance', hint: 'Favor courses that do not grade attendance', uses: [] },
+  prefer_no_midterm: { label: 'Avoid midterms', hint: 'Favor courses without a midterm exam', uses: [] },
+  prefer_no_final: { label: 'Avoid final exams', hint: 'Favor courses without a final exam', uses: [] },
 };
 
 export function describeConstraint(c: Constraint, catalog?: Catalog): string {

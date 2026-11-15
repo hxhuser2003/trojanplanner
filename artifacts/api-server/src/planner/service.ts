@@ -93,6 +93,8 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
   const examHeavy = known.filter(([c]) => (c.syllabus.examPercent ?? -1) >= 50).length;
   const quizCourses = known.filter(([c]) => (c.syllabus.quizPercent ?? 0) > 0).length;
   const attendanceCourses = known.filter(([c]) => (c.syllabus.attendancePercent ?? 0) > 0).length;
+  const midtermCourses = known.filter(([c]) => c.syllabus.grading.some(i => i.kind === "midterm")).length;
+  const finalCourses = known.filter(([c]) => c.syllabus.grading.some(i => i.kind === "final")).length;
   const days = new Set(meetings.map(m => m.day)).size;
   const earliest = meetings.length ? Math.min(...meetings.map(m => m.start)) : 0;
   return {
@@ -105,11 +107,11 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     units: selected.reduce((sum, [c]) => sum + c.units, 0), campusDays: days,
     classHours: Math.round(meetings.reduce((sum, m) => sum + m.end - m.start, 0) / 6) / 10,
     gapMinutes, earliestStart: earliest, score: raw.score,
-    projectHeavy, examHeavy, individual, quizCourses, attendanceCourses,
+    projectHeavy, examHeavy, individual, quizCourses, attendanceCourses, midtermCourses, finalCourses,
     checks: ["No overlapping meetings in the loaded data", "All enabled hard constraints respected", "Unit bounds and selected illustrative requirements checked", "Linked meetings and known prerequisites checked"],
     warnings: ["Synthetic data only—not an official degree audit.", "Seat availability, restrictions, real prerequisites, and current USC degree eligibility remain unverified.",
       ...(known.length < selected.length ? ["Some syllabi are missing; absence of evidence does not mean fewer exams or projects."] : [])],
-    assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses; ${quizCourses} with graded quizzes; ${attendanceCourses} with graded attendance. Evidence coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
+    assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses; ${quizCourses} with graded quizzes; ${attendanceCourses} with graded attendance; ${midtermCourses} with a midterm; ${finalCourses} with a final exam. Evidence coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
   };
 }
 let activeSolves = 0;
@@ -151,6 +153,8 @@ function alternativeTitle(best: Summary, alt: Summary, used: Set<string>): strin
   if (alt.earliestStart > best.earliestStart) wins.push([(alt.earliestStart - best.earliestStart) / 3, `No class before ${clock(alt.earliestStart)}`]);
   if (alt.quizCourses < best.quizCourses) wins.push([(best.quizCourses - alt.quizCourses) * 18, alt.quizCourses ? "Fewer quizzes" : "No quizzes"]);
   if (alt.attendanceCourses < best.attendanceCourses) wins.push([(best.attendanceCourses - alt.attendanceCourses) * 18, alt.attendanceCourses ? "Less graded attendance" : "No graded attendance"]);
+  if (alt.midtermCourses < best.midtermCourses) wins.push([(best.midtermCourses - alt.midtermCourses) * 20, alt.midtermCourses ? "Fewer midterms" : "No midterms"]);
+  if (alt.finalCourses < best.finalCourses) wins.push([(best.finalCourses - alt.finalCourses) * 20, alt.finalCourses ? "Fewer final exams" : "No final exams"]);
   if (alt.gapMinutes < best.gapMinutes) wins.push([(best.gapMinutes - alt.gapMinutes) / 6, alt.gapMinutes ? "Fewer gaps between classes" : "Back-to-back classes, no gaps"]);
   if (alt.classHours < best.classHours) wins.push([(best.classHours - alt.classHours) * 8, "Less time in class"]);
   if (alt.projectHeavy > best.projectHeavy) wins.push([(alt.projectHeavy - best.projectHeavy) * 15, "More project-based"]);

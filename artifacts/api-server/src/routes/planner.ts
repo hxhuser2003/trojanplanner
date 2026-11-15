@@ -4,7 +4,7 @@ import { catalog } from "../planner/catalog";
 import { solve, validateInput } from "../planner/service";
 import { catalogLookup, chat, parsePreferences, rephrase } from "../planner/ai";
 import { explainCompare, explainConflict, explainSection } from "../planner/explain";
-import { excludeIntent, lockIntent, progressIntent, selectIntent } from "../planner/intents";
+import { avoidIntent, excludeIntent, gradingIntent, lockIntent, progressIntent, selectIntent } from "../planner/intents";
 import { parseStarsText } from "../planner/stars";
 
 const router: IRouter = Router();
@@ -73,8 +73,8 @@ router.post("/planner/chat", async (req, res): Promise<void> => {
   const { message, history, current, selections = [], scheduleOptions = [], chosenScheduleId } = parsed.data;
   const error = validateInput(current);
   if (error) { res.status(400).json({ error }); return; }
-  // Progress, exclude, lock, and option-switch requests are answered from data, with or without AI.
-  const direct = progressIntent(message, current, selections) ?? excludeIntent(message, current) ?? lockIntent(message, current, selections) ?? selectIntent(message, scheduleOptions, chosenScheduleId);
+  // Progress, grading, exclude, lock, and option-switch requests are answered from data, with or without AI.
+  const direct = progressIntent(message, current, selections) ?? gradingIntent(message, selections) ?? excludeIntent(message, current) ?? avoidIntent(message, current) ?? lockIntent(message, current, selections) ?? selectIntent(message, scheduleOptions, chosenScheduleId);
   if (direct) {
     res.json(ChatCopilotResponse.parse({ proposedConstraints: [], removeConstraintIds: [], updatedConstraints: [], options: [], citations: [], warnings: [],
       ...direct, provider: "Computed from catalog and solver facts" }));

@@ -153,6 +153,20 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
             <Bar label="Projects" v={s.projectPercent} cls="bg-accent" />
             <Bar label="Other" v={s.otherPercent} cls="bg-chart-3" />
           </div>
+          {s.grading.length > 0 && (
+            <table className="mt-4 w-full text-sm" data-testid="table-grading">
+              <thead><tr className="text-xs text-muted-foreground text-left"><th className="font-normal pb-1">Grading breakdown</th><th className="font-normal pb-1 text-right">%</th></tr></thead>
+              <tbody>
+                {s.grading.map((g) => (
+                  <tr key={g.item} className="border-t align-top">
+                    <td className="py-1.5 pr-2">{g.item}{g.when && <span className="block text-xs text-muted-foreground">{g.when}</span>}</td>
+                    <td className="py-1.5 text-right tabular-nums">{g.percent}</td>
+                  </tr>
+                ))}
+                <tr className="border-t font-semibold"><td className="py-1.5">Total</td><td className="py-1.5 text-right tabular-nums">{s.grading.reduce((n, g) => n + g.percent, 0)}</td></tr>
+              </tbody>
+            </table>
+          )}
           <div className="mt-4 rounded-lg bg-secondary/60 p-3 text-xs space-y-1">
             <p><span className="font-semibold">Label:</span> {projectLabel(course)} <span className="text-muted-foreground">(threshold: projects at or above 50%)</span></p>
             <p><span className="font-semibold">Project mode:</span> {s.projectMode}</p>

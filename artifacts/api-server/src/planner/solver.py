@@ -110,6 +110,10 @@ def run_solver(catalog, request, excluded=None):
                 cost -= 30
             if kind == "prefer_no_attendance" and known and not syllabus.get("attendancePercent"):
                 cost -= 30
+            if kind == "prefer_no_midterm" and known and not any(g["kind"] == "midterm" for g in syllabus["grading"]):
+                cost -= 30
+            if kind == "prefer_no_final" and known and not any(g["kind"] == "final" for g in syllabus["grading"]):
+                cost -= 30
         costs.append(cost * variables[i])
     day_weight = 40 if any(c["kind"] == "prefer_fewer_days" for c in active) else 4
     model.minimize(sum(costs) + day_weight * sum(campus))

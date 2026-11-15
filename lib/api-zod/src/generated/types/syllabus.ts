@@ -5,6 +5,7 @@
  * OpenAPI spec version: 0.2.0
  */
 import type { Evidence } from './evidence';
+import type { GradingItem } from './gradingItem';
 import type { SyllabusProjectMode } from './syllabusProjectMode';
 import type { SyllabusStatus } from './syllabusStatus';
 
@@ -21,6 +22,7 @@ export interface Syllabus {
   quizPercent?: number | null;
   /** @nullable */
   attendancePercent?: number | null;
+  grading: GradingItem[];
   projectMode: SyllabusProjectMode;
   cadence: string;
   attendance: string;

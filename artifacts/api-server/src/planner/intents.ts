@@ -7,7 +7,8 @@ import type { Constraint, PlannerInput } from "./service";
 
 type Ref = { courseId: string; sectionId: string };
 type Option = { id: string; title: string; units: number; campusDays: number; classHours: number; earliestStart: number; gapMinutes: number };
-type Reply = { kind: "answer" | "rules" | "select"; message: string; proposedConstraints?: Constraint[]; removeConstraintIds?: string[]; selectScheduleId?: string; warnings?: string[] };
+type Citation = { courseId: string; label: string; excerpt: string; sourceUrl: string };
+type Reply = { kind: "answer" | "rules" | "select"; message: string; proposedConstraints?: Constraint[]; removeConstraintIds?: string[]; selectScheduleId?: string; warnings?: string[]; citations?: Citation[] };
 
 const mentions = (message: string, courseId: string) => new RegExp(`\\b${courseId.replace("-", "[- ]?")}\\b`, "i").test(message);
 const isDone = (input: PlannerInput, id: string) => input.completedCourses.includes(id);
@@ -46,6 +47,87 @@ export function lockIntent(message: string, current: PlannerInput, selections: R
     proposedConstraints: fresh.map(t => ({
       id: `lock-${t.sectionId}-${Date.now().toString(36)}`, label: `Keep ${code(t.courseId)} §${t.sectionId}`, kind: "lock_section" as const,
       hard: true, enabled: true, value: t.sectionId, days: [], start: 0, end: 0,
+    })),
+  };
+}
+
+type GradeKind = "midterm" | "final" | "quiz" | "attendance" | "participation" | "homework";
+const TOPICS: [GradeKind, RegExp, string][] = [
+  ["midterm", /\bmid-?terms?\b/i, "a midterm"], ["final", /\bfinals?( exams?)?\b/i, "a final exam"], ["quiz", /\bquiz(zes)?\b/i, "graded quizzes"],
+  ["attendance", /\battendance\b/i, "graded attendance"], ["participation", /\bparticipation\b/i, "graded participation"], ["homework", /\bhomeworks?\b/i, "graded homework"],
+];
+
+/** "Which of my classes have a midterm?", "When is the CSCI 350 final?", "How is CSCI 201 graded?" — answered from grading tables. */
+export function gradingIntent(message: string, selections: Ref[]): Reply | null {
+  // Only questions; "I don't want midterms" is a preference and goes to the rule handlers.
+  if (/\b(want|avoid|prefer|hate|rather|don'?t like|no more)\b/i.test(message)) return null;
+  if (!/\?\s*$/.test(message) && !/^\s*(which|what|when|does|do|is|are|how|list|show|any)\b/i.test(message)) return null;
+  const topics = TOPICS.filter(([, re]) => re.test(message));
+  const breakdown = /\b(grad(ed|ing)|grade breakdown|breakdown|weights?|weighted)\b/i.test(message);
+  if (!topics.length && !breakdown) return null;
+  const named = catalog.courses.filter(c => mentions(message, c.id));
+  const courses = named.length ? named : selections.map(s => catalog.courses.find(c => c.id === s.courseId)).filter((c): c is NonNullable<typeof c> => !!c);
+  if (!courses.length) return null;
+  const scope = named.length ? "" : "in this plan";
+  const cite = (c: (typeof courses)[number], label: string) => {
+    const e = c.syllabus.evidence.find(x => x.label === label);
+    return e ? [{ courseId: c.id, label: e.label, excerpt: e.excerpt, sourceUrl: c.syllabus.sourceUrl }] : [];
+  };
+  const unknown = courses.filter(c => c.syllabus.status !== "synthetic");
+  const known = courses.filter(c => c.syllabus.status === "synthetic");
+  const lines: string[] = [];
+  const citations: Citation[] = [];
+  if (!topics.length) {
+    for (const c of known) {
+      lines.push(`${c.code}: ${c.syllabus.grading.map(i => `${i.item} ${i.percent}%${i.when ? ` (${i.when})` : ""}`).join(" · ")}`);
+      citations.push(...c.syllabus.grading.flatMap(i => cite(c, i.item)));
+    }
+  }
+  for (const [kind, , phrase] of topics) {
+    const withIt = known.filter(c => c.syllabus.grading.some(i => i.kind === kind));
+    const without = known.filter(c => !withIt.includes(c));
+    const bare = phrase.replace(/^an? /, "");
+    if (known.length === 1) lines.push(withIt.length ? `${known[0]!.code} has ${phrase}:` : `${known[0]!.code} has no ${bare}.`);
+    else if (known.length) lines.push(withIt.length
+      ? `${withIt.length} of the ${known.length} courses${scope ? ` ${scope}` : ""} ${withIt.length === 1 ? "has" : "have"} ${phrase}:`
+      : `None of the ${known.length} courses${scope ? ` ${scope}` : ""} has ${phrase}.`);
+    for (const c of withIt) {
+      const items = c.syllabus.grading.filter(i => i.kind === kind);
+      lines.push(...items.map(i => `• ${c.code} ${i.item}: ${i.percent}% of the grade${i.when ? `, ${i.when}` : ""}`));
+      citations.push(...items.flatMap(i => cite(c, i.item)));
+    }
+    if (withIt.length && without.length) lines.push(`No ${bare}: ${without.map(c => c.code).join(", ")}.`);
+    // Flag exams that fall in the same week, the usual crunch point.
+    if (kind === "midterm") {
+      const byWeek = new Map<string, string[]>();
+      for (const c of withIt) for (const i of c.syllabus.grading.filter(x => x.kind === "midterm")) {
+        const week = i.when?.match(/Week \d+/)?.[0];
+        if (week) byWeek.set(week, [...(byWeek.get(week) ?? []), c.code]);
+      }
+      for (const [week, codes] of byWeek) if (codes.length > 1) lines.push(`Heads-up: ${codes.join(" and ")} both have a midterm in ${week}.`);
+    }
+  }
+  if (unknown.length) lines.push(`${unknown.map(c => c.code).join(", ")}: no syllabus on file, so this is unknown (not zero).`);
+  return { kind: "answer", message: lines.join("\n"), citations, warnings: ["From synthetic demo syllabi. Check the real syllabus before deciding."] };
+}
+
+const AVOIDABLE: [Constraint["kind"], RegExp, string][] = [
+  ["prefer_no_midterm", /\bmid-?terms?\b/i, "Avoid midterms"], ["prefer_no_final", /\bfinals?( exams?)?\b/i, "Avoid final exams"],
+  ["prefer_no_quizzes", /\bquiz(zes)?\b/i, "Avoid graded quizzes"], ["prefer_no_attendance", /\battendance\b/i, "Avoid graded attendance"],
+];
+
+/** "I don't want midterms" / "avoid quizzes and attendance" (no course named) proposes soft assessment rules. */
+export function avoidIntent(message: string, current: PlannerInput): Reply | null {
+  if (!/\b(don'?t|do not|never|no|avoid|hate|without|rather not|skip)\b/i.test(message) || catalog.courses.some(c => mentions(message, c.id))) return null;
+  const hits = AVOIDABLE.filter(([, re]) => re.test(message));
+  if (!hits.length) return null;
+  const fresh = hits.filter(([kind]) => !current.constraints.some(c => c.enabled && c.kind === kind));
+  if (!fresh.length) return { kind: "answer", message: `You already have ${hits.map(([, , l]) => `“${l}”`).join(" and ")} in your rules.` };
+  return {
+    kind: "rules",
+    message: `I can add ${fresh.length > 1 ? "these preferences. They are" : "this preference. It is"} soft: the solver favors courses whose syllabus shows none, but will still pick one if nothing else fits your schedule and requirements.`,
+    proposedConstraints: fresh.map(([kind, , label]) => ({
+      id: `${kind}-${Date.now().toString(36)}`, label, kind, hard: false, enabled: true, value: "", days: [], start: 0, end: 0,
     })),
   };
 }

@@ -118,9 +118,17 @@ components:
         excerpt: { type: string }
         page: { type: integer }
         status: { type: string, enum: [synthetic, unknown, historical] }
+    GradingItem:
+      type: object
+      required: [item, kind, percent]
+      properties:
+        item: { type: string }
+        kind: { type: string, enum: [attendance, participation, quiz, homework, project, midterm, final] }
+        percent: { type: number }
+        when: { type: string }
     Syllabus:
       type: object
-      required: [term, status, projectMode, cadence, attendance, evidence, sourceUrl]
+      required: [term, status, projectMode, cadence, attendance, grading, evidence, sourceUrl]
       properties:
         term: { type: string }
         status: { type: string, enum: [synthetic, unknown, historical] }
@@ -129,6 +137,9 @@ components:
         otherPercent: { type: [number, "null"] }
         quizPercent: { type: [number, "null"] }
         attendancePercent: { type: [number, "null"] }
+        grading:
+          type: array
+          items: { $ref: "#/components/schemas/GradingItem" }
         projectMode: { type: string, enum: [individual, group, mixed, unspecified] }
         cadence: { type: string }
         attendance: { type: string }
@@ -184,7 +195,7 @@ components:
         label: { type: string, maxLength: 200 }
         kind:
           type: string
-          enum: [no_day, earliest, latest, blocked, require_course, exclude_course, lock_section, prefer_projects, prefer_exams, prefer_individual, prefer_fewer_days, prefer_less_frequent, prefer_no_quizzes, prefer_no_attendance]
+          enum: [no_day, earliest, latest, blocked, require_course, exclude_course, lock_section, prefer_projects, prefer_exams, prefer_individual, prefer_fewer_days, prefer_less_frequent, prefer_no_quizzes, prefer_no_attendance, prefer_no_midterm, prefer_no_final]
         hard: { type: boolean }
         enabled: { type: boolean }
         value: { type: string, maxLength: 100 }

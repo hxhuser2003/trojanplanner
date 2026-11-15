@@ -7,30 +7,54 @@ const meeting = (day: number, start: number, end: number, kind = "Lecture") => (
 const section = (id: string, instructor: string, meetings: ReturnType<typeof meeting>[]) => ({
   id, instructor, meetings, eligibility: "Seat availability and enrollment restrictions not verified",
 });
-// Synthetic quiz and graded-attendance weights, carved out of each course's "other" share.
-const SMALL_ITEMS: Record<string, { quizzes: number; attendance: number }> = {
-  "CSCI-270": { quizzes: 10, attendance: 0 }, "CSCI-271": { quizzes: 0, attendance: 5 },
-  "CSCI-201": { quizzes: 0, attendance: 10 }, "CSCI-202": { quizzes: 10, attendance: 0 },
-  "CSCI-310": { quizzes: 0, attendance: 10 }, "CSCI-360": { quizzes: 10, attendance: 0 },
-  "CSCI-350": { quizzes: 10, attendance: 0 }, "WRIT-340": { quizzes: 0, attendance: 15 },
+type Kind = "attendance" | "participation" | "quiz" | "homework" | "project" | "midterm" | "final";
+type Item = { item: string; kind: Kind; percent: number; when?: string };
+const g = (item: string, kind: Kind, percent: number, when?: string): Item => ({ item, kind, percent, ...(when ? { when } : {}) });
+// Synthetic grading breakdowns, laid out like a typical USC syllabus "Grading Breakdown" table.
+const GRADING: Record<string, Item[]> = {
+  "CSCI-270": [g("Homework", "homework", 10, "Weekly"), g("Quizzes", "quiz", 10, "Weekly, in discussion"), g("Programming project", "project", 10),
+    g("Midterm exam", "midterm", 30, "Week 7, in class"), g("Final exam", "final", 40, "Finals week")],
+  "CSCI-271": [g("Attendance", "attendance", 5, "Taken every lecture"), g("Homework", "homework", 10, "Weekly"),
+    g("Project milestones", "project", 60, "Weeks 5, 10, 15"), g("Final exam", "final", 25, "Finals week")],
+  "CSCI-201": [g("Attendance", "attendance", 10, "Taken every lecture"), g("Lab exercises", "homework", 5, "Weekly"),
+    g("Group project", "project", 65, "Checkpoints in weeks 6, 11, 15"), g("Midterm exam", "midterm", 20, "Week 8, in class")],
+  "CSCI-202": [g("Quizzes", "quiz", 10, "Weekly, online"), g("Homework", "homework", 10, "Weekly"),
+    g("Programming projects", "project", 50, "Four projects"), g("Final exam", "final", 30, "Finals week")],
+  "CSCI-310": [g("Attendance", "attendance", 10, "Taken every lecture"), g("Homework", "homework", 5),
+    g("Project milestones", "project", 70, "Four milestones"), g("Midterm exam", "midterm", 15, "Week 8, in class")],
+  "CSCI-360": [g("Quizzes", "quiz", 10, "Biweekly, in class"), g("Homework", "homework", 5),
+    g("Programming projects", "project", 40, "Three projects"), g("Midterm exam", "midterm", 20, "Week 9, in class"), g("Final exam", "final", 25, "Finals week")],
+  "CSCI-350": [g("Quizzes", "quiz", 10, "Weekly, in class"), g("Projects", "project", 35, "Three projects"),
+    g("Midterm exam", "midterm", 25, "Week 8, in class"), g("Final exam", "final", 30, "Finals week")],
+  "WRIT-340": [g("Attendance", "attendance", 15, "Taken every class"), g("Participation", "participation", 15, "Workshops and peer review"),
+    g("Essays", "project", 70, "Four drafts with revisions")],
 };
+const sum = (items: Item[], ...kinds: Kind[]) => items.filter(i => kinds.includes(i.kind)).reduce((n, i) => n + i.percent, 0);
 const syllabus = (id: string, exams: number | null, projects: number | null, mode: string, cadence = "Weekly assignments") => {
-  const small = exams === null ? null : SMALL_ITEMS[id] ?? { quizzes: 0, attendance: 0 };
+  const grading = exams === null ? [] : GRADING[id] ?? [];
+  // The headline weights below must agree with the grading table, so a typo fails at startup.
+  if (exams !== null && (sum(grading, ...(["attendance", "participation", "quiz", "homework", "project", "midterm", "final"] as Kind[])) !== 100
+    || sum(grading, "midterm", "final") !== exams || sum(grading, "project") !== projects)) throw new Error(`Grading table for ${id} does not match its weights.`);
+  const attendance = sum(grading, "attendance");
   return {
   term: "Spring 2027 (synthetic)", status: exams === null ? "unknown" : "synthetic",
   examPercent: exams, projectPercent: projects,
   otherPercent: exams === null || projects === null ? null : 100 - exams - projects,
-  quizPercent: small?.quizzes ?? null, attendancePercent: small?.attendance ?? null,
+  quizPercent: exams === null ? null : sum(grading, "quiz"), attendancePercent: exams === null ? null : attendance,
+  grading,
   projectMode: mode, cadence,
-  attendance: !small ? "Not specified" : small.attendance ? `Attendance is graded (${small.attendance}% of the final grade).` : "Attendance is not separately graded.",
+  attendance: exams === null ? "Not specified" : attendance ? `Attendance is graded (${attendance}% of the final grade).` : "Attendance is not separately graded.",
   sourceUrl: `/api/planner/sources/${id}`,
   evidence: exams === null ? [] : [
     { label: "Exam weighting", value: `${exams}%`, page: 1, status: "synthetic", excerpt: `Exams contribute ${exams}% of the final course grade.` },
     { label: "Project weighting", value: `${projects}%`, page: 1, status: "synthetic", excerpt: `Projects contribute ${projects}% of the final course grade.` },
     { label: "Project format", value: mode, page: 1, status: "synthetic", excerpt: `Projects are completed in ${mode === "group" ? "groups of three" : mode === "individual" ? "individual submissions" : "a mixture of individual and group submissions"}.` },
     { label: "Assignment cadence", value: cadence, page: 1, status: "synthetic", excerpt: `${cadence}.` },
-    { label: "Quizzes", value: `${small!.quizzes}%`, page: 2, status: "synthetic", excerpt: small!.quizzes ? `Short in-class quizzes contribute ${small!.quizzes}% of the final grade.` : "There are no graded quizzes." },
-    { label: "Attendance", value: `${small!.attendance}%`, page: 2, status: "synthetic", excerpt: small!.attendance ? `Attendance is taken each session and counts for ${small!.attendance}% of the final grade.` : "Attendance is not graded." },
+    ...grading.map(i => ({ label: i.item, value: `${i.percent}%${i.when ? ` · ${i.when}` : ""}`, page: 2, status: "synthetic",
+      excerpt: `Grading breakdown: ${i.item}, ${i.percent}% of grade${i.when ? ` (${i.when.charAt(0).toLowerCase()}${i.when.slice(1)})` : ""}.` })),
+    ...(["midterm", "final", "quiz", "attendance"] as Kind[]).filter(k => !grading.some(i => i.kind === k)).map(k => ({
+      label: { midterm: "No midterm", final: "No final exam", quiz: "No quizzes", attendance: "Attendance not graded" }[k as "midterm"], value: "0%", page: 2, status: "synthetic",
+      excerpt: `The grading breakdown lists no ${{ midterm: "midterm exam", final: "final exam", quiz: "quizzes", attendance: "graded attendance" }[k as "midterm"]}.` })),
   ],
   };
 };
