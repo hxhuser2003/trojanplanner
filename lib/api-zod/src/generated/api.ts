@@ -88,6 +88,14 @@ export const GetCatalogResponse = zod.object({
   "examPercent": zod.number().nullish(),
   "projectPercent": zod.number().nullish(),
   "otherPercent": zod.number().nullish(),
+  "quizPercent": zod.number().nullish(),
+  "attendancePercent": zod.number().nullish(),
+  "grading": zod.array(zod.object({
+  "item": zod.string(),
+  "kind": zod.enum(['attendance', 'participation', 'quiz', 'homework', 'project', 'midterm', 'final', 'exam', 'other']),
+  "percent": zod.number(),
+  "when": zod.string().optional()
+})),
   "projectMode": zod.enum(['individual', 'group', 'mixed', 'unspecified']),
   "cadence": zod.string(),
   "attendance": zod.string(),
@@ -113,7 +121,7 @@ export const GetCatalogResponse = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(getCatalogResponseDefaultInputConstraintsItemIdMax),
   "label": zod.string().max(getCatalogResponseDefaultInputConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'exclude_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance', 'prefer_no_midterm', 'prefer_no_final']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(getCatalogResponseDefaultInputConstraintsItemValueMax),
@@ -164,7 +172,7 @@ export const SolvePlannerBody = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(solvePlannerBodyConstraintsItemIdMax),
   "label": zod.string().max(solvePlannerBodyConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'exclude_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance', 'prefer_no_midterm', 'prefer_no_final']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(solvePlannerBodyConstraintsItemValueMax),
@@ -241,7 +249,7 @@ export const SolvePlannerResponse = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(solvePlannerResponseRepairsItemInputConstraintsItemIdMax),
   "label": zod.string().max(solvePlannerResponseRepairsItemInputConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'exclude_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance', 'prefer_no_midterm', 'prefer_no_final']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(solvePlannerResponseRepairsItemInputConstraintsItemValueMax),
@@ -316,7 +324,7 @@ export const ParsePreferencesBody = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(parsePreferencesBodyCurrentConstraintsItemIdMax),
   "label": zod.string().max(parsePreferencesBodyCurrentConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'exclude_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance', 'prefer_no_midterm', 'prefer_no_final']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(parsePreferencesBodyCurrentConstraintsItemValueMax),
@@ -356,13 +364,261 @@ export const ParsePreferencesResponse = zod.object({
   "proposedConstraints": zod.array(zod.object({
   "id": zod.string().min(1).max(parsePreferencesResponseProposedConstraintsItemIdMax),
   "label": zod.string().max(parsePreferencesResponseProposedConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'exclude_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance', 'prefer_no_midterm', 'prefer_no_final']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(parsePreferencesResponseProposedConstraintsItemValueMax),
   "days": zod.array(zod.number().int().min(parsePreferencesResponseProposedConstraintsItemDaysItemMin).max(parsePreferencesResponseProposedConstraintsItemDaysItemMax)).max(parsePreferencesResponseProposedConstraintsItemDaysMax),
   "start": zod.number().int().min(parsePreferencesResponseProposedConstraintsItemStartMin).max(parsePreferencesResponseProposedConstraintsItemStartMax),
   "end": zod.number().int().min(parsePreferencesResponseProposedConstraintsItemEndMin).max(parsePreferencesResponseProposedConstraintsItemEndMax)
+})),
+  "warnings": zod.array(zod.string())
+})
+
+
+export const explainPlannerBodyInputConstraintsItemIdMax = 80;
+
+export const explainPlannerBodyInputConstraintsItemLabelMax = 200;
+
+export const explainPlannerBodyInputConstraintsItemValueMax = 100;
+
+export const explainPlannerBodyInputConstraintsItemDaysItemMin = 0;
+export const explainPlannerBodyInputConstraintsItemDaysItemMax = 4;
+
+export const explainPlannerBodyInputConstraintsItemDaysMax = 5;
+
+export const explainPlannerBodyInputConstraintsItemStartMin = 0;
+export const explainPlannerBodyInputConstraintsItemStartMax = 1439;
+
+export const explainPlannerBodyInputConstraintsItemEndMin = 0;
+export const explainPlannerBodyInputConstraintsItemEndMax = 1440;
+
+export const explainPlannerBodyInputConstraintsMax = 20;
+
+export const explainPlannerBodyInputCompletedCoursesMax = 100;
+
+export const explainPlannerBodyInputRequirementIdsMax = 10;
+
+export const explainPlannerBodyInputMinUnitsMin = 0;
+export const explainPlannerBodyInputMinUnitsMax = 20;
+
+export const explainPlannerBodyInputMaxUnitsMin = 0;
+export const explainPlannerBodyInputMaxUnitsMax = 20;
+
+export const explainPlannerBodySelectionsItemCourseIdMax = 40;
+
+export const explainPlannerBodySelectionsItemSectionIdMax = 40;
+
+export const explainPlannerBodySelectionsMax = 10;
+
+export const explainPlannerBodyOtherSelectionsItemCourseIdMax = 40;
+
+export const explainPlannerBodyOtherSelectionsItemSectionIdMax = 40;
+
+export const explainPlannerBodyOtherSelectionsMax = 10;
+
+export const explainPlannerBodyCourseIdMax = 40;
+
+
+
+export const ExplainPlannerBody = zod.object({
+  "mode": zod.enum(['section', 'compare', 'conflict']),
+  "input": zod.object({
+  "constraints": zod.array(zod.object({
+  "id": zod.string().min(1).max(explainPlannerBodyInputConstraintsItemIdMax),
+  "label": zod.string().max(explainPlannerBodyInputConstraintsItemLabelMax),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'exclude_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance', 'prefer_no_midterm', 'prefer_no_final']),
+  "hard": zod.boolean(),
+  "enabled": zod.boolean(),
+  "value": zod.string().max(explainPlannerBodyInputConstraintsItemValueMax),
+  "days": zod.array(zod.number().int().min(explainPlannerBodyInputConstraintsItemDaysItemMin).max(explainPlannerBodyInputConstraintsItemDaysItemMax)).max(explainPlannerBodyInputConstraintsItemDaysMax),
+  "start": zod.number().int().min(explainPlannerBodyInputConstraintsItemStartMin).max(explainPlannerBodyInputConstraintsItemStartMax),
+  "end": zod.number().int().min(explainPlannerBodyInputConstraintsItemEndMin).max(explainPlannerBodyInputConstraintsItemEndMax)
+})).max(explainPlannerBodyInputConstraintsMax),
+  "completedCourses": zod.array(zod.string()).max(explainPlannerBodyInputCompletedCoursesMax),
+  "requirementIds": zod.array(zod.string()).max(explainPlannerBodyInputRequirementIdsMax),
+  "minUnits": zod.number().int().min(explainPlannerBodyInputMinUnitsMin).max(explainPlannerBodyInputMinUnitsMax),
+  "maxUnits": zod.number().int().min(explainPlannerBodyInputMaxUnitsMin).max(explainPlannerBodyInputMaxUnitsMax)
+}),
+  "selections": zod.array(zod.object({
+  "courseId": zod.string().max(explainPlannerBodySelectionsItemCourseIdMax),
+  "sectionId": zod.string().max(explainPlannerBodySelectionsItemSectionIdMax)
+})).max(explainPlannerBodySelectionsMax),
+  "otherSelections": zod.array(zod.object({
+  "courseId": zod.string().max(explainPlannerBodyOtherSelectionsItemCourseIdMax),
+  "sectionId": zod.string().max(explainPlannerBodyOtherSelectionsItemSectionIdMax)
+})).max(explainPlannerBodyOtherSelectionsMax).optional(),
+  "courseId": zod.string().max(explainPlannerBodyCourseIdMax).optional(),
+  "useAi": zod.boolean().optional()
+})
+
+export const ExplainPlannerResponse = zod.object({
+  "summary": zod.string(),
+  "provider": zod.string(),
+  "facts": zod.array(zod.string())
+})
+
+
+export const chatCopilotBodyMessageMax = 2000;
+
+export const chatCopilotBodyHistoryItemTextMax = 2000;
+
+export const chatCopilotBodyHistoryMax = 8;
+
+export const chatCopilotBodyCurrentConstraintsItemIdMax = 80;
+
+export const chatCopilotBodyCurrentConstraintsItemLabelMax = 200;
+
+export const chatCopilotBodyCurrentConstraintsItemValueMax = 100;
+
+export const chatCopilotBodyCurrentConstraintsItemDaysItemMin = 0;
+export const chatCopilotBodyCurrentConstraintsItemDaysItemMax = 4;
+
+export const chatCopilotBodyCurrentConstraintsItemDaysMax = 5;
+
+export const chatCopilotBodyCurrentConstraintsItemStartMin = 0;
+export const chatCopilotBodyCurrentConstraintsItemStartMax = 1439;
+
+export const chatCopilotBodyCurrentConstraintsItemEndMin = 0;
+export const chatCopilotBodyCurrentConstraintsItemEndMax = 1440;
+
+export const chatCopilotBodyCurrentConstraintsMax = 20;
+
+export const chatCopilotBodyCurrentCompletedCoursesMax = 100;
+
+export const chatCopilotBodyCurrentRequirementIdsMax = 10;
+
+export const chatCopilotBodyCurrentMinUnitsMin = 0;
+export const chatCopilotBodyCurrentMinUnitsMax = 20;
+
+export const chatCopilotBodyCurrentMaxUnitsMin = 0;
+export const chatCopilotBodyCurrentMaxUnitsMax = 20;
+
+export const chatCopilotBodySelectionsItemCourseIdMax = 40;
+
+export const chatCopilotBodySelectionsItemSectionIdMax = 40;
+
+export const chatCopilotBodySelectionsMax = 10;
+
+export const chatCopilotBodyScheduleOptionsItemIdMax = 40;
+
+export const chatCopilotBodyScheduleOptionsItemTitleMax = 200;
+
+export const chatCopilotBodyScheduleOptionsMax = 5;
+
+export const chatCopilotBodyChosenScheduleIdMax = 40;
+
+
+
+export const ChatCopilotBody = zod.object({
+  "message": zod.string().min(1).max(chatCopilotBodyMessageMax),
+  "history": zod.array(zod.object({
+  "role": zod.enum(['user', 'assistant']),
+  "text": zod.string().max(chatCopilotBodyHistoryItemTextMax)
+})).max(chatCopilotBodyHistoryMax),
+  "current": zod.object({
+  "constraints": zod.array(zod.object({
+  "id": zod.string().min(1).max(chatCopilotBodyCurrentConstraintsItemIdMax),
+  "label": zod.string().max(chatCopilotBodyCurrentConstraintsItemLabelMax),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'exclude_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance', 'prefer_no_midterm', 'prefer_no_final']),
+  "hard": zod.boolean(),
+  "enabled": zod.boolean(),
+  "value": zod.string().max(chatCopilotBodyCurrentConstraintsItemValueMax),
+  "days": zod.array(zod.number().int().min(chatCopilotBodyCurrentConstraintsItemDaysItemMin).max(chatCopilotBodyCurrentConstraintsItemDaysItemMax)).max(chatCopilotBodyCurrentConstraintsItemDaysMax),
+  "start": zod.number().int().min(chatCopilotBodyCurrentConstraintsItemStartMin).max(chatCopilotBodyCurrentConstraintsItemStartMax),
+  "end": zod.number().int().min(chatCopilotBodyCurrentConstraintsItemEndMin).max(chatCopilotBodyCurrentConstraintsItemEndMax)
+})).max(chatCopilotBodyCurrentConstraintsMax),
+  "completedCourses": zod.array(zod.string()).max(chatCopilotBodyCurrentCompletedCoursesMax),
+  "requirementIds": zod.array(zod.string()).max(chatCopilotBodyCurrentRequirementIdsMax),
+  "minUnits": zod.number().int().min(chatCopilotBodyCurrentMinUnitsMin).max(chatCopilotBodyCurrentMinUnitsMax),
+  "maxUnits": zod.number().int().min(chatCopilotBodyCurrentMaxUnitsMin).max(chatCopilotBodyCurrentMaxUnitsMax)
+}),
+  "selections": zod.array(zod.object({
+  "courseId": zod.string().max(chatCopilotBodySelectionsItemCourseIdMax),
+  "sectionId": zod.string().max(chatCopilotBodySelectionsItemSectionIdMax)
+})).max(chatCopilotBodySelectionsMax).optional(),
+  "scheduleOptions": zod.array(zod.object({
+  "id": zod.string().max(chatCopilotBodyScheduleOptionsItemIdMax),
+  "title": zod.string().max(chatCopilotBodyScheduleOptionsItemTitleMax),
+  "units": zod.number().int(),
+  "campusDays": zod.number().int(),
+  "classHours": zod.number(),
+  "earliestStart": zod.number().int(),
+  "gapMinutes": zod.number().int()
+})).max(chatCopilotBodyScheduleOptionsMax).optional(),
+  "chosenScheduleId": zod.string().max(chatCopilotBodyChosenScheduleIdMax).optional()
+})
+
+export const chatCopilotResponseProposedConstraintsItemIdMax = 80;
+
+export const chatCopilotResponseProposedConstraintsItemLabelMax = 200;
+
+export const chatCopilotResponseProposedConstraintsItemValueMax = 100;
+
+export const chatCopilotResponseProposedConstraintsItemDaysItemMin = 0;
+export const chatCopilotResponseProposedConstraintsItemDaysItemMax = 4;
+
+export const chatCopilotResponseProposedConstraintsItemDaysMax = 5;
+
+export const chatCopilotResponseProposedConstraintsItemStartMin = 0;
+export const chatCopilotResponseProposedConstraintsItemStartMax = 1439;
+
+export const chatCopilotResponseProposedConstraintsItemEndMin = 0;
+export const chatCopilotResponseProposedConstraintsItemEndMax = 1440;
+
+export const chatCopilotResponseUpdatedConstraintsItemIdMax = 80;
+
+export const chatCopilotResponseUpdatedConstraintsItemLabelMax = 200;
+
+export const chatCopilotResponseUpdatedConstraintsItemValueMax = 100;
+
+export const chatCopilotResponseUpdatedConstraintsItemDaysItemMin = 0;
+export const chatCopilotResponseUpdatedConstraintsItemDaysItemMax = 4;
+
+export const chatCopilotResponseUpdatedConstraintsItemDaysMax = 5;
+
+export const chatCopilotResponseUpdatedConstraintsItemStartMin = 0;
+export const chatCopilotResponseUpdatedConstraintsItemStartMax = 1439;
+
+export const chatCopilotResponseUpdatedConstraintsItemEndMin = 0;
+export const chatCopilotResponseUpdatedConstraintsItemEndMax = 1440;
+
+
+
+export const ChatCopilotResponse = zod.object({
+  "kind": zod.enum(['rules', 'clarify', 'answer', 'select']),
+  "message": zod.string(),
+  "provider": zod.string(),
+  "selectScheduleId": zod.string().optional(),
+  "proposedConstraints": zod.array(zod.object({
+  "id": zod.string().min(1).max(chatCopilotResponseProposedConstraintsItemIdMax),
+  "label": zod.string().max(chatCopilotResponseProposedConstraintsItemLabelMax),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'exclude_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance', 'prefer_no_midterm', 'prefer_no_final']),
+  "hard": zod.boolean(),
+  "enabled": zod.boolean(),
+  "value": zod.string().max(chatCopilotResponseProposedConstraintsItemValueMax),
+  "days": zod.array(zod.number().int().min(chatCopilotResponseProposedConstraintsItemDaysItemMin).max(chatCopilotResponseProposedConstraintsItemDaysItemMax)).max(chatCopilotResponseProposedConstraintsItemDaysMax),
+  "start": zod.number().int().min(chatCopilotResponseProposedConstraintsItemStartMin).max(chatCopilotResponseProposedConstraintsItemStartMax),
+  "end": zod.number().int().min(chatCopilotResponseProposedConstraintsItemEndMin).max(chatCopilotResponseProposedConstraintsItemEndMax)
+})),
+  "removeConstraintIds": zod.array(zod.string()),
+  "updatedConstraints": zod.array(zod.object({
+  "id": zod.string().min(1).max(chatCopilotResponseUpdatedConstraintsItemIdMax),
+  "label": zod.string().max(chatCopilotResponseUpdatedConstraintsItemLabelMax),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'exclude_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance', 'prefer_no_midterm', 'prefer_no_final']),
+  "hard": zod.boolean(),
+  "enabled": zod.boolean(),
+  "value": zod.string().max(chatCopilotResponseUpdatedConstraintsItemValueMax),
+  "days": zod.array(zod.number().int().min(chatCopilotResponseUpdatedConstraintsItemDaysItemMin).max(chatCopilotResponseUpdatedConstraintsItemDaysItemMax)).max(chatCopilotResponseUpdatedConstraintsItemDaysMax),
+  "start": zod.number().int().min(chatCopilotResponseUpdatedConstraintsItemStartMin).max(chatCopilotResponseUpdatedConstraintsItemStartMax),
+  "end": zod.number().int().min(chatCopilotResponseUpdatedConstraintsItemEndMin).max(chatCopilotResponseUpdatedConstraintsItemEndMax)
+})),
+  "options": zod.array(zod.string()),
+  "citations": zod.array(zod.object({
+  "courseId": zod.string(),
+  "label": zod.string(),
+  "excerpt": zod.string(),
+  "sourceUrl": zod.string()
 })),
   "warnings": zod.array(zod.string())
 })

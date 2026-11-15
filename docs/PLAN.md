@@ -79,13 +79,13 @@ Label alternatives by observed benefits: “Fewest campus days,” “Later morn
 
 If only one feasible option is established, show one. Do not claim uniqueness unless the search proves it; if search was limited, say no further alternatives were found within the search budget.
 
-## 7. Instructor and syllabus links
+## 7. Syllabus links
 
 Preserve outbound links alongside evidence-backed syllabus facts:
 
-- RateMyProfessors: USC-limited search link per instructor; optionally hand-curated direct links for 10–20 demo instructors. Co-taught sections show one per instructor; TBA shows none. No scraping or rehosting of reviews, and no unsupported “highly rated” claims.
 - Syllabus: official Schedule of Classes link where available; otherwise a clearly labeled usc.edu-limited search link. A search result is not verified evidence.
 - Link to original syllabi; do not rehost full documents. Process only legitimately accessible or authorized materials, retain minimal supporting excerpts as permitted, and verify association with the intended offering.
+- No instructor ratings or review links. The tool compares courses by published facts (times, units, syllabus structure), not by opinions about instructors.
 
 ## 8. Architecture
 
@@ -124,7 +124,6 @@ Treat retrieved documents and syllabi as untrusted data, not tool instructions. 
 | Degree rules | Official program requirements | One major/catalog year; manually reviewed rules |
 | Student progress | Synthetic profile or manual selection | Minimal information needed for the demo |
 | Syllabus facts | Legitimately available or authorized syllabi | Small manually verified set, provenance per fact, no full-document rehosting |
-| Instructor reviews | Outbound RateMyProfessors links | No scraped reviews or inferred ratings |
 
 General STARS upload is deferred. If added, show extracted requirements for student confirmation before solving; minimize/redact identifiers, define retention/deletion, prevent sensitive content in logs, and disclose any external model transmission. Do not claim “local-only” or “no sensitive data stored” without verifying the full processing path.
 
@@ -196,7 +195,7 @@ The supplied event brief requires a working prototype link, public GitHub reposi
 | Misparsed preferences | Editable chips and confirmation before use |
 | Historical or ambiguous syllabus | Visible provenance, manual review, no unsupported ranking |
 | Demo overreach | One conflict-repair workflow before optional features |
-| Privacy and source permissions | Minimal data, documented processing, authorized sources, no scraped reviews |
+| Privacy and source permissions | Minimal data, documented processing, authorized sources |
 
 Pilot with one department and advisor-reviewed requirements. Measure time to a usable schedule, manual corrections required, and whether students understand the trade-offs. Seek Registrar/advising collaboration for maintained official data rather than assuming access or endorsement. Expand majors, advisor sharing, multi-semester reasoning, and integrations only after validating the core workflow.
 
@@ -207,3 +206,9 @@ Fifteen graduate Spring 2027 CSCI courses are cached in `artifacts/api-server/sr
 The loader creates complete lecture/lab/discussion/quiz combinations for matching USC link codes and sessions, and the solver checks their published meeting times. TBA components remain attached to each combination and are disclosed as unchecked times. Prerequisite alternatives are modeled as groups in which at least one listed course must be completed. Seat counts are deliberately not treated as enrollment guarantees.
 
 The default eight-unit, two-course planning goals are illustrative and clearly labeled. No official degree requirement has been encoded. Thirteen courses link to dated USC-hosted historical syllabi or instructor course pages; two have clearly labeled mock syllabus pages. Unknown grading weights stay unknown. The solver excludes historical assessment weights from preference scoring and uses mock weights only for demonstration. The two-course default follows the [USC MS CS new student guide](https://www.cs.usc.edu/ms-cs-new-student-guide/) for traditional MS students who started in Spring 2020 or later; individual programs and exceptions need confirmation. Before a campus pilot, confirm degree rules, registration eligibility, and current syllabi with the relevant USC offices.
+
+## 17. To improve later
+
+Open design questions, kept working as-is for the demo:
+
+- **Completed courses (Degree page).** The checklist shows the fifteen planned courses plus prerequisite options, and the "Add a course code not listed" field accepts any well-formed code (for example `CSCI-599`) without checking it against USC's catalog. Codes outside the subset are recorded for prerequisite checks only and never count toward goals. Still to decide: how this should work alongside STARS import, whether to validate codes against the Schedule of Classes, whether outside courses can satisfy goals, and whether the checklist should list more courses or be replaced by search.

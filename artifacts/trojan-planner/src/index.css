@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
@@ -79,70 +79,70 @@
   --elevate-1: rgba(0, 0, 0, 0.03);
   --elevate-2: rgba(0, 0, 0, 0.08);
 
-  --background: 40 38% 95%;
+  --background: 0 0% 100%;
 
-  --foreground: 350 30% 12%;
+  --foreground: 240 10% 10%;
 
-  --border: 36 22% 82%;
+  --border: 240 6% 91%;
 
-  --card: 42 45% 98%;
+  --card: 0 0% 100%;
 
-  --card-foreground: 350 30% 12%;
+  --card-foreground: 240 10% 10%;
 
-  --card-border: 36 22% 84%;
+  --card-border: 240 6% 91%;
 
-  --sidebar: 352 62% 22%;
+  --sidebar: 0 0% 100%;
 
-  --sidebar-foreground: 42 60% 94%;
+  --sidebar-foreground: 240 10% 10%;
 
-  --sidebar-border: 352 50% 28%;
+  --sidebar-border: 240 6% 91%;
 
-  --sidebar-primary: 43 92% 56%;
+  --sidebar-primary: 352 70% 36%;
 
-  --sidebar-primary-foreground: 350 40% 12%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 352 50% 30%;
+  --sidebar-accent: 240 5% 96%;
 
-  --sidebar-accent-foreground: 42 60% 94%;
+  --sidebar-accent-foreground: 240 10% 10%;
 
-  --sidebar-ring: 43 92% 56%;
+  --sidebar-ring: 352 70% 36%;
 
-  --popover: 42 45% 98%;
+  --popover: 0 0% 100%;
 
-  --popover-foreground: 350 30% 12%;
+  --popover-foreground: 240 10% 10%;
 
-  --popover-border: 36 22% 82%;
+  --popover-border: 240 6% 90%;
 
-  --primary: 352 70% 32%;
+  --primary: 352 70% 36%;
 
-  --primary-foreground: 42 60% 96%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 40 40% 89%;
+  --secondary: 240 5% 96%;
 
-  --secondary-foreground: 350 30% 16%;
+  --secondary-foreground: 240 10% 10%;
 
-  --muted: 38 30% 90%;
+  --muted: 240 5% 96%;
 
-  --muted-foreground: 350 10% 38%;
+  --muted-foreground: 240 4% 46%;
 
   --accent: 43 90% 58%;
 
-  --accent-foreground: 350 40% 12%;
+  --accent-foreground: 240 10% 10%;
 
-  --destructive: 8 72% 44%;
+  --destructive: 0 72% 45%;
 
-  --destructive-foreground: 42 60% 96%;
+  --destructive-foreground: 0 0% 100%;
 
-  --input: 36 20% 76%;
-  --ring: 43 90% 50%;
+  --input: 240 6% 88%;
+  --ring: 352 70% 36%;
   --chart-1: 352 70% 32%;
   --chart-2: 43 90% 52%;
   --chart-3: 190 40% 34%;
   --chart-4: 24 70% 48%;
   --chart-5: 260 20% 40%;
 
-  --app-font-sans: 'Instrument Sans', system-ui, sans-serif;
-  --app-font-serif: 'Fraunces', Georgia, serif;
+  --app-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --app-font-serif: 'Inter', system-ui, -apple-system, sans-serif;
   --app-font-mono: 'JetBrains Mono', Menlo, monospace;
   --radius: 0.5rem; /* 8px */
   --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0); /*replace with H S L */
@@ -228,63 +228,63 @@
   --elevate-1: rgba(255, 255, 255, 0.04);
   --elevate-2: rgba(255, 255, 255, 0.09);
 
-  --background: 350 25% 8%;
+  --background: 240 8% 7%;
 
-  --foreground: 42 40% 92%;
+  --foreground: 0 0% 95%;
 
-  --border: 350 15% 20%;
+  --border: 240 5% 17%;
 
-  --card: 350 22% 11%;
+  --card: 240 7% 9%;
 
-  --card-foreground: 42 40% 92%;
+  --card-foreground: 0 0% 95%;
 
-  --card-border: 350 15% 20%;
+  --card-border: 240 5% 17%;
 
-  --sidebar: 352 62% 22%;
+  --sidebar: 240 8% 7%;
 
-  --sidebar-foreground: 42 60% 94%;
+  --sidebar-foreground: 0 0% 95%;
 
-  --sidebar-border: 352 50% 28%;
+  --sidebar-border: 240 5% 17%;
 
-  --sidebar-primary: 43 92% 56%;
+  --sidebar-primary: 352 70% 62%;
 
-  --sidebar-primary-foreground: 350 40% 12%;
+  --sidebar-primary-foreground: 0 0% 100%;
 
-  --sidebar-accent: 352 50% 30%;
+  --sidebar-accent: 240 5% 14%;
 
-  --sidebar-accent-foreground: 42 60% 94%;
+  --sidebar-accent-foreground: 0 0% 95%;
 
-  --sidebar-ring: 43 92% 56%;
+  --sidebar-ring: 352 70% 62%;
 
-  --popover: 350 22% 11%;
+  --popover: 240 7% 9%;
 
-  --popover-foreground: 42 40% 92%;
+  --popover-foreground: 0 0% 95%;
 
-  --popover-border: 350 15% 22%;
+  --popover-border: 240 5% 18%;
 
-  --primary: 352 60% 48%;
+  --primary: 352 65% 58%;
 
-  --primary-foreground: 42 60% 96%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 350 15% 18%;
+  --secondary: 240 5% 14%;
 
-  --secondary-foreground: 42 40% 92%;
+  --secondary-foreground: 0 0% 95%;
 
-  --muted: 350 15% 16%;
+  --muted: 240 5% 14%;
 
-  --muted-foreground: 40 15% 65%;
+  --muted-foreground: 240 5% 64%;
 
   --accent: 43 90% 58%;
 
-  --accent-foreground: 350 40% 12%;
+  --accent-foreground: 240 10% 10%;
 
-  --destructive: 8 72% 44%;
+  --destructive: 0 70% 55%;
 
-  --destructive-foreground: 42 60% 96%;
+  --destructive-foreground: 0 0% 100%;
 
   /* Used as the border around inputs. Dark mode: Should be a border that is light enough to have high contrast when rendered on a --card background. More contrast than standard --border */
-  --input: 350 15% 30%;
-  --ring: 43 90% 50%;
+  --input: 240 5% 24%;
+  --ring: 352 65% 58%;
   --chart-1: 352 70% 32%;
   --chart-2: 43 90% 52%;
   --chart-3: 190 40% 34%;
@@ -435,9 +435,10 @@
 
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;
 background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
-.font-display{font-family:var(--app-font-serif);font-optical-sizing:auto;letter-spacing:-0.02em}
+.font-display{font-family:var(--app-font-sans);letter-spacing:-0.015em}
 .hatch{background-image:repeating-linear-gradient(135deg,hsl(var(--foreground)/.09) 0 6px,transparent 6px 12px)}
 .unknown-stripes{background-image:repeating-linear-gradient(45deg,hsl(var(--muted-foreground)/.25) 0 4px,transparent 4px 8px)}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.rise{animation:rise .45s cubic-bezier(.2,.7,.2,1) both}
+.rise{animation:rise .3s cubic-bezier(.2,.7,.2,1) both}
+@media (prefers-reduced-motion:reduce){.rise{animation:none}}
 @media print{header,nav,.no-print,body::before{display:none!important}body{background:#fffdf8}}

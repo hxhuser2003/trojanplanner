@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
-import { Search, ExternalLink, Plus, FileText, Check } from 'lucide-react';
+import { Search, ExternalLink, Plus, FileText, Check, Ban } from 'lucide-react';
 import type { Catalog, Course, Constraint } from '@workspace/api-client-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CatalogGate } from '@/components/gate';
 import { PageHeader } from '@/components/shell';
 import { usePlanner } from '@/lib/planner-store';
-import { DAYS, fmtTime } from '@/lib/format';
+import { sectionParts } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -71,6 +71,21 @@ function projectLabel(c: Course) {
   return `${p}% projects · ${c.syllabus.status === 'synthetic' ? 'mock' : 'historical'}`;
 }
 
+const GROUP = {
+  exams: { label: 'Exams', cls: 'bg-primary' },
+  projects: { label: 'Projects', cls: 'bg-accent' },
+  coursework: { label: 'Homework & quizzes', cls: 'bg-chart-3' },
+  attendance: { label: 'Attendance & participation', cls: 'bg-chart-5' },
+  other: { label: 'Other', cls: 'bg-muted-foreground/40' },
+};
+function gradeGroup(kind: string): keyof typeof GROUP {
+  if (kind === 'midterm' || kind === 'final' || kind === 'exam') return 'exams';
+  if (kind === 'project') return 'projects';
+  if (kind === 'homework' || kind === 'quiz') return 'coursework';
+  if (kind === 'attendance' || kind === 'participation') return 'attendance';
+  return 'other';
+}
+
 function Bar({ label, v, cls }: { label: string; v: number | null | undefined; cls: string }) {
   return (
     <div>
@@ -88,16 +103,21 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
   const { toast } = useToast();
   const s = course.syllabus;
   const required = p.input?.constraints.some((c) => c.kind === 'require_course' && c.value === course.id && c.enabled);
+  const excluded = p.input?.constraints.some((c) => c.kind === 'exclude_course' && c.value === course.id && c.enabled);
   const req = catalog.requirements.find((r) => r.id === course.requirement);
 
-  const addRequired = () => {
+  // Requiring and excluding the same course would contradict, so each replaces the other.
+  const setCourseRule = (kind: 'require_course' | 'exclude_course') => {
     const input = p.input ?? catalog.defaultInput;
-    if (input.constraints.length >= 20) { toast({ title: 'Rule limit reached', variant: 'destructive' }); return; }
-    const c: Constraint = { id: `req-${course.id}`, label: `Take ${course.code}`, kind: 'require_course', hard: true, enabled: true, value: course.id, days: [], start: 0, end: 0 };
-    const next = { ...input, constraints: [...input.constraints.filter((x) => x.id !== c.id), c] };
+    const rest = input.constraints.filter((x) => !((x.kind === 'require_course' || x.kind === 'exclude_course') && x.value === course.id));
+    if (rest.length >= 20) { toast({ title: 'Rule limit reached', variant: 'destructive' }); return; }
+    const c: Constraint = kind === 'require_course'
+      ? { id: `req-${course.id}`, label: `Take ${course.code}`, kind, hard: true, enabled: true, value: course.id, days: [], start: 0, end: 0 }
+      : { id: `excl-${course.id}`, label: `Don't take ${course.code}`, kind, hard: true, enabled: true, value: course.id, days: [], start: 0, end: 0 };
+    const next = { ...input, constraints: [...rest, c] };
     p.setInput(next);
     void p.solve(next);
-    toast({ title: `${course.code} is now required`, description: 'Re-solving your week…' });
+    toast({ title: kind === 'require_course' ? `${course.code} is now required` : `${course.code} is now excluded`, description: 'Re-solving your week…' });
     nav('/');
   };
 
@@ -106,26 +126,35 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="font-mono text-sm font-semibold" style={{ color: course.color }}>{course.code} · {course.units} units · {req?.title ?? course.requirement}</p>
-          <h2 className="font-display text-3xl font-extrabold mt-1">{course.title}</h2>
+          <h2 className="text-2xl font-semibold tracking-tight mt-1">{course.title}</h2>
           <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{course.description}</p>
           {course.prerequisiteGroups.length > 0 && <p className="text-xs mt-2"><span className="font-semibold">Published prerequisites:</span> {course.prerequisiteGroups.map((group) => `(${group.join(' or ')})`).join(' and ')}</p>}
         </div>
-        <Button onClick={addRequired} disabled={required} data-testid="button-add-required">
-          {required ? <><Check className="size-4" />Required</> : <><Plus className="size-4" />Add as required</>}
-        </Button>
+        <div className="flex flex-col gap-2 shrink-0">
+          <Button onClick={() => setCourseRule('require_course')} disabled={required} data-testid="button-add-required">
+            {required ? <><Check className="size-4" />Required</> : <><Plus className="size-4" />Add as required</>}
+          </Button>
+          <Button variant="outline" onClick={() => setCourseRule('exclude_course')} disabled={excluded} data-testid="button-exclude">
+            <Ban className="size-4" />{excluded ? 'Excluded' : "Don't take this"}
+          </Button>
+        </div>
       </div>
 
-      <h3 className="font-display text-lg font-semibold mt-6 mb-2">Registration combinations</h3>
+      <h3 className="text-base font-semibold mt-6 mb-2">Registration combinations</h3>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
-          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Section</th><th className="p-2.5">Instructor</th><th className="p-2.5">Meetings</th><th className="p-2.5">Eligibility</th></tr></thead>
+          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Meets</th><th className="p-2.5">Instructor</th><th className="p-2.5">Eligibility</th></tr></thead>
           <tbody>
             {course.sections.map((sec) => (
               <tr key={sec.id} className="border-t" data-testid={`row-section-${sec.id}`}>
-                <td className="p-2.5 font-mono">{sec.componentIds.join(' + ')}</td>
+                <td className="p-2.5 text-xs">
+                  {sectionParts(sec).map((part) => (
+                    <div key={part.id} className="flex gap-2"><span className="w-20 shrink-0 text-muted-foreground">{part.kind}</span>
+                      <span className={cn('whitespace-nowrap', part.tba && 'font-medium text-amber-700')}>{part.tba ? 'Time TBA' : part.times.join(', ')}</span></div>
+                  ))}
+                </td>
                 <td className="p-2.5">{sec.instructor}
                   <a href={`https://www.google.com/search?q=${encodeURIComponent(`"${sec.instructor}" site:usc.edu`)}`} target="_blank" rel="noreferrer" className="block text-[11px] text-primary hover:underline" data-testid={`link-instructor-${sec.id}`}>Search usc.edu</a></td>
-                <td className="p-2.5 text-xs">{sec.meetings.map((m, i) => <div key={i}>{DAYS[m.day]} {fmtTime(m.start)}–{fmtTime(m.end)} · {m.kind} · {m.location}</div>)}{sec.unknownScheduleComponents.map((item) => <div key={item} className="font-semibold text-amber-700">{item}</div>)}</td>
                 <td className="p-2.5 text-xs text-muted-foreground">{sec.eligibility}{sec.syllabusUrl && <a href={sec.syllabusUrl} target="_blank" rel="noreferrer" className="block mt-1 text-primary hover:underline">Check Spring 2027 syllabus listing (may be unpublished)</a>}</td>
               </tr>
             ))}
@@ -136,13 +165,38 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
 
       <div className="mt-6 grid md:grid-cols-[1fr_1.4fr] gap-6">
         <div>
-          <h3 className="font-display text-lg font-semibold mb-1">Assessment fit</h3>
-          <p className="text-xs text-muted-foreground mb-3">{s.status === 'synthetic' ? 'Mock syllabus created for this demo' : `Real USC syllabus from ${s.term}`}. These weights are not verified for Spring 2027.</p>
-          <div className="space-y-3">
-            <Bar label="Exams" v={s.examPercent} cls="bg-primary" />
-            <Bar label="Projects" v={s.projectPercent} cls="bg-accent" />
-            <Bar label="Other" v={s.otherPercent} cls="bg-chart-3" />
-          </div>
+          <h3 className="text-base font-semibold mb-1">Assessment fit</h3>
+          <p className="text-xs text-muted-foreground mb-3">{s.status === 'synthetic' ? 'Mock syllabus created for this demo' : s.status === 'historical' ? `Real USC syllabus from ${s.term}` : 'No syllabus on file; unknown is not zero'}. These weights are not verified for Spring 2027.</p>
+          {s.grading.length > 0 ? (
+            <div data-testid="table-grading">
+              <div className="flex h-2.5 rounded-full overflow-hidden bg-muted gap-px" aria-hidden>
+                {s.grading.map((g) => <div key={g.item} className={cn('h-full origin-left rise', GROUP[gradeGroup(g.kind)].cls)} style={{ width: `${g.percent}%` }} title={`${g.item} ${g.percent}%`} />)}
+              </div>
+              <ul className="mt-3 divide-y">
+                {s.grading.map((g) => (
+                  <li key={g.item} className="flex items-start gap-2.5 py-2 text-sm">
+                    <span className={cn('mt-1.5 size-2 rounded-full shrink-0', GROUP[gradeGroup(g.kind)].cls)} />
+                    <div className="flex-1 min-w-0">
+                      <p>{g.item}</p>
+                      {g.when && <p className="text-xs text-muted-foreground">{g.when}</p>}
+                    </div>
+                    <span className="font-mono tabular-nums text-sm">{g.percent}%</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                {(Object.keys(GROUP) as (keyof typeof GROUP)[]).filter((k) => s.grading.some((g) => gradeGroup(g.kind) === k)).map((k) => (
+                  <span key={k} className="inline-flex items-center gap-1"><span className={cn('size-1.5 rounded-full', GROUP[k].cls)} />{GROUP[k].label}</span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Bar label="Exams" v={s.examPercent} cls="bg-primary" />
+              <Bar label="Projects" v={s.projectPercent} cls="bg-accent" />
+              <Bar label="Other" v={s.otherPercent} cls="bg-chart-3" />
+            </div>
+          )}
           <div className="mt-4 rounded-lg bg-secondary/60 p-3 text-xs space-y-1">
             <p><span className="font-semibold">Label:</span> {projectLabel(course)} <span className="text-muted-foreground">(threshold: projects at or above 50%)</span></p>
             <p><span className="font-semibold">Project mode:</span> {s.projectMode}</p>
@@ -155,7 +209,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
           </div>
         </div>
         <div>
-          <h3 className="font-display text-lg font-semibold mb-2">Evidence</h3>
+          <h3 className="text-base font-semibold mb-2">Evidence</h3>
           {s.evidence.length === 0 ? <p className="text-sm italic text-muted-foreground">No syllabus evidence on file. Treat all assessment details as unknown.</p> : (
             <ul className="space-y-2">
               {s.evidence.map((e, i) => (

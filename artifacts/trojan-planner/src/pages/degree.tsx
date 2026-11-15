@@ -54,23 +54,9 @@ function Degree({ catalog }: { catalog: Catalog }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="space-y-6">
           <div className="rounded-xl border bg-card p-5">
-            <h2 className="font-display text-xl font-bold">Requirements to work on</h2>
-            <p className="text-xs text-muted-foreground mb-3">The solver picks courses that advance the selected buckets.</p>
-            <ul className="space-y-2">
-              {catalog.requirements.map((r) => {
-                const on = input.requirementIds.includes(r.id);
-                return (
-                  <li key={r.id}>
-                    <label className={cn('flex gap-3 rounded-lg border p-3 cursor-pointer transition-colors', on ? 'border-primary bg-primary/5' : 'hover:bg-secondary/50')}>
-                      <Checkbox checked={on} data-testid={`checkbox-req-${r.id}`} onCheckedChange={() => set({ requirementIds: on ? input.requirementIds.filter((x) => x !== r.id) : [...input.requirementIds, r.id].slice(0, 10) })} />
-                      <span><span className="font-semibold text-sm">{r.title}</span> <span className="text-xs font-mono text-muted-foreground">needs {r.needed}</span>
-                        <span className="block text-xs text-muted-foreground">{r.description}</span></span>
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="grid grid-cols-2 gap-3 mt-4">
+            <h2 className="text-base font-semibold">Units this semester</h2>
+            <p className="text-xs text-muted-foreground mb-3">The solver keeps your plan inside this range.</p>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1"><Label htmlFor="minu">Min units</Label><Input id="minu" type="number" min={0} max={20} value={input.minUnits} onChange={(e) => set({ minUnits: Math.min(20, Math.max(0, Number(e.target.value))) })} data-testid="input-min-units" /></div>
               <div className="space-y-1"><Label htmlFor="maxu">Max units</Label><Input id="maxu" type="number" min={0} max={20} value={input.maxUnits} onChange={(e) => set({ maxUnits: Math.min(20, Math.max(0, Number(e.target.value))) })} data-testid="input-max-units" /></div>
             </div>
@@ -78,7 +64,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
           </div>
 
           <div className="rounded-xl border bg-card p-5">
-            <h2 className="font-display text-xl font-bold">Completed courses</h2>
+            <h2 className="text-base font-semibold">Completed courses</h2>
             <p className="text-xs text-muted-foreground mb-3">Used for prerequisites. Only check courses with a final grade.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {catalog.completedOptions.map((id) => (
@@ -90,7 +76,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
             <div className="mt-4">
               <Label htmlFor="manual">Add a course code not listed</Label>
               <div className="flex gap-2 mt-1">
-                <Input id="manual" value={manual} onChange={(e) => setManual(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addManual()} placeholder="e.g. WRIT 150, MATH-226" data-testid="input-manual-course" />
+                <Input id="manual" value={manual} onChange={(e) => setManual(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addManual()} placeholder="e.g. CSCI 567, EE 559" data-testid="input-manual-course" />
                 <Button variant="outline" onClick={addManual} data-testid="button-add-manual"><Plus className="size-4" />Add</Button>
               </div>
             </div>
@@ -156,7 +142,7 @@ function StarsImport({ catalogKnown, onApply }: { catalogKnown: Set<string>; onA
 
   return (
     <section className="rounded-xl border bg-card p-5 self-start" data-testid="panel-stars">
-      <div className="flex items-center gap-2"><FileSearch className="size-5 text-primary" /><h2 className="font-display text-xl font-bold">Import from a STARS report</h2></div>
+      <div className="flex items-center gap-2"><FileSearch className="size-5 text-primary" /><h2 className="text-base font-semibold">Import from a STARS report</h2></div>
       <p className="text-xs text-muted-foreground mt-1">Your PDF file stays in this browser. When you click Find course candidates, the extracted text is sent to the TrojanPlanner backend parser; it is not saved here or there by this app. Results are candidates for you to confirm.</p>
 
       <div className="mt-4 rounded-lg border-2 border-dashed p-5 text-center hover:border-primary/50 transition-colors">

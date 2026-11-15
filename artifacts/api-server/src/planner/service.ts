@@ -7,9 +7,9 @@ import type { z } from "zod";
 import { catalog } from "./catalog";
 
 export type PlannerInput = z.infer<typeof SolvePlannerBody>;
-type Constraint = PlannerInput["constraints"][number];
-type Course = typeof catalog.courses[number];
-type Section = Course["sections"][number];
+export type Constraint = PlannerInput["constraints"][number];
+export type Course = typeof catalog.courses[number];
+export type Section = Course["sections"][number];
 type RawSolution = { selected: [Course, Section][]; score: number };
 type WorkerResult = {
   status: "optimal" | "feasible" | "infeasible" | "unknown" | "invalid";
@@ -24,7 +24,7 @@ export function validateInput(input: PlannerInput): string | null {
   if (input.requirementIds.some(id => !catalog.requirements.some(r => r.id === id))) return "Unknown requirement.";
   if (input.completedCourses.some(id => !/^[A-Z]{2,8}-\d{3}[A-Z]?$/i.test(id))) return "Use course codes such as CSCI-103.";
   for (const c of input.constraints) {
-    if (c.kind === "require_course" && !catalog.courses.some(course => course.id === c.value)) return `Unknown course in ${c.label}.`;
+    if ((c.kind === "require_course" || c.kind === "exclude_course") && !catalog.courses.some(course => course.id === c.value)) return `Unknown course in ${c.label}.`;
     if (c.kind === "lock_section" && !catalog.courses.some(course => course.sections.some(s => s.id === c.value))) return `Unknown section in ${c.label}.`;
     if ((c.kind === "blocked" || c.kind === "no_day") && c.days.length === 0) return `Select at least one weekday for ${c.label}.`;
     if (c.kind === "blocked" && c.start >= c.end) return `End time must be after start time for ${c.label}.`;
@@ -32,7 +32,7 @@ export function validateInput(input: PlannerInput): string | null {
   }
   return null;
 }
-function satisfies(section: Section, constraint: Constraint) {
+export function satisfies(section: Section, constraint: Constraint) {
   return section.meetings.every(m => {
     const applies = constraint.days.length === 0 || constraint.days.includes(m.day);
     if (constraint.kind === "no_day") return !constraint.days.includes(m.day);
@@ -69,6 +69,7 @@ function validateSolution(raw: RawSolution, input: PlannerInput): [Course, Secti
   }
   for (const rule of input.constraints.filter(x => x.enabled && x.hard)) {
     if (rule.kind === "require_course" && !selected.some(([c]) => c.id === rule.value)) throw new Error("Required course missing.");
+    if (rule.kind === "exclude_course" && selected.some(([c]) => c.id === rule.value)) throw new Error("Excluded course selected.");
     if (rule.kind === "lock_section" && !selected.some(([, s]) => s.id === rule.value)) throw new Error("Locked section missing.");
   }
   for (const id of input.requirementIds) {
@@ -86,14 +87,21 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     const list = meetings.filter(m => m.day === day).sort((a, b) => a.start - b.start);
     for (let i = 1; i < list.length; i++) gapMinutes += list[i]!.start - list[i - 1]!.end;
   }
-  const mock = selected.filter(([c]) => c.syllabus.status === "synthetic");
-  const individual = mock.filter(([c]) => c.syllabus.projectMode === "individual").length;
-  const projectHeavy = mock.filter(([c]) => (c.syllabus.projectPercent ?? -1) >= 50).length;
+  // Historical tables are displayed, but only labeled mocks contribute assessment counts.
+  const known = selected.filter(([c]) => c.syllabus.grading.length > 0);
+  const scored = known.filter(([c]) => c.syllabus.status === "synthetic");
+  const individual = scored.filter(([c]) => c.syllabus.projectMode === "individual").length;
+  const projectHeavy = scored.filter(([c]) => (c.syllabus.projectPercent ?? -1) >= 50).length;
+  const examHeavy = scored.filter(([c]) => (c.syllabus.examPercent ?? -1) >= 50).length;
+  const quizCourses = scored.filter(([c]) => (c.syllabus.quizPercent ?? 0) > 0).length;
+  const attendanceCourses = scored.filter(([c]) => (c.syllabus.attendancePercent ?? 0) > 0).length;
+  const midtermCourses = scored.filter(([c]) => c.syllabus.grading.some(i => i.kind === "midterm")).length;
+  const finalCourses = scored.filter(([c]) => c.syllabus.grading.some(i => i.kind === "final")).length;
   const days = new Set(meetings.map(m => m.day)).size;
   const earliest = meetings.length ? Math.min(...meetings.map(m => m.start)) : 0;
   return {
     id: createHash("sha256").update(selected.map(([, s]) => s.id).sort().join(",")).digest("hex").slice(0, 16),
-    title: index === 0 ? "Best preference fit" : `${days} campus days · alternative ${index}`,
+    title: index === 0 ? "Best preference fit" : `Alternative ${index}`,
     selections: selected.map(([c, s]) => ({
       courseId: c.id, sectionId: s.id,
       reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. Published linked meeting times checked. ${c.syllabus.examPercent == null || c.syllabus.projectPercent == null ? `Assessment weights are partly or fully unknown in the ${c.syllabus.status === "synthetic" ? "mock" : `historical ${c.syllabus.term}`} source; verify current policy.` : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (${c.syllabus.status === "synthetic" ? "illustrative mock" : `historical ${c.syllabus.term}`}; verify current policy).`}`,
@@ -101,14 +109,15 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     units: selected.reduce((sum, [c]) => sum + c.units, 0), campusDays: days,
     classHours: Math.round(meetings.reduce((sum, m) => sum + m.end - m.start, 0) / 6) / 10,
     gapMinutes, earliestStart: earliest, score: raw.score,
+    projectHeavy, examHeavy, individual, quizCourses, attendanceCourses, midtermCourses, finalCourses,
     checks: ["No overlapping published meetings in the loaded data", "All enabled hard constraints respected for published times", "Unit bounds and selected illustrative goals checked", "Published linked meetings and listed prerequisite groups checked against entered completions"],
     warnings: ["USC offerings are a cached snapshot; recheck the Schedule of Classes before registration.", "Planning goals and completed courses are illustrative, not an official degree audit. Seat availability, restrictions, and actual prerequisite clearance remain unverified.",
       ...(selected.length > 2 ? ["USC's MS student guide says traditional MS students who started in Spring 2020 or later are limited to two four-unit CSCI/DSCI courses per term. Check your individual program and registration eligibility."] : []),
-      ...selected.filter(([, s]) => s.unknownScheduleComponents.length > 0).map(([c, s]) => `${c.code} §${s.id}: ${s.unknownScheduleComponents.join(", ")}; full conflict check is not possible.`),
-      ...(selected.some(([c]) => c.syllabus.status === "historical") ? ["Historical USC syllabi describe past sections and are not used to score assessment preferences; confirm current grading with instructors."] : []),
-      ...(mock.length > 0 ? ["Mock syllabi are hypothetical and are used only for illustrative assessment preferences."] : []),
+      ...selected.filter(([, s]) => s.unknownScheduleComponents.length > 0).map(([c, s]) => `${c.code}: ${s.unknownScheduleComponents.map(u => u.replace(/ \d{5}\b/, "")).join(", ")}; full conflict check is not possible.`),
+      ...(selected.some(([c]) => c.syllabus.status === "historical") ? ["Historical USC syllabi describe past sections and are not used to score assessment preferences; confirm Spring 2027 grading with instructors."] : []),
+      ...(selected.some(([c]) => c.syllabus.status === "synthetic") ? ["Some grading tables are illustrative mocks, not published by USC."] : []),
       ...(selected.some(([c]) => c.syllabus.examPercent == null || c.syllabus.projectPercent == null || c.syllabus.otherPercent == null) ? ["Some historical assessment weights are unspecified; absence of evidence does not mean fewer exams or projects."] : [])],
-    assessmentSummary: `${projectHeavy} project-weighted and ${individual} individual-project courses based on mock syllabi only. Mock coverage: ${mock.length}/${selected.length}; historical USC syllabus sources are viewable separately. No difficulty estimate.`,
+    assessmentSummary: `Mock-based counts only: ${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses; ${quizCourses} with graded quizzes; ${attendanceCourses} with graded attendance or participation; ${midtermCourses} with a midterm; ${finalCourses} with a final exam. Dated grading tables: ${known.length}/${selected.length}; historical USC sources are viewable separately. No difficulty estimate.`,
   };
 }
 let activeSolves = 0;
@@ -137,12 +146,51 @@ async function worker(input: PlannerInput): Promise<WorkerResult> {
     process.stdin.end(JSON.stringify({ catalog, input }));
   });
 }
+type Summary = ReturnType<typeof summarize>;
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const clock = (min: number) => {
+  const h = Math.floor(min / 60), m = min % 60;
+  return `${h % 12 === 0 ? 12 : h % 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h >= 12 ? "pm" : "am"}`;
+};
+/** Names an alternative by its single biggest advantage over the best schedule, e.g. "Only 2 campus days" or "No quizzes". */
+function alternativeTitle(best: Summary, alt: Summary, used: Set<string>): string {
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  // Each candidate is [rough size of the win, label]. Sizes put different units on one scale.
+  const wins: [number, string][] = [];
+  if (alt.campusDays < best.campusDays) wins.push([(best.campusDays - alt.campusDays) * 30, `Only ${plural(alt.campusDays, "campus day")}`]);
+  if (alt.earliestStart > best.earliestStart) wins.push([(alt.earliestStart - best.earliestStart) / 3, `No class before ${clock(alt.earliestStart)}`]);
+  if (alt.quizCourses < best.quizCourses) wins.push([(best.quizCourses - alt.quizCourses) * 18, alt.quizCourses ? "Fewer quizzes" : "No quizzes"]);
+  if (alt.attendanceCourses < best.attendanceCourses) wins.push([(best.attendanceCourses - alt.attendanceCourses) * 18, alt.attendanceCourses ? "Less graded attendance" : "No graded attendance"]);
+  if (alt.midtermCourses < best.midtermCourses) wins.push([(best.midtermCourses - alt.midtermCourses) * 20, alt.midtermCourses ? "Fewer midterms" : "No midterms"]);
+  if (alt.finalCourses < best.finalCourses) wins.push([(best.finalCourses - alt.finalCourses) * 20, alt.finalCourses ? "Fewer final exams" : "No final exams"]);
+  if (alt.gapMinutes < best.gapMinutes) wins.push([(best.gapMinutes - alt.gapMinutes) / 6, alt.gapMinutes ? "Fewer gaps between classes" : "Back-to-back classes, no gaps"]);
+  if (alt.classHours < best.classHours) wins.push([(best.classHours - alt.classHours) * 8, "Less time in class"]);
+  if (alt.projectHeavy > best.projectHeavy) wins.push([(alt.projectHeavy - best.projectHeavy) * 15, "More project-based"]);
+  if (alt.examHeavy > best.examHeavy) wins.push([(alt.examHeavy - best.examHeavy) * 15, "More exam-based"]);
+  if (alt.individual > best.individual) wins.push([(alt.individual - best.individual) * 15, "More solo projects"]);
+  if (alt.units < best.units) wins.push([10, `Lighter load · ${alt.units} units`]);
+  if (alt.units > best.units) wins.push([10, `More progress · ${alt.units} units`]);
+  const pick = wins.sort((a, b) => b[0] - a[0]).find(([, label]) => !used.has(label));
+  if (pick) return pick[1];
+  // No measurable win: say what changed instead.
+  const code = (id: string) => catalog.courses.find(c => c.id === id)?.code ?? id;
+  const bestIds = new Set(best.selections.map(s => s.courseId));
+  const added = alt.selections.filter(s => !bestIds.has(s.courseId)).map(s => code(s.courseId));
+  return added.length ? `Try ${added.join(" + ")}` : "Same courses, other sections";
+}
+
 export async function solve(input: PlannerInput) {
   if (activeSolves >= 3) throw new Error("BUSY");
   activeSolves++;
   try {
     const result = await worker(input);
     const schedules = result.solutions.map((s, i) => summarize(s, input, i));
+    const seen = new Set<string>();
+    for (const [i, s] of schedules.entries()) {
+      if (i > 0) s.title = alternativeTitle(schedules[0]!, s, seen);
+      while (seen.has(s.title)) s.title = `${s.title} (${i + 1})`;
+      seen.add(s.title);
+    }
     const repairs = result.repairs.map((r, i) => ({
       id: `repair-${i}`, title: `Allow change: ${r.constraint.label}`,
       explanation: `Disable only “${r.constraint.label}”. All other enabled hard constraints, units, and requirements remain unchanged. This preview was re-solved and independently validated. Approve to apply. No multi-semester graduation effects are verified.`,

@@ -55,6 +55,10 @@ def run_solver(catalog, request, excluded=None):
             ids = [i for i, (c, s) in enumerate(rows)
                    if (c["id"] if constraint["kind"] == "require_course" else s["id"]) == target]
             model.add(sum(variables[i] for i in ids) == 1)
+        if constraint["hard"] and constraint["kind"] == "exclude_course":
+            for i, (c, _) in enumerate(rows):
+                if c["id"] == constraint["value"]:
+                    model.add(variables[i] == 0)
     units = sum(c["units"] * variables[i] for i, (c, _) in enumerate(rows))
     model.add(units >= request["minUnits"])
     model.add(units <= request["maxUnits"])
@@ -64,10 +68,15 @@ def run_solver(catalog, request, excluded=None):
             needed = max(0, requirement["needed"] - satisfied)
             model.add(sum(variables[i] for i, (c, _) in enumerate(rows)
                           if c["id"] in requirement["courseIds"]) >= needed)
+    # Two sections of one course with identical meetings give the same week, so alternatives
+    # must differ in courses or meeting times, not just in section numbers.
+    signature = [(c["id"], tuple(sorted((m["day"], m["start"], m["end"]) for m in s["meetings"]))) for c, s in rows]
     for previous in excluded or []:
-        # Exclude the exact set, including unselected variables. Works with variable course counts.
-        model.add(sum((1-variables[i]) if s["id"] in previous else variables[i]
-                      for i, (_, s) in enumerate(rows)) >= 1)
+        chosen = {signature[i] for i, (_, s) in enumerate(rows) if s["id"] in previous}
+        same = [i for i in range(len(rows)) if signature[i] in chosen]
+        courses = {sig[0] for sig in chosen}
+        model.add(sum(variables[i] for i in range(len(rows)) if i not in same)
+                  + sum(1 - sum(variables[i] for i in same if signature[i][0] == cid) for cid in courses) >= 1)
     campus = []
     for day in range(5):
         present = model.new_bool_var(f"day-{day}")
@@ -90,17 +99,32 @@ def run_solver(catalog, request, excluded=None):
                 cost += 120
             if kind == "require_course" and course["id"] == constraint["value"]:
                 cost -= 150
+            if kind == "exclude_course" and course["id"] == constraint["value"]:
+                cost += 200
             if kind == "lock_section" and section["id"] == constraint["value"]:
                 cost -= 150
             syllabus = course["syllabus"]
+            # Past-term grading is visible for comparison but cannot score a future offering.
             known = syllabus["status"] == "synthetic"
+            # "Exam 1 / Exam 2" rows are not labeled midterm or final, so they never count as "no midterm".
+            exam_kinds = {g["kind"] for g in syllabus["grading"]}
             # Neutral missing values must not outperform positively evidenced matches.
             if kind == "prefer_projects" and known:
                 cost -= int((syllabus.get("projectPercent") or 0) / 2)
+            if kind == "prefer_exams" and known:
+                cost -= int((syllabus.get("examPercent") or 0) / 2)
             if kind == "prefer_individual" and known and syllabus["projectMode"] == "individual":
                 cost -= 45
             if kind == "prefer_less_frequent" and known and "milestone" in syllabus["cadence"].lower():
                 cost -= 35
+            if kind == "prefer_no_quizzes" and known and not syllabus.get("quizPercent"):
+                cost -= 30
+            if kind == "prefer_no_attendance" and known and not syllabus.get("attendancePercent"):
+                cost -= 30
+            if kind == "prefer_no_midterm" and known and not exam_kinds & {"midterm", "exam"}:
+                cost -= 30
+            if kind == "prefer_no_final" and known and not exam_kinds & {"final", "exam"}:
+                cost -= 30
         costs.append(cost * variables[i])
     day_weight = 40 if any(c["kind"] == "prefer_fewer_days" for c in active) else 4
     model.minimize(sum(costs) + day_weight * sum(campus))
