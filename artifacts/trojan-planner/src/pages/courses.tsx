@@ -209,12 +209,10 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
           </tbody>
         </table>
       </div>
-      <p className="text-[11px] text-muted-foreground mt-2">Section combinations and instructor names come from the cached USC listing. TBA components are shown but cannot be checked for time conflicts. Confirm the combination and seats in Web Registration.</p>
-
       <div className="mt-6 grid md:grid-cols-[1fr_1.4fr] gap-6">
         <div>
           <h3 className="text-base font-semibold mb-1">Grading</h3>
-          <p className="text-xs text-muted-foreground mb-3">{s.status === 'synthetic' ? 'Mock syllabus made for this demo.' : s.status === 'historical' ? `From the ${s.term} USC syllabus; Spring 2027 may differ.` : 'No syllabus on file; unknown is not zero.'}</p>
+          <p className="text-xs text-muted-foreground mb-3">{s.status === 'synthetic' ? 'Mock syllabus made for this demo.' : s.status === 'historical' ? `From the ${s.term} USC syllabus.` : 'No syllabus on file.'}</p>
           {s.grading.length > 0 ? (
             <div data-testid="table-grading">
               <div className="flex h-2.5 rounded-full overflow-hidden bg-muted gap-px" aria-hidden>

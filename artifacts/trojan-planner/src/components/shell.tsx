@@ -5,7 +5,6 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { usePlanner } from '@/lib/planner-store';
 import { cn } from '@/lib/utils';
 
@@ -42,14 +41,9 @@ export function Shell({ children }: { children: ReactNode }) {
           </nav>
           <div className="ml-auto flex items-center gap-2">
             {catalog && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span tabIndex={0} className="text-xs text-muted-foreground px-2 py-1 rounded-md border cursor-default" data-testid="text-synthetic-notice">
-                    {catalog.term} · USC snapshot
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">{catalog.notice} Nothing here reserves a seat or guarantees enrollment.</TooltipContent>
-              </Tooltip>
+              <span className="text-xs text-muted-foreground px-2 py-1 rounded-md border" data-testid="text-synthetic-notice">
+                {catalog.term} · USC snapshot
+              </span>
             )}
             <AlertDialog>
               <AlertDialogTrigger asChild>

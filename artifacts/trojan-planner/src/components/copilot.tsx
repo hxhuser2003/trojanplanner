@@ -134,10 +134,6 @@ function Reply({ catalog, input, result, status, available, onSelect, onOption, 
   return (
     <div className="space-y-2 rise" data-testid={`chat-reply-${result.kind}`}>
       <p className="text-sm leading-relaxed whitespace-pre-wrap">{result.message}</p>
-      {result.warnings.map((w, i) => (
-        <p key={i} className="text-xs flex gap-1.5 text-amber-800 dark:text-amber-300"><AlertTriangle className="size-3.5 shrink-0 mt-0.5" />{w}</p>
-      ))}
-
       {result.kind === 'clarify' && (
         <div className="flex flex-wrap gap-1.5">
           {result.options.map((o) => (

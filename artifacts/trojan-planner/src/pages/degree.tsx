@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { AlertTriangle, X, Plus, ShieldAlert, FileSearch } from 'lucide-react';
+import { AlertTriangle, X, Plus, FileSearch } from 'lucide-react';
 import { useParseStars, type Catalog, type PlannerInput, type StarsResult } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,11 +54,6 @@ function Degree({ catalog }: { catalog: Catalog }) {
       <PageHeader eyebrow={`${catalog.major} · ${catalog.catalogYear}`} title="What you've done, what you need.">
         <Button onClick={() => { void p.solve(); nav('/'); }} disabled={p.solveState === 'solving' || !p.dirty} data-testid="button-degree-solve">{p.dirty ? 'Re-solve with these' : 'Plan is up to date'}</Button>
       </PageHeader>
-
-      <div className="rounded-xl border-l-4 border-primary bg-card p-4 mb-6 flex gap-3" data-testid="text-audit-disclaimer">
-        <ShieldAlert className="size-5 text-primary shrink-0 mt-0.5" />
-        <p className="text-sm">Course offerings are from a cached USC listing. The <strong>student profile and planning goals are illustrative</strong>. This does not reproduce, replace, or certify your USC degree audit (STARS). Confirm requirements with your advisor and the official report.</p>
-      </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="space-y-6">
@@ -159,7 +154,6 @@ function StarsImport({ catalogKnown, onApply }: { catalogKnown: Set<string>; onA
       {res && (
         <div className="mt-5 border-t pt-4 space-y-3 rise" data-testid="panel-stars-review">
           <p className="text-xs font-mono text-muted-foreground">Detected format: {res.detectedFormat}</p>
-          {res.warnings.map((w, i) => <p key={i} className="text-xs flex gap-1.5 text-amber-800"><AlertTriangle className="size-3.5 shrink-0" />{w}</p>)}
           <div>
             <p className="text-sm font-semibold mb-1.5">Completed or in-progress candidates — confirm each</p>
             {res.completedCandidates.length === 0 ? <p className="text-xs italic text-muted-foreground">None found.</p> : (

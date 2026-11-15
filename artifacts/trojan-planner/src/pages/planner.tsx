@@ -147,48 +147,13 @@ function Planner({ catalog }: { catalog: Catalog }) {
             </dl>
           )}
 
-          {sched && !infeasible && sched.warnings.filter((w) => w.includes('not covered this semester')).map((w) => (
-            <p key={w} className="flex gap-2 text-sm text-amber-800" data-testid="text-goals-uncovered"><AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />{w}</p>
-          ))}
-
           {infeasible && result && <Conflicts result={result} catalog={catalog} input={input} solvedInput={p.solvedInput} onApprove={applyRepair} solving={solving} stale={stale} />}
 
           <WeekCalendar catalog={catalog} schedule={sched && !infeasible ? sched : null} constraints={input.constraints} lockedSectionIds={locked} onToggleLock={toggleLock} dim={solving}
             input={!stale && p.solvedInput ? p.solvedInput : undefined} />
-
-          {sched && !infeasible && result && result.schedules.length > 1 && p.solvedInput && !stale && (
-            <OptionCompare catalog={catalog} schedules={result.schedules} chosen={sched} input={p.solvedInput} />
-          )}
-
-          {sched && !infeasible && (
-            <Collapsible className="rounded-lg border">
-              <CollapsibleTrigger className="group w-full flex items-center justify-between px-4 py-3 text-sm font-medium" data-testid="button-details">
-                Why these sections
-                <ChevronDown className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="px-4 pb-4 space-y-4">
-                <ul className="space-y-2">
-                  {sched.selections.map((s) => {
-                    const c = catalog.courses.find((x) => x.id === s.courseId);
-                    return (
-                      <li key={s.sectionId} className="flex gap-2 text-sm" data-testid={`text-selection-${s.courseId}`}>
-                        <span className="mt-1.5 size-2 rounded-full shrink-0" style={{ background: c?.color }} />
-                        <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId}</Link> <span className="text-muted-foreground">{s.reason}</span></span>
-                      </li>
-                    );
-                  })}
-                </ul>
-                <p className="text-sm text-muted-foreground">{sched.assessmentSummary}</p>
-                <ul className="space-y-1.5 border-t pt-3">
-                  {sched.checks.map((c, i) => <li key={i} className="flex gap-2 text-sm"><CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" />{c}</li>)}
-                  {sched.warnings.map((w, i) => <li key={`w${i}`} className="flex gap-2 text-sm"><AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />{w}</li>)}
-                </ul>
-              </CollapsibleContent>
-            </Collapsible>
-          )}
         </section>
 
-        <aside className="lg:sticky lg:top-20 self-start">
+        <aside className="self-start min-w-0">
           <Tabs defaultValue="copilot">
             <TabsList className="w-full grid grid-cols-2">
               <TabsTrigger value="copilot" data-testid="tab-copilot">Ask</TabsTrigger>
@@ -199,7 +164,33 @@ function Planner({ catalog }: { catalog: Catalog }) {
               <Copilot catalog={catalog} input={input} onApply={applyEdits}
                 schedules={!infeasible && result ? result.schedules : []} chosenId={sched?.id ?? null} onSelect={p.chooseSchedule}
                 selections={sched && !infeasible ? sched.selections.map((x) => ({ courseId: x.courseId, sectionId: x.sectionId })) : []} />
-              <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setSetupOpen(true)} data-testid="button-open-onboarding">Redo the 3 setup questions</button>
+              {sched && !infeasible && result && result.schedules.length > 1 && p.solvedInput && !stale && (
+                <OptionCompare catalog={catalog} schedules={result.schedules} chosen={sched} input={p.solvedInput} />
+              )}
+              {sched && !infeasible && (
+                <Collapsible className="rounded-lg border">
+                  <CollapsibleTrigger className="group w-full flex items-center justify-between px-4 py-3 text-sm font-medium" data-testid="button-details">
+                    Why these sections
+                    <ChevronDown className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-4 pb-4 space-y-4">
+                    <ul className="space-y-2">
+                      {sched.selections.map((s) => {
+                        const c = catalog.courses.find((x) => x.id === s.courseId);
+                        return (
+                          <li key={s.sectionId} className="flex gap-2 text-sm" data-testid={`text-selection-${s.courseId}`}>
+                            <span className="mt-1.5 size-2 rounded-full shrink-0" style={{ background: c?.color }} />
+                            <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId}</Link> <span className="text-muted-foreground">{s.reason}</span></span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <ul className="space-y-1.5 border-t pt-3">
+                      {sched.checks.map((c, i) => <li key={i} className="flex gap-2 text-sm"><CheckCircle2 className="size-4 text-emerald-600 shrink-0 mt-0.5" />{c}</li>)}
+                    </ul>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
             </TabsContent>
             <TabsContent value="rules" className="mt-3">
               <ConstraintEditor catalog={catalog} constraints={input.constraints} onChange={p.updateConstraints} />

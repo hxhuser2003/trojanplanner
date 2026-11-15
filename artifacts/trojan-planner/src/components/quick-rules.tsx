@@ -155,7 +155,6 @@ export function Onboarding({ open, onOpenChange, current, onApply }: {
                 })}
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">Based on each syllabus's grading breakdown. Courses without a syllabus are never assumed to match.</p>
           </div>
         )}
 

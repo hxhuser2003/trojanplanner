@@ -44,7 +44,7 @@ function Checklist({ catalog }: { catalog: Catalog }) {
   const exportText = () => {
     const lines = [
       `TrojanPlanner registration checklist — ${catalog.term}`,
-      `USC course snapshot retrieved ${catalog.sourceDate}. Illustrative planning goals; not an enrollment guarantee or degree audit.`,
+      `USC course snapshot retrieved ${catalog.sourceDate}.`,
       '',
       `Plan: ${sched.title} · ${sched.units} units · ${sched.campusDays} campus days`,
       '',
@@ -85,7 +85,7 @@ function Checklist({ catalog }: { catalog: Catalog }) {
         <div role="alert" className="mb-4 rounded-xl border border-accent bg-accent/15 p-3 text-sm" data-testid="status-checklist-stale">Your rules changed after this plan was solved. Checking and export are paused until you <Link href="/" className="underline font-semibold">re-solve on the planner</Link>.</div>
       )}
       <div className="h-1.5 rounded-full bg-muted mb-6 overflow-hidden"><div className="h-full bg-primary transition-all duration-500" style={{ width: `${(done / total) * 100}%` }} /></div>
-      <p className="text-sm mb-4"><strong>{sched.title}</strong> · {sched.units} units · {sched.campusDays} campus days. This list does not reserve seats.</p>
+      <p className="text-sm mb-4"><strong>{sched.title}</strong> · {sched.units} units · {sched.campusDays} campus days.</p>
 
       <h2 className="text-base font-semibold">Sections to register</h2>
       <p className="text-xs text-muted-foreground mt-0.5 mb-2">The numbers are USC section numbers. Register every number listed for a course together: the lecture plus its linked discussion or exam slot.</p>
@@ -104,7 +104,7 @@ function Checklist({ catalog }: { catalog: Catalog }) {
                   <li key={part.id} className="flex items-center gap-3 text-xs">
                     <span className="w-20 shrink-0 text-muted-foreground">{part.kind}</span>
                     <span className="font-mono tabular-nums rounded bg-secondary px-1.5 py-0.5">{part.id}</span>
-                    <span className={cn(part.tba && 'font-medium text-amber-700')}>{part.tba ? 'Time TBA, not checked for conflicts' : part.times.join(', ')}</span>
+                    <span className={cn(part.tba && 'font-medium text-amber-700')}>{part.tba ? 'Time TBA' : part.times.join(', ')}</span>
                   </li>
                 ))}
               </ul>
