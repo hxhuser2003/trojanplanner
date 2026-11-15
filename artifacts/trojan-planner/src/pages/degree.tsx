@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Upload, ScanText, AlertTriangle, X, Plus, ShieldAlert, FileSearch } from 'lucide-react';
 import { useParseStars, type Catalog, type PlannerInput, type StarsResult } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ const norm = (s: string) => s.toUpperCase().replace(/\s+/g, '').replace(/^([A-Z]
 
 function Degree({ catalog }: { catalog: Catalog }) {
   const p = usePlanner();
+  const [, nav] = useLocation();
   const { toast } = useToast();
   const input = p.input ?? catalog.defaultInput;
   const set = (patch: Partial<PlannerInput>) => p.setInput({ ...input, ...patch });
@@ -53,7 +54,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
   return (
     <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
       <PageHeader eyebrow={`${catalog.major} · ${catalog.catalogYear}`} title="What you've done, what you need.">
-        <Button onClick={() => p.solve()} disabled={p.solveState === 'solving' || !p.dirty} data-testid="button-degree-solve">{p.dirty ? 'Re-solve with these' : 'Plan is up to date'}</Button>
+        <Button onClick={() => { void p.solve(); nav('/'); }} disabled={p.solveState === 'solving' || !p.dirty} data-testid="button-degree-solve">{p.dirty ? 'Re-solve with these' : 'Plan is up to date'}</Button>
       </PageHeader>
 
       <div className="rounded-xl border-l-4 border-primary bg-card p-4 mb-6 flex gap-3" data-testid="text-audit-disclaimer">
