@@ -150,7 +150,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
             <p><span className="font-semibold">Attendance:</span> {s.attendance || 'Unknown'}</p>
           </div>
           <div className="mt-3 flex flex-col gap-1.5 text-xs">
-            <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline" data-testid="link-syllabus-source"><FileText className="size-3.5" />{s.status === 'synthetic' ? 'Open clearly labeled mock syllabus' : `Open USC ${s.term} syllabus PDF`}<ExternalLink className="size-3" /></a>
+            <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline" data-testid="link-syllabus-source"><FileText className="size-3.5" />{s.status === 'synthetic' ? 'Open clearly labeled mock syllabus' : `Open USC ${s.term} syllabus source`}<ExternalLink className="size-3" /></a>
             <a href={course.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-muted-foreground hover:underline" data-testid="link-course-source">Course listing provenance<ExternalLink className="size-3" /></a>
           </div>
         </div>

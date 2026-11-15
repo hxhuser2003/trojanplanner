@@ -31,13 +31,31 @@ export const mockSyllabi = {
 
 type Syllabus = {
   term: string; status: "historical" | "synthetic";
-  examPercent: number; projectPercent: number; otherPercent: number;
+  examPercent: number | null; projectPercent: number | null; otherPercent: number | null;
   projectMode: "individual" | "group" | "unspecified";
   cadence: string; attendance: string; sourceUrl: string;
-  evidence: { label: string; value: string; excerpt: string; page: number; status: "historical" | "synthetic" }[];
+  evidence: { label: string; value: string; excerpt: string; page: number; status: "historical" | "synthetic" | "unknown" }[];
 };
 
 export const syllabi: Record<string, Syllabus> = {
+  "CSCI-530": {
+    term: "Fall 2026", status: "historical", examPercent: 55, projectPercent: null, otherPercent: 15,
+    projectMode: "unspecified", cadence: "Two or three short homeworks, required labs, a paper or project, and two exams.",
+    attendance: "Fall 2026 course page requires seven of nine labs; lab results adjust the base grade separately.",
+    sourceUrl: "https://ccss.usc.edu/530/",
+    evidence: [
+      { label: "Base assessment split", value: "55% exams · 30% paper or project · 15% homework; project weight unknown", excerpt: "Fall 2026 course page lists a 25% midterm, 30% final, 30% paper or project, and 15% homework; labs can adjust the base grade.", page: 1, status: "historical" },
+    ],
+  },
+  "CSCI-531": {
+    term: "Spring 2022", status: "historical", examPercent: 40, projectPercent: 15, otherPercent: 45,
+    projectMode: "unspecified", cadence: "Quizzes, homework, programming assignments, two exams, and a semester project.",
+    attendance: "Spring 2022 syllabus assigns 10% to class participation.",
+    sourceUrl: "https://web-app.usc.edu/soc/syllabus/20221/30321.pdf",
+    evidence: [
+      { label: "Assessment split", value: "40% exams · 15% project · 45% other", excerpt: "Spring 2022 grading table lists 20% midterm, 20% final, 15% project, 15% quizzes, 20% assignments, and 10% participation.", page: 1, status: "historical" },
+    ],
+  },
   "CSCI-544": {
     term: "Fall 2024", status: "historical", examPercent: 25, projectPercent: 40, otherPercent: 35,
     projectMode: "group", cadence: "Four coding homeworks, five quizzes, and staged team project milestones.",
@@ -46,6 +64,16 @@ export const syllabi: Record<string, Syllabus> = {
     evidence: [
       { label: "Assessment split", value: "25% exams · 40% project · 35% other", excerpt: "Fall 2024 grading table: quizzes 10%, homework 20%, presentations 5%, class project 40%, midterm 10%, final 15%.", page: 4, status: "historical" },
       { label: "Project format", value: "Team of five", excerpt: "Fall 2024 project section describes teams and proposal, update, presentation, and final report stages.", page: 3, status: "historical" },
+    ],
+  },
+  "CSCI-545": {
+    term: "Spring 2024", status: "historical", examPercent: 60, projectPercent: null, otherPercent: 40,
+    projectMode: "group", cadence: "Four homeworks, four hands-on robotics labs, a midterm, and a final.",
+    attendance: "No attendance grading rule extracted from the Spring 2024 syllabus.",
+    sourceUrl: "https://web-app.usc.edu/soc/syllabus/20241/30398.pdf",
+    evidence: [
+      { label: "Assessment split", value: "60% exams · 30% group labs · 10% homework; project weight unknown", excerpt: "Spring 2024 tentative grading assigns 30% each to midterm, final, and labs, plus 10% homework. Labs are shown as other work rather than an identified project.", page: 3, status: "historical" },
+      { label: "Lab format", value: "Group", excerpt: "Spring 2024 syllabus says students stay in the same group for all robotics labs.", page: 3, status: "historical" },
     ],
   },
   "CSCI-546": {
@@ -58,6 +86,15 @@ export const syllabi: Record<string, Syllabus> = {
       { label: "Project format", value: "Team implementation", excerpt: "Illustrative replicated-service project with several milestones.", page: 1, status: "synthetic" },
     ],
   },
+  "CSCI-551": {
+    term: "Fall 2025", status: "historical", examPercent: 55, projectPercent: 30, otherPercent: 15,
+    projectMode: "unspecified", cadence: "Two short midterms, a final, homework, and a substantial networking project.",
+    attendance: "Fall 2025 syllabus assigns 5% to class participation.",
+    sourceUrl: "https://ant.isi.edu/~johnh/TEACHING/CS651/FA2025/csci551_csci651_fa2025_syllabus_251110.pdf",
+    evidence: [
+      { label: "Assessment split", value: "55% exams · 30% projects · 15% homework and participation", excerpt: "Fall 2025 grading table lists 25% midterms, 30% final, 30% projects, 10% homework, and 5% participation.", page: 3, status: "historical" },
+    ],
+  },
   "CSCI-561": {
     term: "Spring 2023", status: "historical", examPercent: 70, projectPercent: 0, otherPercent: 30,
     projectMode: "unspecified", cadence: "Three programming homeworks, two midterms, and a final in the Spring 2023 syllabus.",
@@ -65,6 +102,26 @@ export const syllabi: Record<string, Syllabus> = {
     sourceUrl: "https://web-app.usc.edu/soc/syllabus/20231/30071.pdf",
     evidence: [
       { label: "Assessment split", value: "70% exams · 0% projects · 30% homework", excerpt: "Spring 2023 schedule lists two 20% midterms, a 30% final, and three 10% programming homeworks.", page: 2, status: "historical" },
+    ],
+  },
+  "CSCI-566": {
+    term: "Fall 2026", status: "historical", examPercent: 35, projectPercent: 45, otherPercent: 20,
+    projectMode: "group", cadence: "One coding assignment, a midterm, and a staged team project.",
+    attendance: "Fall 2026 quizzes may be given when in-person attendance is low; unused quiz weight moves to the project.",
+    sourceUrl: "https://usc-fortis.github.io/CSCI566-F26/syllabus.pdf",
+    evidence: [
+      { label: "Base assessment split", value: "35% midterm · 45% project · 20% quizzes and assignment", excerpt: "Fall 2026 syllabus gives 35 points to midterm, 45 to project, 10 to quizzes, and 10 to coding; unadministered quiz weight moves to project.", page: 2, status: "historical" },
+      { label: "Project format", value: "Group with individual components", excerpt: "Fall 2026 project uses groups of four to six and individually grades poster defense and peer evaluation.", page: 3, status: "historical" },
+    ],
+  },
+  "CSCI-567": {
+    term: "Summer 2025", status: "historical", examPercent: 22, projectPercent: 30, otherPercent: 48,
+    projectMode: "group", cadence: "Three theory assignments, three programming assignments, a midterm, and a team project.",
+    attendance: "No attendance grading rule extracted from the Summer 2025 syllabus.",
+    sourceUrl: "https://web-app.usc.edu/soc/syllabus/20252/29922.pdf",
+    evidence: [
+      { label: "Assessment split", value: "22% exam · 30% project · 48% assignments", excerpt: "Summer 2025 grading table assigns 24% each to theory and programming assignments, 22% midterm, and 30% final project.", page: 5, status: "historical" },
+      { label: "Project format", value: "Team of up to three", excerpt: "Summer 2025 syllabus describes a team research project with proposal, presentation, and report.", page: 3, status: "historical" },
     ],
   },
   "CSCI-570": {
@@ -96,6 +153,15 @@ export const syllabi: Record<string, Syllabus> = {
       { label: "Project format", value: "Individual search prototype", excerpt: "Illustrative project with indexing, ranking, evaluation, and demo milestones.", page: 1, status: "synthetic" },
     ],
   },
+  "CSCI-580": {
+    term: "Spring 2021", status: "historical", examPercent: null, projectPercent: null, otherPercent: null,
+    projectMode: "unspecified", cadence: "The linked historical overview discusses coding homework and a course project, but does not publish grading weights.",
+    attendance: "Attendance policy not specified in the linked overview.",
+    sourceUrl: "https://web-app.usc.edu/soc/syllabus/20211/30390.pdf",
+    evidence: [
+      { label: "Assessment weights", value: "Not specified", excerpt: "The USC-hosted Spring 2021 syllabus overview describes coding homework and a project without a grading table; weights remain unknown.", page: 1, status: "unknown" },
+    ],
+  },
   "CSCI-585": {
     term: "Fall 2024", status: "historical", examPercent: 80, projectPercent: 0, otherPercent: 20,
     projectMode: "unspecified", cadence: "Two exams and in-class participation in the Fall 2024 syllabus.",
@@ -103,6 +169,15 @@ export const syllabi: Record<string, Syllabus> = {
     sourceUrl: "https://web-app.usc.edu/soc/syllabus/20243/30150.pdf",
     evidence: [
       { label: "Assessment split", value: "On-campus: 80% exams · 20% participation", excerpt: "Fall 2024 syllabus assigns two 40% exams and 20% participation on campus; DEN students are exempt from participation.", page: 1, status: "historical" },
+    ],
+  },
+  "CSCI-587": {
+    term: "Spring 2026", status: "historical", examPercent: 60, projectPercent: null, otherPercent: 40,
+    projectMode: "unspecified", cadence: "Three homeworks, two midterms, and participation in the Spring 2026 course page.",
+    attendance: "Spring 2026 course page assigns 10% to participation.",
+    sourceUrl: "https://infolab.usc.edu/teaching/csci587/S26/",
+    evidence: [
+      { label: "Listed grading split", value: "60% exams · 40% homework and participation; project weight unclear", excerpt: "Spring 2026 course page lists two 30% midterms, 30% homework, and 10% participation; the page also mentions a project without listing its weight.", page: 1, status: "historical" },
     ],
   },
 };

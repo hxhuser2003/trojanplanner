@@ -96,18 +96,19 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     title: index === 0 ? "Best preference fit" : `${days} campus days · alternative ${index}`,
     selections: selected.map(([c, s]) => ({
       courseId: c.id, sectionId: s.id,
-      reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. Published linked meeting times checked. ${c.syllabus.status === "unknown" ? "Assessment information not specified." : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (${c.syllabus.status === "synthetic" ? "illustrative mock" : `historical ${c.syllabus.term}`}; verify current policy).`}`,
+      reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. Published linked meeting times checked. ${c.syllabus.examPercent == null || c.syllabus.projectPercent == null ? `Assessment weights are partly or fully unknown in the ${c.syllabus.status === "synthetic" ? "mock" : `historical ${c.syllabus.term}`} source; verify current policy.` : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (${c.syllabus.status === "synthetic" ? "illustrative mock" : `historical ${c.syllabus.term}`}; verify current policy).`}`,
     })),
     units: selected.reduce((sum, [c]) => sum + c.units, 0), campusDays: days,
     classHours: Math.round(meetings.reduce((sum, m) => sum + m.end - m.start, 0) / 6) / 10,
     gapMinutes, earliestStart: earliest, score: raw.score,
     checks: ["No overlapping published meetings in the loaded data", "All enabled hard constraints respected for published times", "Unit bounds and selected illustrative goals checked", "Published linked meetings and listed prerequisite groups checked against entered completions"],
     warnings: ["USC offerings are a cached snapshot; recheck the Schedule of Classes before registration.", "Planning goals and completed courses are illustrative, not an official degree audit. Seat availability, restrictions, and actual prerequisite clearance remain unverified.",
+      ...(selected.length > 2 ? ["USC's MS student guide says traditional MS students who started in Spring 2020 or later are limited to two four-unit CSCI/DSCI courses per term. Check your individual program and registration eligibility."] : []),
       ...selected.filter(([, s]) => s.unknownScheduleComponents.length > 0).map(([c, s]) => `${c.code} §${s.id}: ${s.unknownScheduleComponents.join(", ")}; full conflict check is not possible.`),
       ...(selected.some(([c]) => c.syllabus.status === "historical") ? ["Historical USC syllabi describe past sections and are not used to score assessment preferences; confirm current grading with instructors."] : []),
       ...(mock.length > 0 ? ["Mock syllabi are hypothetical and are used only for illustrative assessment preferences."] : []),
-      ...(selected.some(([c]) => c.syllabus.status === "unknown") ? ["Some syllabi are missing; absence of evidence does not mean fewer exams or projects."] : [])],
-    assessmentSummary: `${projectHeavy} project-weighted and ${individual} individual-project courses based on mock syllabi only. Mock coverage: ${mock.length}/${selected.length}; historical USC PDFs are viewable separately. No difficulty estimate.`,
+      ...(selected.some(([c]) => c.syllabus.examPercent == null || c.syllabus.projectPercent == null || c.syllabus.otherPercent == null) ? ["Some historical assessment weights are unspecified; absence of evidence does not mean fewer exams or projects."] : [])],
+    assessmentSummary: `${projectHeavy} project-weighted and ${individual} individual-project courses based on mock syllabi only. Mock coverage: ${mock.length}/${selected.length}; historical USC syllabus sources are viewable separately. No difficulty estimate.`,
   };
 }
 let activeSolves = 0;
