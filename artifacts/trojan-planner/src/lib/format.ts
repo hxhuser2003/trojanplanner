@@ -56,6 +56,31 @@ export function describeConstraint(c: Constraint, catalog?: Catalog): string {
   }
 }
 
+const shortTime = (min: number) => fmtTime(min).replace(':00', '');
+const DAY_OR_TIME = /\s(?:(?:Mon|Tue|Wed|Thu|Fri)(?:day|days|s)?\b|\d{1,2}(?::\d{2})?\s?(?:am|pm)\b)/i;
+
+/** The label a rule would get from its fields, so editing days or times keeps the name accurate.
+ *  For time blocks, the name in front ("Work", "Gym") is kept from the previous label. */
+export function autoLabel(c: Constraint, catalog: Catalog | undefined, previous: string): string {
+  const days = [...c.days].sort().map((d) => DAYS[d]).join('/');
+  switch (c.kind) {
+    case 'no_day': return `${c.hard ? 'Keep' : 'Prefer'} ${days || 'days'} free`;
+    case 'earliest': return c.hard ? `No classes before ${shortTime(c.start)}` : `Prefer starts after ${shortTime(c.start)}`;
+    case 'latest': return c.hard ? `Done by ${shortTime(c.end)}` : `Prefer done by ${shortTime(c.end)}`;
+    case 'blocked': {
+      const name = previous.split(DAY_OR_TIME)[0]!.replace(/[\s·,–-]+$/, '').trim();
+      return `${name && name !== KIND_META.blocked.label ? name : 'Busy'} ${days || 'no days'} · ${shortTime(c.start)}–${shortTime(c.end)}`;
+    }
+    case 'require_course': return c.value ? `Take ${courseCode(catalog, c.value) ?? c.value}` : KIND_META[c.kind].label;
+    case 'exclude_course': return c.value ? `Don't take ${courseCode(catalog, c.value) ?? c.value}` : KIND_META[c.kind].label;
+    case 'lock_section': {
+      const f = findSection(catalog, c.value);
+      return f ? `Keep ${f.course.code} §${f.section.id}` : KIND_META[c.kind].label;
+    }
+    default: return KIND_META[c.kind].label;
+  }
+}
+
 export function courseCode(catalog: Catalog | undefined, id: string): string | undefined {
   return catalog?.courses.find((c) => c.id === id || c.code === id)?.code;
 }
