@@ -73,8 +73,8 @@ router.post("/planner/chat", async (req, res): Promise<void> => {
   const { message, history, current, selections = [], scheduleOptions = [], chosenScheduleId } = parsed.data;
   const error = validateInput(current);
   if (error) { res.status(400).json({ error }); return; }
-  // Progress, grading, exclude, lock, and option-switch requests are answered from data, with or without AI.
-  const direct = progressIntent(message, current, selections) ?? gradingIntent(message, selections) ?? excludeIntent(message, current) ?? avoidIntent(message, current) ?? lockIntent(message, current, selections) ?? selectIntent(message, scheduleOptions, chosenScheduleId);
+  // Degree progress is a counting problem, so code answers it directly. Everything else goes to the model first.
+  const direct = progressIntent(message, current, selections);
   if (direct) {
     res.json(ChatCopilotResponse.parse({ proposedConstraints: [], removeConstraintIds: [], updatedConstraints: [], options: [], citations: [], warnings: [],
       ...direct, provider: "Computed from catalog and solver facts" }));
@@ -101,6 +101,14 @@ router.post("/planner/chat", async (req, res): Promise<void> => {
   try { res.json(ChatCopilotResponse.parse(await chat(message, history, current, selections, scheduleOptions, chosenScheduleId))); }
   catch (e) {
     const kind = e instanceof Error ? e.message : "";
+    // Without the model, the common requests still work from data: grading questions, excluding or avoiding, locking, switching options.
+    const backup = gradingIntent(message, selections) ?? excludeIntent(message, current) ?? avoidIntent(message, current)
+      ?? lockIntent(message, current, selections) ?? selectIntent(message, scheduleOptions, chosenScheduleId);
+    if (backup) {
+      res.json(ChatCopilotResponse.parse({ proposedConstraints: [], removeConstraintIds: [], updatedConstraints: [], options: [], citations: [], ...backup,
+        warnings: [...(backup.warnings ?? []), "AI is unavailable, so this was computed directly from the catalog."], provider: "Computed from catalog and solver facts" }));
+      return;
+    }
     const fallback = catalogLookup(message);
     if (fallback && kind !== "BUSY") { res.json(ChatCopilotResponse.parse(fallback)); return; }
     req.log.warn({ kind: kind.startsWith("INVALID_PROPOSAL") ? "invalid_proposal" : kind === "AI_UNCONFIGURED" ? "ai_unconfigured" : "chat_error" }, "Copilot chat unavailable");
