@@ -168,26 +168,13 @@ Stretch: backup sections and exam/deadline clustering from explicit current-term
 - Unsupported course IDs and prompt-like instructions inside source documents are rejected/ignored.
 - End-to-end demo works with the cached dataset and clearly discloses stale or unchecked information.
 
-## 13. Three-minute demo
-
-1. 0:00–0:25: Introduce one student, a required course, and fixed work hours using the verified demo data.
-2. 0:25–0:50: Enter preferences; show editable hard/soft interpretation.
-3. 0:50–1:20: Reveal a genuine conflict in the demo dataset and open its supporting source.
-4. 1:20–2:00: Compare tested repairs; approve one and show the calendar change without silently changing other constraints.
-5. 2:00–2:30: Compare assessment styles for feasible alternatives and open syllabus evidence; show checks and unknowns.
-6. 2:30–3:00: Show the registration checklist and propose a one-department, advisor-reviewed pilot.
-
-Do not present hypothetical course meeting patterns as actual USC facts. Use a synthetic student but verified course information, or label fixtures explicitly. Do not promise campus-wide integration next semester.
-
-## 14. Event fit and submission
+## 13. Event fit and submission
 
 Emphasize campus impact, useful AI, feasible adoption, and clear UX without asserting unverified rubric percentages or claims about competing teams. Differentiation: transparent conflict repair, validated scheduling, student-controlled trade-offs, and evidence-backed assessment fit.
 
 The supplied event brief requires a working prototype link, public GitHub repository, project description, video of at most three minutes, short slide deck, and at least one screenshot, with teammates added. The listed deadline is November 15, 2026 at 11:00 AM PT. Verify official rules and any changes before submission. Do not change repository visibility without explicit owner approval.
 
-**Before submitting:** delete `docs/DEMO_PRESENTATION.md` (the internal video script) from the GitHub repository, on `main` and any public branch, so judges see only the product docs.
-
-## 15. Risks and adoption
+## 14. Risks and adoption
 
 | Risk | Mitigation |
 |---|---|
@@ -201,7 +188,7 @@ The supplied event brief requires a working prototype link, public GitHub reposi
 
 Pilot with one department and advisor-reviewed requirements. Measure time to a usable schedule, manual corrections required, and whether students understand the trade-offs. Seek Registrar/advising collaboration for maintained official data rather than assuming access or endorsement. Expand majors, advisor sharing, multi-semester reasoning, and integrations only after validating the core workflow.
 
-## 16. Current data status
+## 15. Current data status
 
 Fifteen graduate Spring 2027 CSCI courses are cached in `artifacts/api-server/src/planner/usc-spring-2027.json` from USC's public Schedule of Classes course API. Run `python scripts/sync_usc_courses.py` to refresh them. The snapshot records a UTC retrieval timestamp and each course links to its official listing.
 
@@ -209,7 +196,7 @@ The loader creates complete lecture/lab/discussion/quiz combinations for matchin
 
 The default eight-unit, two-course planning goals are illustrative and clearly labeled. No official degree requirement has been encoded. Thirteen courses link to dated USC-hosted historical syllabi or instructor course pages; two have clearly labeled mock syllabus pages. Unknown grading weights stay unknown. The solver excludes historical assessment weights from preference scoring and uses mock weights only for demonstration. The two-course default follows the [USC MS CS new student guide](https://www.cs.usc.edu/ms-cs-new-student-guide/) for traditional MS students who started in Spring 2020 or later; individual programs and exceptions need confirmation. Before a campus pilot, confirm degree rules, registration eligibility, and current syllabi with the relevant USC offices.
 
-## 17. To improve later
+## 16. To improve later
 
 Open design questions, kept working as-is for the demo:
 
