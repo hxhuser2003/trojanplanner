@@ -27,6 +27,16 @@ function Degree({ catalog }: { catalog: Catalog }) {
   const { toast } = useToast();
   const input = p.input ?? catalog.defaultInput;
   const set = (patch: Partial<PlannerInput>) => p.setInput({ ...input, ...patch });
+  // One number is the usual case ("I want 8 units"); a range is still available.
+  const [range, setRange] = useState(input.minUnits !== input.maxUnits);
+  const clampUnits = (v: string) => Math.min(20, Math.max(0, Math.round(Number(v) || 0)));
+  const sizes = [...new Set(catalog.courses.map((c) => c.units))].sort((a, b) => a - b);
+  const unitSizes = sizes.join(' or ');
+  const unitStep = sizes.length === 1 ? sizes[0] : 1;
+  const sums = catalog.courses.filter((c) => !input.completedCourses.includes(c.id))
+    .reduce((acc, c) => new Set([...acc, ...[...acc].map((x) => x + c.units)]), new Set([0]));
+  const offTarget = ![...sums].some((x) => x >= input.minUnits && x <= input.maxUnits);
+  const nearest = [...sums].filter((x) => x > 0).sort((a, b) => Math.abs(a - input.maxUnits) - Math.abs(b - input.maxUnits)).slice(0, 2).sort((a, b) => a - b).map((x) => `${x}`).join(' or ') + ' units';
   const completed = new Set(input.completedCourses);
   const known = new Set([...catalog.completedOptions, ...catalog.courses.map((c) => c.id), ...catalog.courses.map((c) => c.code)]);
   const outside = input.completedCourses.filter((c) => !known.has(c));
@@ -55,12 +65,29 @@ function Degree({ catalog }: { catalog: Catalog }) {
         <section className="space-y-6">
           <div className="rounded-xl border bg-card p-5">
             <h2 className="text-base font-semibold">Units this semester</h2>
-            <p className="text-xs text-muted-foreground mb-3">The solver keeps your plan inside this range.</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1"><Label htmlFor="minu">Min units</Label><Input id="minu" type="number" min={0} max={20} value={input.minUnits} onChange={(e) => set({ minUnits: Math.min(20, Math.max(0, Number(e.target.value))) })} data-testid="input-min-units" /></div>
-              <div className="space-y-1"><Label htmlFor="maxu">Max units</Label><Input id="maxu" type="number" min={0} max={20} value={input.maxUnits} onChange={(e) => set({ maxUnits: Math.min(20, Math.max(0, Number(e.target.value))) })} data-testid="input-max-units" /></div>
-            </div>
-            {input.minUnits > input.maxUnits && <p className="text-xs text-destructive mt-2">Min units is above max units; the solver will report this as invalid.</p>}
+            <p className="text-xs text-muted-foreground mb-3">
+              Courses here are {unitSizes} units each. Your goals are covered as far as these units allow.
+            </p>
+            {!range ? (
+              <div className="flex items-end gap-4">
+                <div className="space-y-1 w-32">
+                  <Label htmlFor="units">Units</Label>
+                  <Input id="units" type="number" min={0} max={20} step={unitStep} value={input.maxUnits}
+                    onChange={(e) => { const u = clampUnits(e.target.value); set({ minUnits: u, maxUnits: u }); }} data-testid="input-units" />
+                </div>
+                <button type="button" className="text-xs text-muted-foreground underline underline-offset-2 pb-2.5" onClick={() => setRange(true)} data-testid="button-unit-range">Set a range instead</button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1"><Label htmlFor="minu">Min units</Label><Input id="minu" type="number" min={0} max={20} value={input.minUnits} onChange={(e) => set({ minUnits: clampUnits(e.target.value) })} data-testid="input-min-units" /></div>
+                  <div className="space-y-1"><Label htmlFor="maxu">Max units</Label><Input id="maxu" type="number" min={0} max={20} value={input.maxUnits} onChange={(e) => set({ maxUnits: clampUnits(e.target.value) })} data-testid="input-max-units" /></div>
+                </div>
+                <button type="button" className="mt-2 text-xs text-muted-foreground underline underline-offset-2" onClick={() => { setRange(false); set({ minUnits: input.maxUnits }); }} data-testid="button-unit-exact">Use one number</button>
+                {input.minUnits > input.maxUnits && <p className="text-xs text-destructive mt-2">Min units is above max units; the solver will report this as invalid.</p>}
+              </>
+            )}
+            {offTarget && <p className="text-xs text-destructive mt-2" data-testid="text-units-unreachable">No mix of courses adds up to {input.minUnits === input.maxUnits ? input.maxUnits : `${input.minUnits}–${input.maxUnits}`} units. Try {nearest}.</p>}
           </div>
 
           <div className="rounded-xl border bg-card p-5">

@@ -17,6 +17,20 @@ type WorkerResult = {
   repairs: { constraint: Constraint; input: PlannerInput; solution: RawSolution }[];
   conflicts: string[]; elapsedMs: number;
 };
+const unitText = (min: number, max: number) => min === max ? `${min} units` : `${min}–${max} units`;
+
+/** A unit target that no mix of courses adds up to (every course here is 4 units, so 2 or 10 never work). */
+export function unitConflicts(input: PlannerInput): string[] {
+  const reasons: string[] = [];
+  const open = catalog.courses.filter(c => !input.completedCourses.includes(c.id));
+  const sums = open.reduce((acc, c) => new Set([...acc, ...[...acc].map(x => x + c.units)]), new Set([0]));
+  if (![...sums].some(x => x >= input.minUnits && x <= input.maxUnits)) {
+    const sizes = [...new Set(open.map(c => c.units))].sort((x, y) => x - y).join(" or ");
+    reasons.push(`No mix of courses adds up to ${unitText(input.minUnits, input.maxUnits)}: courses here are ${sizes} units each.`);
+  }
+  return reasons;
+}
+
 export function validateInput(input: PlannerInput): string | null {
   if (input.minUnits > input.maxUnits) return "Minimum units cannot exceed maximum units.";
   if (new Set(input.constraints.map(c => c.id)).size !== input.constraints.length) return "Constraint IDs must be unique.";
@@ -72,11 +86,6 @@ function validateSolution(raw: RawSolution, input: PlannerInput): [Course, Secti
     if (rule.kind === "exclude_course" && selected.some(([c]) => c.id === rule.value)) throw new Error("Excluded course selected.");
     if (rule.kind === "lock_section" && !selected.some(([, s]) => s.id === rule.value)) throw new Error("Locked section missing.");
   }
-  for (const id of input.requirementIds) {
-    const req = catalog.requirements.find(r => r.id === id)!;
-    const covered = req.courseIds.filter(c => completed.has(c) || selected.some(([x]) => x.id === c)).length;
-    if (covered < req.needed) throw new Error("Requirement missing.");
-  }
   return selected;
 }
 function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
@@ -109,8 +118,13 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     classHours: Math.round(meetings.reduce((sum, m) => sum + m.end - m.start, 0) / 6) / 10,
     gapMinutes, earliestStart: earliest, score: raw.score,
     projectHeavy, examHeavy, individual, quizCourses, attendanceCourses, midtermCourses, finalCourses,
-    checks: ["No overlapping published meetings in the loaded data", "All enabled hard constraints respected for published times", "Unit bounds and selected illustrative goals checked", "Published linked meetings and listed prerequisite groups checked against entered completions"],
-    warnings: ["USC offerings are a cached snapshot; recheck the Schedule of Classes before registration.", "Planning goals and completed courses are illustrative, not an official degree audit. Seat availability, restrictions, and actual prerequisite clearance remain unverified.",
+    checks: ["No overlapping published meetings in the loaded data", "All enabled hard constraints respected for published times", "Unit target checked; goals covered as far as the units allow", "Published linked meetings and listed prerequisite groups checked against entered completions"],
+    warnings: [
+      ...(() => {
+        const missed = catalog.requirements.filter(r => input.requirementIds.includes(r.id)
+          && r.courseIds.filter(id => input.completedCourses.includes(id) || selected.some(([c]) => c.id === id)).length < r.needed);
+        return missed.length ? [`${unitText(input.minUnits, input.maxUnits)} leaves room for only some of your goals; not covered this semester: ${missed.map(r => r.title).join(", ")}.`] : [];
+      })(),
       ...selected.filter(([, s]) => s.unknownScheduleComponents.length > 0).map(([c, s]) => `${c.code}: ${s.unknownScheduleComponents.map(u => u.replace(/ \d{5}\b/, "")).join(", ")}; full conflict check is not possible.`),
       ...(selected.some(([c]) => c.syllabus.status === "historical") ? ["Grading for some courses comes from a past term's USC syllabus; Spring 2027 grading may differ, so confirm with the instructor."] : []),
       ...(selected.some(([c]) => c.syllabus.status === "synthetic") ? ["Some grading tables are illustrative mocks, not published by USC."] : []),
@@ -194,9 +208,12 @@ export async function solve(input: PlannerInput) {
       explanation: `Disable only “${r.constraint.label}”. All other enabled hard constraints, units, and requirements remain unchanged. This preview was re-solved and independently validated. Approve to apply. No multi-semester graduation effects are verified.`,
       removedConstraintIds: [r.constraint.id], input: r.input, preview: summarize(r.solution, r.input),
     }));
+    // The solver's fallback text is vague; when units are the cause, say so in plain numbers.
+    const unitReasons = result.status === "infeasible" ? unitConflicts(input) : [];
+    const conflicts = unitReasons.length ? [...unitReasons, ...result.conflicts.filter(c => !c.startsWith("Your unit target, completed courses"))] : result.conflicts;
     return SolvePlannerResponse.parse({
       status: result.status, engine: "Google OR-Tools CP-SAT + independent validator",
-      elapsedMs: result.elapsedMs, schedules, repairs, conflicts: result.conflicts,
+      elapsedMs: result.elapsedMs, schedules, repairs, conflicts,
       message: result.status === "infeasible"
         ? "No schedule satisfies all confirmed constraints in the cached USC subset. This is a sufficient conflict explanation, not a guaranteed smallest conflict."
         : result.status === "unknown" ? "Search ended without establishing a solution or impossibility. Your constraints were not changed."

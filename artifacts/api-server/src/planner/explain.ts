@@ -229,49 +229,28 @@ export function explainCompare(input: PlannerInput, refsA: Ref[], refsB: Ref[]):
 
 export function explainConflict(input: PlannerInput): string[] {
   const facts: string[] = [];
-  const usableCourses: Course[] = [];
-  const groups: { title: string; options: Picked[] }[] = [];
   const check = (course: Course) => {
     const blocker = courseBlocker(course, input);
     if (blocker) return { ok: false, why: blocker };
     const per = course.sections.map(s => ({ s, r: sectionBlockers(course, s, input) }));
     if (per.every(x => x.r.length)) return { ok: false, why: `every ${course.code} section is blocked (${per.map(x => `${meetingText(x.s)} ${x.r.join(", ")}`).join("; ")})` };
-    usableCourses.push(course);
     return { ok: true, why: "" };
   };
-  for (const id of input.requirementIds) {
-    const req = catalog.requirements.find(r => r.id === id);
-    if (!req) continue;
-    const results = req.courseIds.map(cid => catalog.courses.find(c => c.id === cid)).filter((c): c is Course => !!c).map(c => check(c));
-    const done = req.courseIds.filter(c => input.completedCourses.includes(c)).length;
-    const usable = results.filter(r => r.ok).length;
-    if (done + usable < req.needed) facts.push(`“${req.title}” cannot be met: ${results.map(r => r.why).filter(Boolean).join("; ")}.`);
-    else if (!done) groups.push({ title: req.title, options: usableCourses.filter(c => req.courseIds.includes(c.id))
-      .flatMap(c => c.sections.filter(s => !sectionBlockers(c, s, input).length).map(s => [c, s] as Picked)) });
-  }
-  // Exact pairwise check: every remaining option of one group overlaps every remaining option of another.
-  for (let i = 0; i < groups.length; i++) for (let j = i + 1; j < groups.length; j++) {
-    const a = groups[i]!, b = groups[j]!;
-    if (!a.options.length || !b.options.length) continue;
-    if (a.options.every(([, x]) => b.options.every(([, y]) => overlapDay(x, y)))) {
-      const name = (o: Picked[]) => list(o.map(([c, s]) => `${c.code} (${meetingText(s)})`));
-      facts.push(`Every remaining “${a.title}” option (${name(a.options)}) overlaps every remaining “${b.title}” option (${name(b.options)}).`);
-    }
-  }
+  // Goals are soft (the solver covers as many as the units allow), so only hard rules and units can cause a conflict.
   for (const rule of enabled(input).filter(c => c.hard && c.kind === "require_course")) {
     const course = catalog.courses.find(c => c.id === rule.value);
     if (!course) continue;
     const r = check(course);
     if (!r.ok) facts.push(`Your rule “${rule.label}” cannot be met: ${r.why}.`);
   }
-  const reachable = [...new Set(usableCourses)].reduce((n, c) => n + c.units, 0);
+  const reachable = catalog.courses.filter(c => !input.completedCourses.includes(c.id) && check(c).ok).reduce((n, c) => n + c.units, 0);
   if (reachable < input.minUnits) facts.push(`Only ${reachable} units have a usable section under your hard rules, below your ${input.minUnits}-unit minimum.`);
   for (const rule of hardTime(input)) {
     const hit = catalog.courses.flatMap(c => c.sections.filter(s => !satisfies(s, rule)).map(s => `${c.code} (${meetingText(s)})`));
     if (hit.length) facts.push(`“${rule.label}” rules out ${plural(hit.length, "section")}: ${list(hit)}.`);
   }
-  if (!facts.some(f => f.includes("cannot be met") || f.startsWith("Only") || f.startsWith("Every remaining"))) {
-    facts.unshift("Each requirement still has a usable section on its own, so the clash comes from combining them: the remaining sections overlap in time or exceed the unit range.");
+  if (!facts.some(f => f.includes("cannot be met") || f.startsWith("Only"))) {
+    facts.unshift("Each course still has a usable section on its own, so the clash comes from combining them: the remaining sections overlap in time or do not add up to your unit target.");
   }
   return facts;
 }

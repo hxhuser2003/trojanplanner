@@ -47,7 +47,7 @@ export const catalog = CatalogSchema.parse({
   ],
   defaultInput: {
     completedCourses: [],
-    requirementIds: ["algorithms", "ai", "web"], minUnits: 12, maxUnits: 16,
+    requirementIds: ["algorithms", "ai", "web"], minUnits: 12, maxUnits: 12,
     constraints: [
       { id: "no-friday", label: "Prefer Fridays free", kind: "no_day", hard: false, enabled: true, value: "", days: [4], start: 0, end: 0 },
       { id: "work-hours", label: "Work Tue/Thu · 9 AM–1 PM", kind: "blocked", hard: true, enabled: true, value: "", days: [1, 3], start: 540, end: 780 },

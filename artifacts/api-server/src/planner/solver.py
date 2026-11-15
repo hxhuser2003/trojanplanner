@@ -5,6 +5,9 @@ import time
 from ortools.sat.python import cp_model
 
 
+GOAL_REWARD = 5000
+
+
 def overlaps(a, b):
     return a["day"] == b["day"] and a["start"] < b["end"] and b["start"] < a["end"]
 
@@ -62,12 +65,19 @@ def run_solver(catalog, request, excluded=None):
     units = sum(c["units"] * variables[i] for i, (c, _) in enumerate(rows))
     model.add(units >= request["minUnits"])
     model.add(units <= request["maxUnits"])
+    # Goals are strongly preferred, not required: with a small unit target the plan covers as many
+    # goals as fit instead of failing. GOAL_REWARD outweighs any single course's cost.
+    goals = []
     for requirement in catalog["requirements"]:
         if requirement["id"] in request["requirementIds"]:
             satisfied = len(completed.intersection(requirement["courseIds"]))
             needed = max(0, requirement["needed"] - satisfied)
+            if needed == 0:
+                continue
+            met = model.new_bool_var(f"goal-{requirement['id']}")
             model.add(sum(variables[i] for i, (c, _) in enumerate(rows)
-                          if c["id"] in requirement["courseIds"]) >= needed)
+                          if c["id"] in requirement["courseIds"]) >= needed).only_enforce_if(met)
+            goals.append(met)
     # Two sections of one course with identical meetings give the same week, so alternatives
     # must differ in courses or meeting times, not just in section numbers.
     signature = [(c["id"], tuple(sorted((m["day"], m["start"], m["end"]) for m in s["meetings"]))) for c, s in rows]
@@ -126,7 +136,7 @@ def run_solver(catalog, request, excluded=None):
                 cost -= 30
         costs.append(cost * variables[i])
     day_weight = 40 if any(c["kind"] == "prefer_fewer_days" for c in active) else 4
-    model.minimize(sum(costs) + day_weight * sum(campus))
+    model.minimize(sum(costs) + day_weight * sum(campus) - GOAL_REWARD * sum(goals))
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 1.0
     solver.parameters.num_search_workers = 1
@@ -167,7 +177,7 @@ def main():
                 core = candidate
         output["conflicts"] = [c["label"] for c in core]
         if not core:
-            output["conflicts"] = ["Selected requirements, unit bounds, completed courses, and available section combinations are incompatible even without user preferences."]
+            output["conflicts"] = ["Your unit target, completed courses, and the available section combinations cannot be combined, even without your rules."]
         # Only propose one-constraint, solver-checked changes. Never mutate original request.
         for constraint in active:
             changed = {**request, "constraints": [

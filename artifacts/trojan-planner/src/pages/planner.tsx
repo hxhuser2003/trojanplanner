@@ -146,6 +146,10 @@ function Planner({ catalog }: { catalog: Catalog }) {
             </dl>
           )}
 
+          {sched && !infeasible && sched.warnings.filter((w) => w.includes('not covered this semester')).map((w) => (
+            <p key={w} className="flex gap-2 text-sm text-amber-800" data-testid="text-goals-uncovered"><AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />{w}</p>
+          ))}
+
           {infeasible && result && <Conflicts result={result} catalog={catalog} input={input} solvedInput={p.solvedInput} onApprove={applyRepair} solving={solving} stale={stale} />}
 
           <WeekCalendar catalog={catalog} schedule={sched && !infeasible ? sched : null} constraints={input.constraints} lockedSectionIds={locked} onToggleLock={toggleLock} dim={solving}
