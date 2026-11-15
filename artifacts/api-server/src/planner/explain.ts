@@ -61,6 +61,8 @@ function sectionBlockers(course: Course, section: Section, input: PlannerInput):
 }
 function courseBlocker(course: Course, input: PlannerInput): string | null {
   if (input.completedCourses.includes(course.id)) return `${course.code} is already in your completed courses`;
+  const excluded = enabled(input).find(c => c.hard && c.kind === "exclude_course" && c.value === course.id);
+  if (excluded) return `your rule “${excluded.label}” excludes ${course.code}`;
   const missing = course.prerequisites.filter(p => !input.completedCourses.includes(p));
   if (missing.length) return `${course.code} needs ${list(missing)} first`;
   return null;
@@ -97,6 +99,8 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
   if (req && input.requirementIds.includes(req.id)) facts.push(`${course.code} covers your “${req.title}” requirement (${course.units} units).`);
   else if (required) facts.push(`${course.code} is in the plan because of your rule “${required.label}”.`);
   else facts.push(`${course.code} adds ${course.units} units toward your ${input.minUnits}–${input.maxUnits} unit range.`);
+  const unwanted = enabled(input).find(c => !c.hard && c.kind === "exclude_course" && c.value === course.id);
+  if (unwanted) facts.push(`You asked to avoid ${course.code} (“${unwanted.label}”), but no plan without it met your other rules and requirements.`);
   if (lockedSection(course, input) === section.id) facts.push(`You locked §${section.id}, so the solver had to keep it.`);
   // Selections come from the client, so overlap and prerequisite claims are re-checked here.
   const clashes = othersByCourse.flatMap(([oc, os]) => { const d = overlapDay(section, os); return d ? [`${oc.code} on ${d}`] : []; });

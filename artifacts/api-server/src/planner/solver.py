@@ -52,6 +52,10 @@ def run_solver(catalog, request, excluded=None):
             ids = [i for i, (c, s) in enumerate(rows)
                    if (c["id"] if constraint["kind"] == "require_course" else s["id"]) == target]
             model.add(sum(variables[i] for i in ids) == 1)
+        if constraint["hard"] and constraint["kind"] == "exclude_course":
+            for i, (c, _) in enumerate(rows):
+                if c["id"] == constraint["value"]:
+                    model.add(variables[i] == 0)
     units = sum(c["units"] * variables[i] for i, (c, _) in enumerate(rows))
     model.add(units >= request["minUnits"])
     model.add(units <= request["maxUnits"])
@@ -87,6 +91,8 @@ def run_solver(catalog, request, excluded=None):
                 cost += 120
             if kind == "require_course" and course["id"] == constraint["value"]:
                 cost -= 150
+            if kind == "exclude_course" and course["id"] == constraint["value"]:
+                cost += 200
             if kind == "lock_section" and section["id"] == constraint["value"]:
                 cost -= 150
             syllabus = course["syllabus"]

@@ -24,7 +24,7 @@ export function validateInput(input: PlannerInput): string | null {
   if (input.requirementIds.some(id => !catalog.requirements.some(r => r.id === id))) return "Unknown requirement.";
   if (input.completedCourses.some(id => !/^[A-Z]{2,8}-\d{3}[A-Z]?$/i.test(id))) return "Use course codes such as CSCI-103.";
   for (const c of input.constraints) {
-    if (c.kind === "require_course" && !catalog.courses.some(course => course.id === c.value)) return `Unknown course in ${c.label}.`;
+    if ((c.kind === "require_course" || c.kind === "exclude_course") && !catalog.courses.some(course => course.id === c.value)) return `Unknown course in ${c.label}.`;
     if (c.kind === "lock_section" && !catalog.courses.some(course => course.sections.some(s => s.id === c.value))) return `Unknown section in ${c.label}.`;
     if ((c.kind === "blocked" || c.kind === "no_day") && c.days.length === 0) return `Select at least one weekday for ${c.label}.`;
     if (c.kind === "blocked" && c.start >= c.end) return `End time must be after start time for ${c.label}.`;
@@ -69,6 +69,7 @@ function validateSolution(raw: RawSolution, input: PlannerInput): [Course, Secti
   }
   for (const rule of input.constraints.filter(x => x.enabled && x.hard)) {
     if (rule.kind === "require_course" && !selected.some(([c]) => c.id === rule.value)) throw new Error("Required course missing.");
+    if (rule.kind === "exclude_course" && selected.some(([c]) => c.id === rule.value)) throw new Error("Excluded course selected.");
     if (rule.kind === "lock_section" && !selected.some(([, s]) => s.id === rule.value)) throw new Error("Locked section missing.");
   }
   for (const id of input.requirementIds) {

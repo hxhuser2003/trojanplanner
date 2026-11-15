@@ -122,6 +122,7 @@ export const ConstraintKind = {
   latest: 'latest',
   blocked: 'blocked',
   require_course: 'require_course',
+  exclude_course: 'exclude_course',
   lock_section: 'lock_section',
   prefer_projects: 'prefer_projects',
   prefer_exams: 'prefer_exams',

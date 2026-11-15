@@ -27,6 +27,7 @@ export const KIND_META: Record<ConstraintKind, { label: string; hint: string; us
   latest: { label: 'Latest end', hint: 'Nothing after this time', uses: ['end'] },
   blocked: { label: 'Time block', hint: 'Work, practice, commute, life', uses: ['days', 'time'] },
   require_course: { label: 'Require course', hint: 'This course must be in the plan', uses: ['course'] },
+  exclude_course: { label: 'Exclude course', hint: 'Keep this course out of the plan', uses: ['course'] },
   lock_section: { label: 'Lock section', hint: 'Keep this exact section', uses: ['section'] },
   prefer_projects: { label: 'Prefer project-weighted', hint: 'Favor syllabi with project weight at or above 50%', uses: [] },
   prefer_exams: { label: 'Prefer exam-weighted', hint: 'Favor syllabi with exam weight at or above 50%', uses: [] },
@@ -44,7 +45,7 @@ export function describeConstraint(c: Constraint, catalog?: Catalog): string {
     case 'earliest': return `Start at or after ${fmtTime(c.start)}`;
     case 'latest': return `Finish by ${fmtTime(c.end)}`;
     case 'blocked': return `${days || 'No days'} · ${fmtTime(c.start)}–${fmtTime(c.end)}`;
-    case 'require_course': return courseCode(catalog, c.value) ?? c.value;
+    case 'require_course': case 'exclude_course': return courseCode(catalog, c.value) ?? c.value;
     case 'lock_section': {
       const f = findSection(catalog, c.value);
       return f ? `${f.course.code} §${f.section.id}` : c.value;

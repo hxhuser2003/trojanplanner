@@ -74,7 +74,7 @@ export function Onboarding({ open, onOpenChange, current, onApply }: {
   const [step, setStep] = useState(0);
   const [a, setA] = useState<Answers>(INITIAL);
   const set = (patch: Partial<Answers>) => setA((x) => ({ ...x, ...patch }));
-  const kept = current.filter((c) => c.kind === 'require_course' || c.kind === 'lock_section');
+  const kept = current.filter((c) => c.kind === 'require_course' || c.kind === 'exclude_course' || c.kind === 'lock_section');
   const rules = answersToRules(a);
   const blockInvalid = a.hasBlock && (a.blockDays.length === 0 || a.blockStart >= a.blockEnd);
   const close = (v: boolean) => { onOpenChange(v); if (!v) setStep(0); };
