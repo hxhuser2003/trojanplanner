@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info, X } from 'lucide-react';
 import type { Catalog, Constraint, PlannerInput, Repair } from '@workspace/api-client-react';
@@ -57,6 +57,8 @@ function Planner({ catalog }: { catalog: Catalog }) {
   };
 
   const [setupOpen, setSetupOpen] = useState(!p.onboarded);
+  // Reset clears the onboarded flag; ask the three questions again.
+  useEffect(() => { if (!p.onboarded) setSetupOpen(true); }, [p.onboarded]);
   const onSetupOpen = (v: boolean) => { setSetupOpen(v); if (!v) p.setOnboarded(true); };
   const applySetup = (constraints: Constraint[]) => {
     const next: PlannerInput = { ...input, constraints };
