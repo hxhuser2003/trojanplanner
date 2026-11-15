@@ -1,5 +1,8 @@
 import { GetCatalogResponse as CatalogSchema } from "@workspace/api-zod";
 import snapshot from "./usc-spring-2027.json";
+
+// USC lists the weekly midterm/final slot as a "Quiz" section; students know it as the exam time.
+const examSlot = <M extends { kind: string }>(m: M): M => (m.kind === "Quiz" ? { ...m, kind: "Exam" } : m);
 import { syllabi } from "./syllabi";
 
 const color: Record<string, string> = {
@@ -34,7 +37,7 @@ export const catalog = CatalogSchema.parse({
       requirement, description: course.description, prerequisiteGroups: course.prerequisiteGroups,
       sections: course.sections.map((section) => ({
         id: section.id, componentIds: section.componentIds, instructor: section.instructor,
-        meetings: section.meetings, unknownScheduleComponents: section.unknownScheduleComponents,
+        meetings: section.meetings.map(examSlot), unknownScheduleComponents: section.unknownScheduleComponents.map((u) => u.replace(/^Quiz\b/, "Exam")),
         eligibility: section.eligibility, syllabusUrl: section.syllabusUrl,
       })),
       syllabus,

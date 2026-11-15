@@ -35,9 +35,9 @@ export function goalsFit(input: PlannerInput): boolean {
   return total <= input.maxUnits;
 }
 
-/** Weekly time in class. Quiz slots are reserved exam times, not weekly classes, so they are left out. */
+/** Weekly time in class, including the weekly exam slot (midterms and finals are held there). */
 export function classMinutes(meetings: Section["meetings"]): number {
-  return meetings.filter(m => m.kind !== "Quiz").reduce((n, m) => n + m.end - m.start, 0);
+  return meetings.reduce((n, m) => n + m.end - m.start, 0);
 }
 export const hoursText = (h: number) => { const m = Math.round(h * 60); return `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`; };
 
