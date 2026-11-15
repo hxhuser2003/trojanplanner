@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'wouter';
-import { Download, Printer, HelpCircle, CalendarX } from 'lucide-react';
+import { Download, Printer, CalendarX } from 'lucide-react';
 import type { Catalog, Schedule } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,26 +15,11 @@ export default function ChecklistPage() {
 }
 
 function buildItems(catalog: Catalog, sched: Schedule) {
-  const rows = sched.selections.map((sel) => {
+  return sched.selections.map((sel) => {
     const course = catalog.courses.find((c) => c.id === sel.courseId);
     const section = course?.sections.find((s) => s.id === sel.sectionId);
     return { sel, course, section };
   });
-  const unknowns: string[] = [];
-  rows.forEach(({ course, section, sel }) => {
-    if (!course) { unknowns.push(`${sel.courseId}: course details unavailable`); return; }
-    const s = course.syllabus;
-    unknowns.push(`${course.code}: ${s.status === 'synthetic' ? 'mock syllabus is illustrative' : s.status === 'historical' ? `${s.term} syllabus is historical` : 'syllabus is unavailable'}; verify the Spring 2027 syllabus`);
-    if (s.examPercent == null) unknowns.push(`${course.code}: exam weight unknown`);
-    if (s.projectPercent == null) unknowns.push(`${course.code}: project weight unknown`);
-    if (s.projectMode === 'unspecified') unknowns.push(`${course.code}: individual vs group work not specified`);
-    if (!s.cadence) unknowns.push(`${course.code}: assignment cadence unknown`);
-    s.evidence.filter((e) => e.status === 'unknown').forEach((e) => unknowns.push(`${course.code}: ${e.label} unknown`));
-    if (section?.eligibility) unknowns.push(`${course.code}: ${section.eligibility}`);
-    section?.unknownScheduleComponents.forEach((item) => unknowns.push(`${course.code}: ${item}; time conflicts cannot be fully checked`));
-  });
-  sched.warnings.forEach((w) => unknowns.push(w));
-  return { rows, unknowns };
 }
 
 function Checklist({ catalog }: { catalog: Catalog }) {
@@ -51,7 +36,7 @@ function Checklist({ catalog }: { catalog: Catalog }) {
     );
   }
   const stale = p.dirty;
-  const { rows, unknowns } = buildItems(catalog, sched);
+  const rows = buildItems(catalog, sched);
   const steps = ['Confirm prerequisites are cleared in your official record', 'Check D-clearance needs with the department', 'Verify times in the official Schedule of Classes', 'Meet with your advisor before your registration window'];
   const total = rows.length + steps.length;
   const done = [...rows.map((r) => `sec:${r.sel.sectionId}`), ...steps.map((_, i) => `step:${i}`)].filter((k) => p.checklist[k]).length;
@@ -71,9 +56,6 @@ function Checklist({ catalog }: { catalog: Catalog }) {
       '',
       'STEPS',
       ...steps.map((s, i) => `[${p.checklist[`step:${i}`] ? 'x' : ' '}] ${s}`),
-      '',
-      'UNKNOWNS TO RESOLVE',
-      ...(unknowns.length ? unknowns.map((u) => `- ${u}`) : ['- none flagged']),
     ];
     const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
     const a = document.createElement('a');
@@ -132,12 +114,6 @@ function Checklist({ catalog }: { catalog: Catalog }) {
       </div>
       <h2 className="text-base font-semibold mb-2">Before your window</h2>
       <div className="space-y-2 mb-6">{steps.map((s, i) => <Item key={i} k={`step:${i}`}>{s}</Item>)}</div>
-
-      <h2 className="text-base font-semibold mb-2 flex items-center gap-2"><HelpCircle className="size-5 text-primary" />Unknowns ({unknowns.length})</h2>
-      <p className="text-xs text-muted-foreground mb-2">Unknown is not zero. These are gaps in the evidence, not good news.</p>
-      {unknowns.length ? (
-        <ul className="rounded-xl border bg-card divide-y" data-testid="list-unknowns">{unknowns.map((u, i) => <li key={i} className="px-4 py-2 text-sm">{u}</li>)}</ul>
-      ) : <p className="text-sm italic text-muted-foreground">No unknowns flagged for this plan.</p>}
     </div>
   );
 }

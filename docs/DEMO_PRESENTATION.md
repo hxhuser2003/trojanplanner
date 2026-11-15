@@ -51,8 +51,7 @@ Maya is a made-up student. Courses, sections and times are real USC Spring 2027 
 | **1:50–2:05** | **Ask**: `I'm interested in natural language processing. What should I take next semester?` Point at the course recommendation; do not apply a rule. | "The setup handles scheduling preferences. For an open course question, the copilot looks at the loaded course descriptions and suggests a relevant next course, such as 544." |
 | **2:05–2:20** | **Ask**: `which classes in my schedule have a midterm?` Point at the source tags under the answer. | "The grading answer comes from source-linked tables: 566's 35% midterm is in its Fall 2026 USC syllabus, while 572's is in a labeled mock." |
 | **2:20–2:35** | **Ask**: `I don't want to take CSCI 572` → **Apply & update**. Calendar swaps to CSCI 571. | "When she changes her mind, the copilot proposes a course rule. Only after she approves it does the solver re-plan around 571." |
-| **2:35–2:45** | **Ask**: `what do I need for graduation?` | "Progress is counted from her selected planning goals. 570 is still open for next semester, and this is clearly not an official degree audit." |
-| **2:45–3:00** | **Checklist**: section numbers → **Download .txt**. | "Finally, the section numbers for registration. Three answers to start, a solver to check the plan, and sources behind its facts. That's TrojanPlanner." |
+| **2:35–3:00** | **Checklist**: section numbers → **Download .txt**. | "Finally, the section numbers for registration. Three answers to start, a solver to check the plan, and sources behind its facts. That's TrojanPlanner." |
 
 ### AI fallback for 1:50–2:05 (no key, or a slow reply)
 
@@ -68,7 +67,6 @@ Ask `tell me about CSCI 544` instead. The catalog lookup shows its course and se
 | NLP course-interest question | With AI configured, expect a recommendation grounded in course descriptions; CSCI 544 covers human language technologies. It should not change the plan. Without AI, `tell me about CSCI 544` returns a direct catalog lookup. |
 | Midterm question | CSCI 566 Midterm 35% (Fall 2026 USC syllabus); CSCI 572 Midterm exam 30%, Week 9, in class (labeled mock syllabus). Citation links read "Fall 2026 USC syllabus" and "Mock syllabus (made for this demo)". |
 | After excluding 572 | CSCI 566 + CSCI 571. Checklist: 566 Lecture Mon 5:00pm–8:20pm; 571 Lecture Tue/Thu 5:30pm–7:20pm. |
-| Graduation question | Algorithms: not covered by this plan, option CSCI 570. AI or NLP: done (561, 567). Web or search: in this plan (571). Other goals in one line. |
 
 ## Lines to avoid
 
