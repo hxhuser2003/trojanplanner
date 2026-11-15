@@ -42,7 +42,7 @@ Maya is a made-up student. The courses, sections, times and syllabi are real USC
 | Time | Screen | Say |
 |---|---|---|
 | **0:00–0:15** | Planner page with the finished calendar. | "Registering at USC means juggling a degree plan, a job, and dozens of section combinations, and one wrong pick costs you a semester. TrojanPlanner turns that into one conversation, and it never makes things up." |
-| **0:15–0:40** | **Degree** page → paste the STARS text → **Find course candidates** → **Add 4 as completed**. Show the Algorithms and Web goals and **Units: 8**. Click **Re-solve with these**. | "Maya imports her STARS report. The PDF is read on her laptop, and she confirms every course before it counts. She picks this semester's goals and a unit target, and re-solves." |
+| **0:15–0:40** | **Degree** page → paste the STARS text → **Find course candidates** → **Add 4 as completed**. Show the Algorithms and Web goals and **Units: 8**. Click **Re-solve with these**. | "Maya pastes her course rows from STARS, and she confirms every course before it counts. She picks this semester's goals and a unit target, and re-solves." |
 | **0:40–1:10** | Lands on the planner. Point at **Optimal · ~100 ms**, the empty Tue/Thu mornings, and the option tabs. Click **No graded quizzes**, then back. Open **Compare** for one second. | "A constraint solver checked every real section combination and found the best week in a tenth of a second. Work hours are untouched. It also offers truly different alternatives, and their names are promises: *No graded quizzes* means every course in it has no graded quizzes in its syllabus." |
 | **1:10–1:45** | **Rules** tab → click **Soft** on *Prefer Fridays free* to make it **Hard** (label becomes *Keep Fri free*). Conflict panel appears. Point at the reason and the preview, then click **Approve this repair**. | "Now Maya insists on Fridays off. Instead of quietly breaking a rule, it tells her no plan fits, and why: every CSCI 570 section meets on Friday, including the exam slot. It offers a tested repair with a preview, and nothing changes until she approves." |
 | **1:45–2:00** | **Ask** tab: `what do I need for graduation?` | "She can just ask. Progress is counted by code, not guessed: done, in this plan, or still open. And it's clear these are planning goals, not an official audit." |
@@ -68,7 +68,6 @@ Type `I work Mon/Wed 3-6pm too` → the copilot proposes a **Time block Mon/Wed 
 - The registration checklist as the concrete end result.
 
 **Skip** (true, but costs seconds):
-- PDF OCR (slow on camera; pasted text tells the same story).
 - The full rule editor dialog, Compare details, the explain panel.
 - Unit ranges and the "unreachable units" hint.
 - Any claim about seats, eligibility, or official degree audits.
@@ -82,5 +81,5 @@ Type `I work Mon/Wed 3-6pm too` → the copilot proposes a **Time block Mon/Wed 
 ## If there is time left in Q&A or the slide deck
 
 - **Why trust it:** the LLM never writes the schedule. Solver output is re-validated by independent code before it is shown.
-- **Privacy:** the STARS PDF is read on the student's device. Only its extracted text is sent, when she asks for course candidates, and nothing counts as completed until she confirms it.
+- **Privacy:** STARS import is paste-only. Only the rows she pastes are sent, when she asks for course candidates; they are not stored, and nothing counts as completed until she confirms it.
 - **Next:** more departments, live seat data via an official feed, and an advisor-reviewed pilot with one department.

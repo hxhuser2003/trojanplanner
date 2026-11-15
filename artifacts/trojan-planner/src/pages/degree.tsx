@@ -1,18 +1,16 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Upload, ScanText, AlertTriangle, X, Plus, ShieldAlert, FileSearch } from 'lucide-react';
+import { AlertTriangle, X, Plus, ShieldAlert, FileSearch } from 'lucide-react';
 import { useParseStars, type Catalog, type PlannerInput, type StarsResult } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
 import { CatalogGate } from '@/components/gate';
 import { PageHeader } from '@/components/shell';
 import { usePlanner } from '@/lib/planner-store';
 import { errMessage } from '@/lib/format';
-import { extractPdfText, ocrPdf } from '@/lib/pdf-extract';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -131,70 +129,27 @@ function Degree({ catalog }: { catalog: Catalog }) {
 
 function StarsImport({ catalogKnown, onApply }: { catalogKnown: Set<string>; onApply: (codes: string[]) => void }) {
   const parse = useParseStars();
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState('');
-  const [stage, setStage] = useState<'idle' | 'extracting' | 'no-text' | 'ocr' | 'ready'>('idle');
-  const [ocrMsg, setOcrMsg] = useState({ msg: '', pct: 0 });
-  const [fileErr, setFileErr] = useState<string | null>(null);
   const [res, setRes] = useState<StarsResult | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
-
-  const onFile = async (f: File) => {
-    setFile(f); setFileErr(null); setRes(null); setStage('extracting');
-    try {
-      const { text: t } = await extractPdfText(f);
-      if (t.replace(/\s/g, '').length < 20) { setStage('no-text'); setText(''); }
-      else { setText(t); setStage('ready'); }
-    } catch (e) { setFileErr(errMessage(e)); setStage('idle'); }
-  };
-
-  const runOcr = async () => {
-    if (!file) return;
-    setStage('ocr');
-    try {
-      const t = await ocrPdf(file, (msg, pct) => setOcrMsg({ msg, pct }));
-      setText(t); setStage('ready');
-    } catch (e) { setFileErr(`OCR failed: ${errMessage(e)}`); setStage('no-text'); }
-  };
 
   const submit = async () => {
     try {
       const r = await parse.mutateAsync({ data: { text: text.slice(0, 100000) } });
       setRes(r);
       setPicked(new Set(r.completedCandidates));
-      setText(''); setFile(null); setStage('idle');
-      if (fileRef.current) fileRef.current.value = '';
+      setText('');
     } catch { /* shown below */ }
   };
 
   return (
     <section className="rounded-xl border bg-card p-5 self-start" data-testid="panel-stars">
       <div className="flex items-center gap-2"><FileSearch className="size-5 text-primary" /><h2 className="text-base font-semibold">Import from a STARS report</h2></div>
-      <p className="text-xs text-muted-foreground mt-1">Your PDF file stays in this browser. When you click Find course candidates, the extracted text is sent to the TrojanPlanner backend parser; it is not saved here or there by this app. Results are candidates for you to confirm.</p>
-
-      <div className="mt-4 rounded-lg border-2 border-dashed p-5 text-center hover:border-primary/50 transition-colors">
-        <Upload className="size-6 mx-auto text-muted-foreground" />
-        <label className="block mt-2 text-sm font-medium cursor-pointer text-primary">
-          Choose STARS PDF
-          <input ref={fileRef} type="file" accept="application/pdf" className="sr-only" onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} data-testid="input-stars-file" />
-        </label>
-        {file && <p className="text-xs font-mono mt-1 text-muted-foreground">{file.name}</p>}
-      </div>
-      {stage === 'extracting' && <p className="text-xs mt-2 animate-pulse" aria-live="polite">Reading the PDF text layer…</p>}
-      {fileErr && <p className="text-xs text-destructive mt-2" role="alert">{fileErr}</p>}
-      {(stage === 'no-text' || stage === 'ocr') && (
-        <div className="mt-3 rounded-lg bg-accent/20 border border-accent/50 p-3 text-xs space-y-2" data-testid="status-image-only">
-          <p><strong>This PDF is image-only</strong> (a scan with no text layer). You can run local OCR, which recognizes text on this device. It is slower (often 10–40s per page) and can misread codes, so review the result. OCR is not fully offline: the OCR engine and English language data are downloaded from a public CDN on first use. The PDF itself is processed on this device; the recognized text is sent to the backend only when you ask for candidates. Or paste text below.</p>
-          {stage === 'ocr' ? (
-            <div aria-live="polite"><p className="mb-1">{ocrMsg.msg || 'Starting OCR…'}</p><Progress value={ocrMsg.pct * 100} /></div>
-          ) : <Button size="sm" onClick={runOcr} data-testid="button-run-ocr"><ScanText className="size-4" />Run local OCR</Button>}
-        </div>
-      )}
+      <p className="text-xs text-muted-foreground mt-1">Open your STARS report, copy the course rows, and paste them here. When you click Find course candidates, the text is sent to the TrojanPlanner backend parser; it is not saved here or there by this app. Results are candidates for you to confirm.</p>
 
       <div className="mt-4 space-y-1.5">
-        <Label htmlFor="stars-text">Extracted or pasted text</Label>
-        <Textarea id="stars-text" rows={7} value={text} onChange={(e) => { setText(e.target.value); if (e.target.value) setStage('ready'); }} maxLength={100000}
+        <Label htmlFor="stars-text">STARS course rows</Label>
+        <Textarea id="stars-text" rows={7} value={text} onChange={(e) => setText(e.target.value)} maxLength={100000}
           placeholder={'Paste STARS rows, e.g.\n20251 CSCI 103 4.0 A Introduction to Programming'} className="font-mono text-xs" data-testid="input-stars-text" />
         <p className="text-[11px] text-muted-foreground">Rows marked RG (current registration) or IP (in progress) are never counted as completed.</p>
       </div>
