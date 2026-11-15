@@ -12,14 +12,14 @@ export const MAX_RULES = 20;
 const rule = (kind: ConstraintKind, label: string, hard: boolean, patch: Partial<Constraint> = {}): Constraint =>
   ({ ...newConstraint(kind, hard), label, ...patch });
 
-type Assess = 'projects' | 'solo' | 'both' | 'none';
+type Weighting = 'projects' | 'exams' | 'none';
 interface Answers {
   hasBlock: boolean; blockDays: number[]; blockStart: number; blockEnd: number; blockLabel: string;
   freeDays: number[]; freeHard: boolean;
-  assess: Assess;
+  weighting: Weighting; solo: boolean; fewerDeadlines: boolean;
 }
 
-const INITIAL: Answers = { hasBlock: false, blockDays: [], blockStart: 840, blockEnd: 1080, blockLabel: 'Work', freeDays: [], freeHard: true, assess: 'none' };
+const INITIAL: Answers = { hasBlock: false, blockDays: [], blockStart: 840, blockEnd: 1080, blockLabel: 'Work', freeDays: [], freeHard: true, weighting: 'none', solo: false, fewerDeadlines: false };
 
 export function answersToRules(a: Answers): Constraint[] {
   const out: Constraint[] = [];
@@ -32,8 +32,10 @@ export function answersToRules(a: Answers): Constraint[] {
     const days = [...a.freeDays].sort().map((d) => DAYS[d]).join('/');
     out.push(rule('no_day', `${a.freeHard ? 'Keep' : 'Prefer'} ${days} free`, a.freeHard, { days: [...a.freeDays].sort() }));
   }
-  if (a.assess === 'projects' || a.assess === 'both') out.push(rule('prefer_projects', 'Prefer project-based assessment', false));
-  if (a.assess === 'solo' || a.assess === 'both') out.push(rule('prefer_individual', 'Prefer individual projects', false));
+  if (a.weighting === 'projects') out.push(rule('prefer_projects', 'Prefer project-based assessment', false));
+  if (a.weighting === 'exams') out.push(rule('prefer_exams', 'Prefer exam-based assessment', false));
+  if (a.solo) out.push(rule('prefer_individual', 'Prefer individual projects', false));
+  if (a.fewerDeadlines) out.push(rule('prefer_less_frequent', 'Prefer fewer, larger deadlines', false));
   return out;
 }
 
@@ -121,11 +123,29 @@ export function Onboarding({ open, onOpenChange, current, onApply }: {
         )}
 
         {step === 2 && (
-          <div className="space-y-2">
-            <Choice on={a.assess === 'projects'} onClick={() => set({ assess: 'projects' })} testid="onboard-assess-projects">More projects, fewer exams</Choice>
-            <Choice on={a.assess === 'solo'} onClick={() => set({ assess: 'solo' })} testid="onboard-assess-solo">Individual work over group projects</Choice>
-            <Choice on={a.assess === 'both'} onClick={() => set({ assess: 'both' })} testid="onboard-assess-both">Both</Choice>
-            <Choice on={a.assess === 'none'} onClick={() => set({ assess: 'none' })} testid="onboard-assess-none">No preference</Choice>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Exams or projects?</Label>
+              <div className="grid grid-cols-3 gap-2">
+                <Choice on={a.weighting === 'projects'} onClick={() => set({ weighting: 'projects' })} testid="onboard-weight-projects">More projects</Choice>
+                <Choice on={a.weighting === 'exams'} onClick={() => set({ weighting: 'exams' })} testid="onboard-weight-exams">More exams</Choice>
+                <Choice on={a.weighting === 'none'} onClick={() => set({ weighting: 'none' })} testid="onboard-weight-none">Either</Choice>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Group projects?</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Choice on={a.solo} onClick={() => set({ solo: true })} testid="onboard-solo-yes">Prefer solo work</Choice>
+                <Choice on={!a.solo} onClick={() => set({ solo: false })} testid="onboard-solo-no">Groups are fine</Choice>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Deadlines?</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Choice on={a.fewerDeadlines} onClick={() => set({ fewerDeadlines: true })} testid="onboard-deadlines-fewer">Fewer, bigger ones</Choice>
+                <Choice on={!a.fewerDeadlines} onClick={() => set({ fewerDeadlines: false })} testid="onboard-deadlines-any">No preference</Choice>
+              </div>
+            </div>
             <p className="text-xs text-muted-foreground">Based on syllabus weights. Courses without a syllabus are never assumed to match.</p>
           </div>
         )}

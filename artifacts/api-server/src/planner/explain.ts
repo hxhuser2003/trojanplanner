@@ -67,13 +67,14 @@ function courseBlocker(course: Course, input: PlannerInput): string | null {
 }
 
 function assessmentFacts(course: Course, input: PlannerInput): string[] {
-  const prefs = enabled(input).filter(c => c.kind === "prefer_projects" || c.kind === "prefer_individual" || c.kind === "prefer_less_frequent");
+  const prefs = enabled(input).filter(c => c.kind === "prefer_projects" || c.kind === "prefer_exams" || c.kind === "prefer_individual" || c.kind === "prefer_less_frequent");
   if (!prefs.length) return [];
   const s = course.syllabus;
   if (s.status !== "synthetic") return [`No syllabus evidence for ${course.code}, so ${list(prefs.map(p => `“${p.label}”`))} could not be credited. Unknown is not zero.`];
   const out: string[] = [];
   for (const p of prefs) {
     if (p.kind === "prefer_projects") out.push(`${course.code} weights projects ${s.projectPercent}% and exams ${s.examPercent}% (synthetic syllabus)${(s.projectPercent ?? 0) >= 50 ? ", which matches “" + p.label + "”" : ""}.`);
+    if (p.kind === "prefer_exams") out.push(`${course.code} weights exams ${s.examPercent}% and projects ${s.projectPercent}% (synthetic syllabus)${(s.examPercent ?? 0) >= 50 ? ", which matches “" + p.label + "”" : ""}.`);
     if (p.kind === "prefer_individual") out.push(`${course.code} projects are ${s.projectMode}${s.projectMode === "individual" ? ", which matches “" + p.label + "”" : ""}.`);
     if (p.kind === "prefer_less_frequent") out.push(`${course.code} cadence: ${s.cadence.toLowerCase()}${s.cadence.toLowerCase().includes("milestone") ? ", which matches “" + p.label + "”" : ""}.`);
   }
@@ -155,7 +156,7 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
   return facts;
 }
 
-type Metrics = { units: number; days: number[]; hours: number; earliest: number; gaps: number; softBroken: string[]; projectHeavy: number };
+type Metrics = { units: number; days: number[]; hours: number; earliest: number; gaps: number; softBroken: string[]; projectHeavy: number; examHeavy: number };
 function metrics(picked: Picked[], input: PlannerInput): Metrics {
   const meetings = picked.flatMap(([, s]) => s.meetings);
   let gaps = 0;
@@ -171,6 +172,7 @@ function metrics(picked: Picked[], input: PlannerInput): Metrics {
     earliest: meetings.length ? Math.min(...meetings.map(m => m.start)) : 0,
     gaps, softBroken,
     projectHeavy: picked.filter(([c]) => c.syllabus.status === "synthetic" && (c.syllabus.projectPercent ?? 0) >= 50).length,
+    examHeavy: picked.filter(([c]) => c.syllabus.status === "synthetic" && (c.syllabus.examPercent ?? 0) >= 50).length,
   };
 }
 
@@ -194,6 +196,7 @@ export function explainCompare(input: PlannerInput, refsA: Ref[], refsB: Ref[]):
   cmp("First class", fmt(ma.earliest), fmt(mb.earliest));
   cmp("Time between classes", `${ma.gaps} min`, `${mb.gaps} min`);
   cmp("Project-weighted courses", String(ma.projectHeavy), String(mb.projectHeavy));
+  cmp("Exam-weighted courses", String(ma.examHeavy), String(mb.examHeavy));
   const broken = (m: Metrics) => m.softBroken.length ? `breaks ${list(m.softBroken.map(l => `“${l}”`))}` : "keeps every soft preference";
   if (ma.softBroken.join() !== mb.softBroken.join()) facts.push(`This option ${broken(ma)}; the other ${broken(mb)}.`);
   if (!facts.length) facts.push("Both options have the same courses, meeting times, and preference results.");

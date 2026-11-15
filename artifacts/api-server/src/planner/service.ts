@@ -89,6 +89,7 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
   const known = selected.filter(([c]) => c.syllabus.status === "synthetic");
   const individual = known.filter(([c]) => c.syllabus.projectMode === "individual").length;
   const projectHeavy = known.filter(([c]) => (c.syllabus.projectPercent ?? -1) >= 50).length;
+  const examHeavy = known.filter(([c]) => (c.syllabus.examPercent ?? -1) >= 50).length;
   const days = new Set(meetings.map(m => m.day)).size;
   const earliest = meetings.length ? Math.min(...meetings.map(m => m.start)) : 0;
   return {
@@ -104,7 +105,7 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     checks: ["No overlapping meetings in the loaded data", "All enabled hard constraints respected", "Unit bounds and selected illustrative requirements checked", "Linked meetings and known prerequisites checked"],
     warnings: ["Synthetic data only—not an official degree audit.", "Seat availability, restrictions, real prerequisites, and current USC degree eligibility remain unverified.",
       ...(known.length < selected.length ? ["Some syllabi are missing; absence of evidence does not mean fewer exams or projects."] : [])],
-    assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${individual} individual-project courses. Evidence coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
+    assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses. Evidence coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
   };
 }
 let activeSolves = 0;

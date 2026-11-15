@@ -29,6 +29,7 @@ export const KIND_META: Record<ConstraintKind, { label: string; hint: string; us
   require_course: { label: 'Require course', hint: 'This course must be in the plan', uses: ['course'] },
   lock_section: { label: 'Lock section', hint: 'Keep this exact section', uses: ['section'] },
   prefer_projects: { label: 'Prefer project-weighted', hint: 'Favor syllabi with project weight at or above 50%', uses: [] },
+  prefer_exams: { label: 'Prefer exam-weighted', hint: 'Favor syllabi with exam weight at or above 50%', uses: [] },
   prefer_individual: { label: 'Prefer individual work', hint: 'Favor individually graded projects', uses: [] },
   prefer_fewer_days: { label: 'Fewer campus days', hint: 'Compress the week', uses: [] },
   prefer_less_frequent: { label: 'Less frequent meetings', hint: 'Favor 2x/week over 3x/week', uses: [] },

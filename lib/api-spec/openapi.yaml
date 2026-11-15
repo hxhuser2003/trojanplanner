@@ -182,7 +182,7 @@ components:
         label: { type: string, maxLength: 200 }
         kind:
           type: string
-          enum: [no_day, earliest, latest, blocked, require_course, lock_section, prefer_projects, prefer_individual, prefer_fewer_days, prefer_less_frequent]
+          enum: [no_day, earliest, latest, blocked, require_course, lock_section, prefer_projects, prefer_exams, prefer_individual, prefer_fewer_days, prefer_less_frequent]
         hard: { type: boolean }
         enabled: { type: boolean }
         value: { type: string, maxLength: 100 }

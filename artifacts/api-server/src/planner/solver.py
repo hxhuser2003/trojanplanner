@@ -94,6 +94,8 @@ def run_solver(catalog, request, excluded=None):
             # Neutral missing values must not outperform positively evidenced matches.
             if kind == "prefer_projects" and known:
                 cost -= int((syllabus.get("projectPercent") or 0) / 2)
+            if kind == "prefer_exams" and known:
+                cost -= int((syllabus.get("examPercent") or 0) / 2)
             if kind == "prefer_individual" and known and syllabus["projectMode"] == "individual":
                 cost -= 45
             if kind == "prefer_less_frequent" and known and "milestone" in syllabus["cadence"].lower():
