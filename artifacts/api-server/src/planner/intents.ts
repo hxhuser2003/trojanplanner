@@ -29,7 +29,7 @@ export function progressIntent(message: string, input: PlannerInput, selections:
   const units = selections.reduce((n, s) => n + (catalog.courses.find(c => c.id === s.courseId)?.units ?? 0), 0);
   return {
     kind: "answer",
-    message: `Here is where you stand under the loaded ${catalog.major} rules:\n\n${lines.join("\n")}\n\nThis plan has ${units} units (your range is ${input.minUnits}–${input.maxUnits}). Change goals and completed courses on the Degree page.`,
+    message: `Here is where you stand under the loaded ${catalog.major} rules:\n\n${lines.join("\n")}\n\nThis plan has ${units} units (your range is ${input.minUnits}–${input.maxUnits}). Update completed courses on the Degree page.`,
     warnings: ["Computed from the demo catalog's illustrative rules. This is not an official degree audit."],
   };
 }
@@ -153,7 +153,7 @@ export function excludeIntent(message: string, current: PlannerInput): Reply | n
   return {
     kind: "rules",
     message: `I can keep ${fresh.map(t => t.code).join(" and ")} out of your plan. ${stuck.length
-      ? `That leaves no course for “${stuck.map(r => r.title).join("”, “")}”, so the solver will report a conflict unless you drop that goal on the Degree page.`
+      ? `That leaves no course for “${stuck.map(r => r.title).join("”, “")}”, so the solver will report a conflict.`
       : "The solver will pick another course if one fits your other rules."}`,
     proposedConstraints: fresh.map(t => ({
       id: `excl-${t.id}-${Date.now().toString(36)}`, label: `Don't take ${t.code}`, kind: "exclude_course" as const,

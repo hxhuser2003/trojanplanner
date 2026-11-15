@@ -54,23 +54,9 @@ function Degree({ catalog }: { catalog: Catalog }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="space-y-6">
           <div className="rounded-xl border bg-card p-5">
-            <h2 className="text-base font-semibold">Requirements to work on</h2>
-            <p className="text-xs text-muted-foreground mb-3">The solver picks courses that advance the selected buckets.</p>
-            <ul className="space-y-2">
-              {catalog.requirements.map((r) => {
-                const on = input.requirementIds.includes(r.id);
-                return (
-                  <li key={r.id}>
-                    <label className={cn('flex gap-3 rounded-lg border p-3 cursor-pointer transition-colors', on ? 'border-primary bg-primary/5' : 'hover:bg-secondary/50')}>
-                      <Checkbox checked={on} data-testid={`checkbox-req-${r.id}`} onCheckedChange={() => set({ requirementIds: on ? input.requirementIds.filter((x) => x !== r.id) : [...input.requirementIds, r.id].slice(0, 10) })} />
-                      <span><span className="font-semibold text-sm">{r.title}</span> <span className="text-xs font-mono text-muted-foreground">needs {r.needed}</span>
-                        <span className="block text-xs text-muted-foreground">{r.description}</span></span>
-                    </label>
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="grid grid-cols-2 gap-3 mt-4">
+            <h2 className="text-base font-semibold">Units this semester</h2>
+            <p className="text-xs text-muted-foreground mb-3">The solver keeps your plan inside this range.</p>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1"><Label htmlFor="minu">Min units</Label><Input id="minu" type="number" min={0} max={20} value={input.minUnits} onChange={(e) => set({ minUnits: Math.min(20, Math.max(0, Number(e.target.value))) })} data-testid="input-min-units" /></div>
               <div className="space-y-1"><Label htmlFor="maxu">Max units</Label><Input id="maxu" type="number" min={0} max={20} value={input.maxUnits} onChange={(e) => set({ maxUnits: Math.min(20, Math.max(0, Number(e.target.value))) })} data-testid="input-max-units" /></div>
             </div>
