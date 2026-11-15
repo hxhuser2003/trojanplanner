@@ -10,7 +10,7 @@ import {
 } from '@workspace/api-client-react';
 import { errMessage } from './format';
 
-const KEY = 'trojanplanner.v4';
+const KEY = 'trojanplanner.v5';
 const SOLVE_TIMEOUT_MS = 20000;
 
 export type SolveState = 'idle' | 'solving' | 'done' | 'timeout' | 'error';

@@ -13,7 +13,7 @@ import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
 import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
-import { fmtTime, sectionWhen } from '@/lib/format';
+import { fmtHours, fmtTime, sectionWhen } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -138,13 +138,17 @@ function Planner({ catalog }: { catalog: Catalog }) {
               {[
                 ['Units', sched.units],
                 ['Campus days', sched.campusDays],
-                ['Class hours', sched.classHours.toFixed(1)],
+                ['Class time / week', fmtHours(sched.classHours)],
                 ['First class', fmtTime(sched.earliestStart)],
               ].map(([k, v]) => (
                 <div key={k}><dt className="text-xs text-muted-foreground">{k}</dt><dd className="text-lg font-semibold tabular-nums">{v}</dd></div>
               ))}
             </dl>
           )}
+
+          {sched && !infeasible && sched.warnings.filter((w) => w.includes('not covered this semester')).map((w) => (
+            <p key={w} className="flex gap-2 text-sm text-amber-800" data-testid="text-goals-uncovered"><AlertTriangle className="size-4 text-amber-600 shrink-0 mt-0.5" />{w}</p>
+          ))}
 
           {infeasible && result && <Conflicts result={result} catalog={catalog} input={input} solvedInput={p.solvedInput} onApprove={applyRepair} solving={solving} stale={stale} />}
 

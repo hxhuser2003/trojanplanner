@@ -11,6 +11,12 @@ export function fmtTime(min: number): string {
   return `${hh}:${String(m).padStart(2, '0')}${ap}`;
 }
 
+/** 8.17 hours → "8h 10m". Quiz slots are not counted in class time (see the API). */
+export function fmtHours(h: number): string {
+  const m = Math.round(h * 60);
+  return `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}`;
+}
+
 export function toHHMM(min: number): string {
   const c = Math.min(Math.max(min, 0), 1439);
   return `${String(Math.floor(c / 60)).padStart(2, '0')}:${String(c % 60).padStart(2, '0')}`;

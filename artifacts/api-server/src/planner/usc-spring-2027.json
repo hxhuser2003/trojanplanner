@@ -1,9 +1,106 @@
 {
   "term": "Spring 2027",
   "termCode": "20271",
-  "retrievedAt": "2026-11-15T00:38:32+00:00",
+  "retrievedAt": "2026-11-15T01:41:07+00:00",
   "source": "USC Schedule of Classes public course API",
   "courses": [
+    {
+      "id": "CSCI-530",
+      "code": "CSCI 530",
+      "title": "Security Systems",
+      "units": 4,
+      "description": "Protecting computer networks and systems using cryptography,  authentication, authorization, intrusion detection and response.   Includes lab to provide practical experience working with such  systems.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-402"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "30393+30396",
+          "componentIds": [
+            "30393",
+            "30396"
+          ],
+          "instructor": "Mengyuan Li",
+          "meetings": [
+            {
+              "day": 3,
+              "start": 1020,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 1170,
+              "end": 1220,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/530/30393"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI530"
+    },
+    {
+      "id": "CSCI-531",
+      "code": "CSCI 531",
+      "title": "Applied Cryptography",
+      "units": 4,
+      "description": "Intensive overview of cryptography for practitioners, historical perspective on early systems, number theoretic foundations of modern day cryptosystems and basic cryptanalysis.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30320+30031",
+          "componentIds": [
+            "30320",
+            "30031"
+          ],
+          "instructor": "Tatyana Ryutov",
+          "meetings": [
+            {
+              "day": 2,
+              "start": 840,
+              "end": 1040,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Discussion 30031 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/531/30320"
+        },
+        {
+          "id": "30321+30032",
+          "componentIds": [
+            "30321",
+            "30032"
+          ],
+          "instructor": "Tatyana Ryutov",
+          "meetings": [
+            {
+              "day": 2,
+              "start": 840,
+              "end": 1040,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Discussion 30032 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/531/30321"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI531"
+    },
     {
       "id": "CSCI-544",
       "code": "CSCI 544",
@@ -68,6 +165,71 @@
       "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI544"
     },
     {
+      "id": "CSCI-545",
+      "code": "CSCI 545",
+      "title": "Robotics",
+      "units": 4,
+      "description": "Fundamental skills for modeling and controlling of dynamic systems for robotic applications and graphics animations; control theory; kinematics; dynamics; sensor processing; real-time operating systems; robot labs. Recommended preparation: Basic knowledge in linear algebra (matrices and vectors), calculus, programming in C/C++ or any another language or permission of the instructor.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30323+30064",
+          "componentIds": [
+            "30323",
+            "30064"
+          ],
+          "instructor": "Erdem Biyik, Daniel Seita",
+          "meetings": [
+            {
+              "day": 2,
+              "start": 960,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 600,
+              "end": 710,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/545/30323"
+        },
+        {
+          "id": "30323+30080",
+          "componentIds": [
+            "30323",
+            "30080"
+          ],
+          "instructor": "Erdem Biyik, Daniel Seita",
+          "meetings": [
+            {
+              "day": 2,
+              "start": 960,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 720,
+              "end": 830,
+              "kind": "Lab",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/545/30323"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI545"
+    },
+    {
       "id": "CSCI-546",
       "code": "CSCI 546",
       "title": "Distributed Systems",
@@ -103,6 +265,52 @@
         }
       ],
       "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI546"
+    },
+    {
+      "id": "CSCI-551",
+      "code": "CSCI 551",
+      "title": "Computer Networking",
+      "units": 4,
+      "description": "Protocol design for computer communication networks, network routing, transport protocols, internetworking.",
+      "prerequisiteGroups": [
+        [
+          "CSCI-353",
+          "EE-450"
+        ],
+        [
+          "CSCI-350",
+          "CSCI-402"
+        ]
+      ],
+      "sections": [
+        {
+          "id": "30053",
+          "componentIds": [
+            "30053"
+          ],
+          "instructor": "Barath Raghavan",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 600,
+              "end": 710,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 600,
+              "end": 710,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/551/30053"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI551"
     },
     {
       "id": "CSCI-561",
@@ -174,6 +382,126 @@
         }
       ],
       "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI561"
+    },
+    {
+      "id": "CSCI-566",
+      "code": "CSCI 566",
+      "title": "Deep Learning and Its Applications",
+      "units": 4,
+      "description": "Deep learning research in computer vision, natural language processing and robotics; neural networks; deep learning algorithms, tools and software.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30387",
+          "componentIds": [
+            "30387"
+          ],
+          "instructor": "Ruishan Liu",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 1020,
+              "end": 1220,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/566/30387"
+        },
+        {
+          "id": "30366",
+          "componentIds": [
+            "30366"
+          ],
+          "instructor": "Ruishan Liu",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 1020,
+              "end": 1220,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/566/30366"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI566"
+    },
+    {
+      "id": "CSCI-567",
+      "code": "CSCI 567",
+      "title": "Machine Learning",
+      "units": 4,
+      "description": "Statistical methods for building intelligent and adaptive systems that improve performance from experiences; Focus on theoretical understanding of these methods and their computational implications. Recommended preparation: Undergraduate level training or coursework in linear algebra, multivariate calculus, basic probability and statistics; an undergraduate level course in Artificial Intelligence may be helpful but is not required. ",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30079+30081+30265",
+          "componentIds": [
+            "30079",
+            "30081",
+            "30265"
+          ],
+          "instructor": "Victor Adamchik",
+          "meetings": [
+            {
+              "day": 4,
+              "start": 840,
+              "end": 980,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 990,
+              "end": 1040,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 30265 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/567/30079"
+        },
+        {
+          "id": "30213+30264+30266",
+          "componentIds": [
+            "30213",
+            "30264",
+            "30266"
+          ],
+          "instructor": "Victor Adamchik",
+          "meetings": [
+            {
+              "day": 4,
+              "start": 840,
+              "end": 980,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 990,
+              "end": 1040,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 30266 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/567/30213"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI567"
     },
     {
       "id": "CSCI-570",
@@ -404,6 +732,46 @@
       "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI572"
     },
     {
+      "id": "CSCI-580",
+      "code": "CSCI 580",
+      "title": "3-D Graphics and Rendering",
+      "units": 4,
+      "description": "Course outlines the process of creating images from 3D models. Includes transformations, shading, lighting, rastorization, texturing, and other topics. ",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30390+29998",
+          "componentIds": [
+            "30390",
+            "29998"
+          ],
+          "instructor": "Sathyanaraya Raghavachary",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 840,
+              "end": 950,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 840,
+              "end": 950,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Discussion 29998 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/580/30390"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI580"
+    },
+    {
       "id": "CSCI-585",
       "code": "CSCI 585",
       "title": "Database Systems",
@@ -483,6 +851,43 @@
         }
       ],
       "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI585"
+    },
+    {
+      "id": "CSCI-587",
+      "code": "CSCI 587",
+      "title": "Geospatial Data Analysis",
+      "units": 4,
+      "description": "Techniques to efficiently store, manipulate, index, query and analyze geospatial information in support of real-world geographical and decision-making applications.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30306",
+          "componentIds": [
+            "30306"
+          ],
+          "instructor": "Cyrus Shahabi",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 840,
+              "end": 950,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 840,
+              "end": 950,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/587/30306"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI587"
     }
   ]
 }

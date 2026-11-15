@@ -5,6 +5,23 @@ import time
 from ortools.sat.python import cp_model
 
 
+GOAL_REWARD = 5000
+
+
+def goals_fit(catalog, request):
+    """True when the smallest courses that cover every selected goal fit within the unit target."""
+    completed = set(request["completedCourses"])
+    total = 0
+    for requirement in catalog["requirements"]:
+        if requirement["id"] not in request["requirementIds"]:
+            continue
+        needed = max(0, requirement["needed"] - len(completed.intersection(requirement["courseIds"])))
+        sizes = [c["units"] for c in catalog["courses"] if c["id"] in requirement["courseIds"] and c["id"] not in completed]
+        if needed and sizes:
+            total += needed * min(sizes)
+    return total <= request["maxUnits"]
+
+
 def overlaps(a, b):
     return a["day"] == b["day"] and a["start"] < b["end"] and b["start"] < a["end"]
 
@@ -62,12 +79,24 @@ def run_solver(catalog, request, excluded=None):
     units = sum(c["units"] * variables[i] for i, (c, _) in enumerate(rows))
     model.add(units >= request["minUnits"])
     model.add(units <= request["maxUnits"])
+    # Goals are required when the unit target leaves room for all of them, so a hard rule that blocks
+    # a goal is reported as a conflict. With fewer units (say 8 units and three goals) they become
+    # strongly preferred and the plan covers as many as fit. GOAL_REWARD outweighs any course's cost.
+    hard_goals = goals_fit(catalog, request)
+    goals = []
     for requirement in catalog["requirements"]:
         if requirement["id"] in request["requirementIds"]:
             satisfied = len(completed.intersection(requirement["courseIds"]))
             needed = max(0, requirement["needed"] - satisfied)
-            model.add(sum(variables[i] for i, (c, _) in enumerate(rows)
-                          if c["id"] in requirement["courseIds"]) >= needed)
+            if needed == 0:
+                continue
+            covered = sum(variables[i] for i, (c, _) in enumerate(rows) if c["id"] in requirement["courseIds"]) >= needed
+            if hard_goals:
+                model.add(covered)
+                continue
+            met = model.new_bool_var(f"goal-{requirement['id']}")
+            model.add(covered).only_enforce_if(met)
+            goals.append(met)
     # Two sections of one course with identical meetings give the same week, so alternatives
     # must differ in courses or meeting times, not just in section numbers.
     signature = [(c["id"], tuple(sorted((m["day"], m["start"], m["end"]) for m in s["meetings"]))) for c, s in rows]
@@ -104,7 +133,8 @@ def run_solver(catalog, request, excluded=None):
             if kind == "lock_section" and section["id"] == constraint["value"]:
                 cost -= 150
             syllabus = course["syllabus"]
-            known = syllabus["status"] != "unknown"
+            # Past-term grading is visible for comparison but cannot score a future offering.
+            known = syllabus["status"] == "synthetic"
             # "Exam 1 / Exam 2" rows are not labeled midterm or final, so they never count as "no midterm".
             exam_kinds = {g["kind"] for g in syllabus["grading"]}
             # Neutral missing values must not outperform positively evidenced matches.
@@ -126,7 +156,7 @@ def run_solver(catalog, request, excluded=None):
                 cost -= 30
         costs.append(cost * variables[i])
     day_weight = 40 if any(c["kind"] == "prefer_fewer_days" for c in active) else 4
-    model.minimize(sum(costs) + day_weight * sum(campus))
+    model.minimize(sum(costs) + day_weight * sum(campus) - GOAL_REWARD * sum(goals))
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 1.0
     solver.parameters.num_search_workers = 1
@@ -167,7 +197,7 @@ def main():
                 core = candidate
         output["conflicts"] = [c["label"] for c in core]
         if not core:
-            output["conflicts"] = ["Selected requirements, unit bounds, completed courses, and available section combinations are incompatible even without user preferences."]
+            output["conflicts"] = ["Your unit target, completed courses, and the available section combinations cannot be combined, even without your rules."]
         # Only propose one-constraint, solver-checked changes. Never mutate original request.
         for constraint in active:
             changed = {**request, "constraints": [
