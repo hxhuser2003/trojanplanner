@@ -234,8 +234,8 @@ function WhatChanged({ diff, catalog, onDismiss }: { diff: ScheduleDiff; catalog
   const code = (id: string) => catalog.courses.find((c) => c.id === id)?.code ?? id;
   const formatMeetings = (courseId: string, sectionId: string) => formatSectionMeetings(catalog, courseId, sectionId);
   const courseChanges = [
-    ...diff.added.map((x) => ({ title: `${code(x.courseId)} — added`, meetings: formatMeetings(x.courseId, x.sectionId) })),
-    ...diff.removed.map((x) => ({ title: `${code(x.courseId)} — removed`, meetings: formatMeetings(x.courseId, x.sectionId).map((meeting) => ({ ...meeting, time: `removed: ${meeting.time}` })) })),
+    ...diff.added.map((x) => ({ title: `${code(x.courseId)} — added`, removed: false, meetings: formatMeetings(x.courseId, x.sectionId) })),
+    ...diff.removed.map((x) => ({ title: `${code(x.courseId)} — removed`, removed: true, meetings: formatMeetings(x.courseId, x.sectionId).map((meeting) => ({ ...meeting, time: `removed: ${meeting.time}` })) })),
     ...diff.moved.map((x) => {
       const before = formatMeetings(x.courseId, x.from);
       const after = formatMeetings(x.courseId, x.to);
@@ -250,6 +250,7 @@ function WhatChanged({ diff, catalog, onDismiss }: { diff: ScheduleDiff; catalog
       const kinds = [...new Set([...beforeByKind.keys(), ...afterByKind.keys()])];
       return {
         title: `${code(x.courseId)} — ${timesChanged ? 'meeting time changed' : 'section changed; meeting times unchanged'}`,
+        removed: false,
         meetings: kinds.map((kind) => {
           const oldTime = beforeByKind.get(kind);
           const newTime = afterByKind.get(kind);
@@ -272,9 +273,12 @@ function WhatChanged({ diff, catalog, onDismiss }: { diff: ScheduleDiff; catalog
           <ul className="mt-1 space-y-2">
             {courseChanges.map((change, index) => (
               <li key={`${index}-${change.title}`}>
-                <p>{change.title}</p>
+                <p className={cn(change.removed && 'text-destructive')}>{change.title}</p>
                 <ul className="ml-5 list-disc space-y-0.5 text-muted-foreground">
-                  {change.meetings.map((meeting, meetingIndex) => <li key={`${meeting.kind}-${meetingIndex}`}><span className="font-medium text-foreground">{meeting.kind}:</span> {meeting.time}</li>)}
+                  {change.meetings.map((meeting, meetingIndex) => {
+                    const removed = change.removed || meeting.time.startsWith('removed:');
+                    return <li key={`${meeting.kind}-${meetingIndex}`} className={cn(removed && 'text-destructive')}><span className={cn('font-medium', !removed && 'text-foreground')}>{meeting.kind}:</span> {meeting.time}</li>;
+                  })}
                 </ul>
               </li>
             ))}
