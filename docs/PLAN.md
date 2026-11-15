@@ -206,3 +206,9 @@ Seven graduate Spring 2027 CSCI courses are cached in `artifacts/api-server/src/
 The loader creates complete lecture/lab/discussion/quiz combinations for matching USC link codes and sessions, and the solver checks their published meeting times. TBA components remain attached to each combination and are disclosed as unchecked times. Prerequisite alternatives are modeled as groups in which at least one listed course must be completed. Seat counts are deliberately not treated as enrollment guarantees.
 
 The default planning goals are illustrative and clearly labeled. No official degree requirement has been encoded. Five courses link to dated USC-hosted historical syllabi; two have clearly labeled mock syllabus pages. The solver excludes historical assessment weights from preference scoring and uses mock weights only for demonstration. Before a campus pilot, confirm degree rules, registration eligibility, and current syllabi with the relevant USC offices.
+
+## 17. To improve later
+
+Open design questions, kept working as-is for the demo:
+
+- **Completed courses (Degree page).** The checklist only shows the seven planned courses plus a few prerequisite options, and the "Add a course code not listed" field accepts any well-formed code (for example `CSCI-599`) without checking it against USC's catalog. Codes outside the subset are recorded for prerequisite checks only and never count toward goals. Still to decide: how this should work alongside STARS import, whether to validate codes against the Schedule of Classes, whether outside courses can satisfy goals, and whether the checklist should list more courses or be replaced by search.
