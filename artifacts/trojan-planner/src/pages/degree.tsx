@@ -91,8 +91,8 @@ function Degree({ catalog }: { catalog: Catalog }) {
           </div>
 
           <div className="rounded-xl border bg-card p-5">
-            <h2 className="text-base font-semibold">Completed courses</h2>
-            <p className="text-xs text-muted-foreground mb-3">Used for prerequisites. Only check courses with a final grade.</p>
+            <h2 className="text-base font-semibold">Completed/In Progress Courses</h2>
+            <p className="text-xs text-muted-foreground mb-3">Used for prerequisites. Courses already in progress also count so the planner will not ask you to register for them again.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {catalog.completedOptions.map((id) => (
                 <label key={id} className={cn('flex items-center gap-2 rounded-md border px-2.5 py-2 text-sm font-mono cursor-pointer transition-colors', completed.has(id) ? 'bg-primary/5 border-primary' : 'hover:bg-secondary/50')}>
@@ -121,7 +121,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
           </div>
         </section>
 
-        <StarsImport catalogKnown={known} onApply={(codes) => { set({ completedCourses: Array.from(new Set([...input.completedCourses, ...codes])).slice(0, 100) }); toast({ title: `Added ${codes.length} completed course${codes.length === 1 ? '' : 's'}` }); }} />
+        <StarsImport catalogKnown={known} onApply={(codes) => { set({ completedCourses: Array.from(new Set([...input.completedCourses, ...codes])).slice(0, 100) }); toast({ title: `Added ${codes.length} course${codes.length === 1 ? '' : 's'} to planning history` }); }} />
       </div>
       <p className="text-center text-xs text-muted-foreground mt-8"><Link href="/" className="underline">Back to the planner</Link></p>
     </div>
@@ -195,7 +195,7 @@ function StarsImport({ catalogKnown, onApply }: { catalogKnown: Set<string>; onA
         <Label htmlFor="stars-text">Extracted or pasted text</Label>
         <Textarea id="stars-text" rows={7} value={text} onChange={(e) => { setText(e.target.value); if (e.target.value) setStage('ready'); }} maxLength={100000}
           placeholder={'Paste STARS rows, e.g.\n20251 CSCI 103 4.0 A Introduction to Programming'} className="font-mono text-xs" data-testid="input-stars-text" />
-        <p className="text-[11px] text-muted-foreground">Rows marked RG (current registration) or IP (in progress) are never counted as completed.</p>
+        <p className="text-[11px] text-muted-foreground">Rows marked RG (current registration) or IP (in progress) are treated as completed for planning.</p>
       </div>
       <Button className="w-full mt-3" onClick={submit} disabled={!text.trim() || parse.isPending} data-testid="button-parse-stars">{parse.isPending ? 'Finding course rows…' : 'Find course candidates'}</Button>
       {parse.isError && <p className="text-xs text-destructive mt-2 flex gap-1.5" role="alert"><AlertTriangle className="size-3.5" />Parser error: {errMessage(parse.error)}</p>}
@@ -205,7 +205,7 @@ function StarsImport({ catalogKnown, onApply }: { catalogKnown: Set<string>; onA
           <p className="text-xs font-mono text-muted-foreground">Detected format: {res.detectedFormat}</p>
           {res.warnings.map((w, i) => <p key={i} className="text-xs flex gap-1.5 text-amber-800"><AlertTriangle className="size-3.5 shrink-0" />{w}</p>)}
           <div>
-            <p className="text-sm font-semibold mb-1.5">Completed candidates — confirm each</p>
+            <p className="text-sm font-semibold mb-1.5">Completed or in-progress candidates — confirm each</p>
             {res.completedCandidates.length === 0 ? <p className="text-xs italic text-muted-foreground">None found.</p> : (
               <div className="flex flex-wrap gap-1.5">
                 {res.completedCandidates.map((c) => (
@@ -219,13 +219,13 @@ function StarsImport({ catalogKnown, onApply }: { catalogKnown: Set<string>; onA
           </div>
           {res.inProgressCandidates.length > 0 && (
             <div>
-              <p className="text-sm font-semibold">In progress / registered — not counted</p>
+              <p className="text-sm font-semibold">In progress / registered — also treated as completed</p>
               <p className="text-xs font-mono text-muted-foreground mt-1">{res.inProgressCandidates.join(', ')}</p>
             </div>
           )}
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setRes(null)} data-testid="button-stars-discard">Discard</Button>
-            <Button size="sm" className="flex-1" disabled={!picked.size} onClick={() => { onApply(Array.from(picked)); setRes(null); }} data-testid="button-stars-apply">Add {picked.size} as completed</Button>
+            <Button size="sm" className="flex-1" disabled={!picked.size} onClick={() => { onApply(Array.from(picked)); setRes(null); }} data-testid="button-stars-apply">Add {picked.size} to planning history</Button>
           </div>
         </div>
       )}
