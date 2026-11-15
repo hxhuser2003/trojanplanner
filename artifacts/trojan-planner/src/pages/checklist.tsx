@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CatalogGate } from '@/components/gate';
 import { PageHeader } from '@/components/shell';
 import { usePlanner } from '@/lib/planner-store';
-import { DAYS, fmtTime } from '@/lib/format';
+import { sectionParts } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 export default function ChecklistPage() {
@@ -64,7 +64,10 @@ function Checklist({ catalog }: { catalog: Catalog }) {
       `Plan: ${sched.title} · ${sched.units} units · ${sched.campusDays} campus days`,
       '',
       'SECTIONS',
-      ...rows.map(({ sel, course, section }) => `[${p.checklist[`sec:${sel.sectionId}`] ? 'x' : ' '}] ${course?.code ?? sel.courseId} sections ${section?.componentIds.join(', ') ?? sel.sectionId} ${course?.title ?? ''} — ${section?.meetings.map((m) => `${DAYS[m.day]} ${fmtTime(m.start)}-${fmtTime(m.end)}`).join(', ') ?? ''} — ${section?.instructor ?? ''}`),
+      ...rows.flatMap(({ sel, course, section }) => [
+        `[${p.checklist[`sec:${sel.sectionId}`] ? 'x' : ' '}] ${course?.code ?? sel.courseId} ${course?.title ?? ''} — ${section?.instructor ?? ''}`,
+        ...(section ? sectionParts(section).map((part) => `      ${part.kind.padEnd(11)} ${part.id}  ${part.tba ? 'time TBA' : part.times.join(', ')}`) : []),
+      ]),
       '',
       'STEPS',
       ...steps.map((s, i) => `[${p.checklist[`step:${i}`] ? 'x' : ' '}] ${s}`),
@@ -80,10 +83,11 @@ function Checklist({ catalog }: { catalog: Catalog }) {
     URL.revokeObjectURL(a.href);
   };
 
-  const Item = ({ k, children }: { k: string; children: ReactNode }) => (
-    <label className={cn('flex gap-3 items-start rounded-lg border bg-card p-3 cursor-pointer transition-all', p.checklist[k] && 'bg-secondary/50')}>
+  const Item = ({ k, children, accent }: { k: string; children: ReactNode; accent?: string }) => (
+    <label className={cn('flex gap-3 items-start rounded-lg border bg-card p-3 cursor-pointer transition-all', accent && 'border-l-4', p.checklist[k] && 'bg-secondary/50')}
+      style={accent ? { borderLeftColor: accent } : undefined}>
       <Checkbox disabled={stale} checked={!!p.checklist[k]} onCheckedChange={() => p.toggleCheck(k)} className="mt-0.5" data-testid={`checkbox-${k}`} />
-      <span className={cn('flex-1 text-sm transition-opacity', p.checklist[k] && 'opacity-60 line-through decoration-primary/50')}>{children}</span>
+      <div className={cn('flex-1 min-w-0 text-sm transition-opacity', p.checklist[k] && 'opacity-60', p.checklist[k] && !accent && 'line-through decoration-primary/50')}>{children}</div>
     </label>
   );
 
@@ -101,13 +105,28 @@ function Checklist({ catalog }: { catalog: Catalog }) {
       <div className="h-1.5 rounded-full bg-muted mb-6 overflow-hidden"><div className="h-full bg-primary transition-all duration-500" style={{ width: `${(done / total) * 100}%` }} /></div>
       <p className="text-sm mb-4"><strong>{sched.title}</strong> · {sched.units} units · {sched.campusDays} campus days. This list does not reserve seats.</p>
 
-      <h2 className="text-base font-semibold mb-2">Sections to register</h2>
+      <h2 className="text-base font-semibold">Sections to register</h2>
+      <p className="text-xs text-muted-foreground mt-0.5 mb-2">The numbers are USC section numbers. Register every number listed for a course together: the lecture plus its linked discussion or quiz.</p>
       <div className="space-y-2 mb-6">
         {rows.map(({ sel, course, section }) => (
-          <Item key={sel.sectionId} k={`sec:${sel.sectionId}`}>
-            <span className="font-mono font-semibold" style={{ color: course?.color }}>{course?.code ?? sel.courseId} sections {section?.componentIds.join(' + ') ?? sel.sectionId}</span> {course?.title}
-            <span className="block text-xs text-muted-foreground">{section?.meetings.map((m) => `${DAYS[m.day]} ${fmtTime(m.start)}–${fmtTime(m.end)} (${m.kind})`).join(' · ')} · {section?.instructor}</span>
-            {section?.unknownScheduleComponents.map((item) => <span key={item} className="block text-xs font-semibold text-amber-700">{item}</span>)}
+          <Item key={sel.sectionId} k={`sec:${sel.sectionId}`} accent={course?.color}>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+              <p className={cn(p.checklist[`sec:${sel.sectionId}`] && 'line-through decoration-primary/50')}>
+                <span className="font-semibold">{course?.code ?? sel.courseId}</span> <span className="text-muted-foreground">{course?.title}</span>
+              </p>
+              <span className="text-xs text-muted-foreground">{course?.units} units · {section?.instructor}</span>
+            </div>
+            {section && (
+              <ul className="mt-2 space-y-1" data-testid={`parts-${sel.courseId}`}>
+                {sectionParts(section).map((part) => (
+                  <li key={part.id} className="flex items-center gap-3 text-xs">
+                    <span className="w-20 shrink-0 text-muted-foreground">{part.kind}</span>
+                    <span className="font-mono tabular-nums rounded bg-secondary px-1.5 py-0.5">{part.id}</span>
+                    <span className={cn(part.tba && 'font-medium text-amber-700')}>{part.tba ? 'Time TBA, not checked for conflicts' : part.times.join(', ')}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Item>
         ))}
       </div>

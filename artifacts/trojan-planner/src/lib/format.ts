@@ -81,6 +81,30 @@ export function autoLabel(c: Constraint, catalog: Catalog | undefined, previous:
   }
 }
 
+export interface SectionPart { id: string; kind: string; times: string[]; tba: boolean }
+
+/** Splits a registration combination ("30071+30070+30034") into its USC section numbers, each with
+ *  its type and meeting times. Parts are listed lecture first, in the same order as their meetings;
+ *  a part without listed times is named in unknownScheduleComponents ("Quiz 30034 time TBA"). */
+export function sectionParts(section: Section): SectionPart[] {
+  const kinds = [...new Set(section.meetings.map((m) => m.kind))];
+  const used = new Set<string>();
+  return section.componentIds.map((id) => {
+    const note = section.unknownScheduleComponents.find((u) => u.split(' ').includes(id));
+    const kind = note?.split(' ')[0] ?? kinds.find((k) => !used.has(k)) ?? 'Section';
+    used.add(kind);
+    const meetings = section.meetings.filter((m) => m.kind === kind);
+    // Same time on several days reads as "Tue/Thu 2:00pm–3:50pm".
+    const byTime = new Map<string, number[]>();
+    meetings.forEach((m) => {
+      const t = `${fmtTime(m.start)}–${fmtTime(m.end)}`;
+      byTime.set(t, [...(byTime.get(t) ?? []), m.day]);
+    });
+    const times = [...byTime].map(([t, days]) => `${days.sort().map((d) => DAYS[d]).join('/')} ${t}`);
+    return { id, kind, times, tba: !meetings.length };
+  });
+}
+
 export function courseCode(catalog: Catalog | undefined, id: string): string | undefined {
   return catalog?.courses.find((c) => c.id === id || c.code === id)?.code;
 }

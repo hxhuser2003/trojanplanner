@@ -71,6 +71,21 @@ function projectLabel(c: Course) {
   return `${p}% projects · ${c.syllabus.status === 'synthetic' ? 'mock' : 'historical'}`;
 }
 
+const GROUP = {
+  exams: { label: 'Exams', cls: 'bg-primary' },
+  projects: { label: 'Projects', cls: 'bg-accent' },
+  coursework: { label: 'Homework & quizzes', cls: 'bg-chart-3' },
+  attendance: { label: 'Attendance & participation', cls: 'bg-chart-5' },
+  other: { label: 'Other', cls: 'bg-muted-foreground/40' },
+};
+function gradeGroup(kind: string): keyof typeof GROUP {
+  if (kind === 'midterm' || kind === 'final' || kind === 'exam') return 'exams';
+  if (kind === 'project') return 'projects';
+  if (kind === 'homework' || kind === 'quiz') return 'coursework';
+  if (kind === 'attendance' || kind === 'participation') return 'attendance';
+  return 'other';
+}
+
 function Bar({ label, v, cls }: { label: string; v: number | null | undefined; cls: string }) {
   return (
     <div>
@@ -148,24 +163,35 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
         <div>
           <h3 className="text-base font-semibold mb-1">Assessment fit</h3>
           <p className="text-xs text-muted-foreground mb-3">{s.status === 'synthetic' ? 'Mock syllabus created for this demo' : s.status === 'historical' ? `Real USC syllabus from ${s.term}` : 'No syllabus on file; unknown is not zero'}. These weights are not verified for Spring 2027.</p>
-          <div className="space-y-3">
-            <Bar label="Exams" v={s.examPercent} cls="bg-primary" />
-            <Bar label="Projects" v={s.projectPercent} cls="bg-accent" />
-            <Bar label="Other" v={s.otherPercent} cls="bg-chart-3" />
-          </div>
-          {s.grading.length > 0 && (
-            <table className="mt-4 w-full text-sm" data-testid="table-grading">
-              <thead><tr className="text-xs text-muted-foreground text-left"><th className="font-normal pb-1">Grading breakdown</th><th className="font-normal pb-1 text-right">%</th></tr></thead>
-              <tbody>
+          {s.grading.length > 0 ? (
+            <div data-testid="table-grading">
+              <div className="flex h-2.5 rounded-full overflow-hidden bg-muted gap-px" aria-hidden>
+                {s.grading.map((g) => <div key={g.item} className={cn('h-full origin-left rise', GROUP[gradeGroup(g.kind)].cls)} style={{ width: `${g.percent}%` }} title={`${g.item} ${g.percent}%`} />)}
+              </div>
+              <ul className="mt-3 divide-y">
                 {s.grading.map((g) => (
-                  <tr key={g.item} className="border-t align-top">
-                    <td className="py-1.5 pr-2">{g.item}{g.when && <span className="block text-xs text-muted-foreground">{g.when}</span>}</td>
-                    <td className="py-1.5 text-right tabular-nums">{g.percent}</td>
-                  </tr>
+                  <li key={g.item} className="flex items-start gap-2.5 py-2 text-sm">
+                    <span className={cn('mt-1.5 size-2 rounded-full shrink-0', GROUP[gradeGroup(g.kind)].cls)} />
+                    <div className="flex-1 min-w-0">
+                      <p>{g.item}</p>
+                      {g.when && <p className="text-xs text-muted-foreground">{g.when}</p>}
+                    </div>
+                    <span className="font-mono tabular-nums text-sm">{g.percent}%</span>
+                  </li>
                 ))}
-                <tr className="border-t font-semibold"><td className="py-1.5">Total</td><td className="py-1.5 text-right tabular-nums">{s.grading.reduce((n, g) => n + g.percent, 0)}</td></tr>
-              </tbody>
-            </table>
+              </ul>
+              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                {(Object.keys(GROUP) as (keyof typeof GROUP)[]).filter((k) => s.grading.some((g) => gradeGroup(g.kind) === k)).map((k) => (
+                  <span key={k} className="inline-flex items-center gap-1"><span className={cn('size-1.5 rounded-full', GROUP[k].cls)} />{GROUP[k].label}</span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Bar label="Exams" v={s.examPercent} cls="bg-primary" />
+              <Bar label="Projects" v={s.projectPercent} cls="bg-accent" />
+              <Bar label="Other" v={s.otherPercent} cls="bg-chart-3" />
+            </div>
           )}
           <div className="mt-4 rounded-lg bg-secondary/60 p-3 text-xs space-y-1">
             <p><span className="font-semibold">Label:</span> {projectLabel(course)} <span className="text-muted-foreground">(threshold: projects at or above 50%)</span></p>
