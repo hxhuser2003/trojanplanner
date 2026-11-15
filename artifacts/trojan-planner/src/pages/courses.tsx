@@ -114,14 +114,17 @@ function AtAGlance({ course }: { course: Course }) {
 }
 
 const GROUP = {
-  exams: { label: 'Exams', cls: 'bg-primary' },
+  midterm: { label: 'Midterm', cls: 'bg-chart-4' },
+  final: { label: 'Final', cls: 'bg-primary' },
+  exams: { label: 'Other exams', cls: 'bg-primary/55' },
   projects: { label: 'Projects', cls: 'bg-accent' },
   coursework: { label: 'Homework & quizzes', cls: 'bg-chart-3' },
   attendance: { label: 'Attendance & participation', cls: 'bg-chart-5' },
   other: { label: 'Other', cls: 'bg-muted-foreground/40' },
 };
 function gradeGroup(kind: string): keyof typeof GROUP {
-  if (kind === 'midterm' || kind === 'final' || kind === 'exam') return 'exams';
+  if (kind === 'midterm' || kind === 'final') return kind;
+  if (kind === 'exam') return 'exams';
   if (kind === 'project') return 'projects';
   if (kind === 'homework' || kind === 'quiz') return 'coursework';
   if (kind === 'attendance' || kind === 'participation') return 'attendance';
