@@ -16,7 +16,7 @@ Promise: **Conflict-free against the loaded data and confirmed constraints.** No
 
 Students must reconcile course offerings, degree progress, work hours, and assessment preferences across multiple sources. The core problem is not merely creating a timetable: it is understanding and repairing incompatible requests without silently sacrificing something important.
 
-Initial scope: **one major, one catalog year, one semester, and a verified course/section subset**. Use one synthetic student profile or manual completed-course selection. Broader undergraduate/graduate coverage is future work. Academic advisors are potential pilot partners, not assumed endorsers.
+Initial scope: **one graduate program example, one semester, and a selected course/section subset**. Use an illustrative profile or manual completed-course selection. Broader program coverage is future work. Academic advisors are potential pilot partners, not assumed endorsers.
 
 Before building broadly, ask three students to walk through their last registration experience. Establish whether choosing courses, interpreting requirements, or repairing conflicts is the strongest pain point.
 
@@ -190,7 +190,7 @@ The supplied event brief requires a working prototype link, public GitHub reposi
 
 | Risk | Mitigation |
 |---|---|
-| Missing course or syllabus access | Verify early; reduce the supported subset rather than fabricate evidence |
+| Missing course or syllabus access | Verify early; use a visibly labeled mock syllabus only for demo behavior, never as USC evidence |
 | Incomplete eligibility/degree rules | Bound claims, show unknowns, seek advisor review |
 | Solver complexity or slow search | Small dataset, time limits, honest status handling, validated incumbents |
 | Misparsed preferences | Editable chips and confirmation before use |
@@ -202,8 +202,8 @@ Pilot with one department and advisor-reviewed requirements. Measure time to a u
 
 ## 16. Current data status
 
-Nine Spring 2027 CSCI courses are cached in `artifacts/api-server/src/planner/usc-spring-2027.json` from USC's public Schedule of Classes course API. Run `python scripts/sync_usc_courses.py` to refresh them. The snapshot records a UTC retrieval timestamp and each course links to its official listing.
+Seven graduate Spring 2027 CSCI courses are cached in `artifacts/api-server/src/planner/usc-spring-2027.json` from USC's public Schedule of Classes course API. Run `python scripts/sync_usc_courses.py` to refresh them. The snapshot records a UTC retrieval timestamp and each course links to its official listing.
 
 The loader creates complete lecture/lab/discussion/quiz combinations for matching USC link codes and sessions, and the solver checks their published meeting times. TBA components remain attached to each combination and are disclosed as unchecked times. Prerequisite alternatives are modeled as groups in which at least one listed course must be completed. Seat counts are deliberately not treated as enrollment guarantees.
 
-The default completed-course profile and course-planning goals remain illustrative and are clearly labeled. No official degree requirement has been encoded. Syllabus assessment fields are unknown and receive no scoring benefit; the USC Simple Syllabus link may be unpublished. Before a campus pilot, confirm degree rules, registration eligibility, and current syllabi with the relevant USC offices.
+The default planning goals are illustrative and clearly labeled. No official degree requirement has been encoded. Five courses link to dated USC-hosted historical syllabi; two have clearly labeled mock syllabus pages. The solver excludes historical assessment weights from preference scoring and uses mock weights only for demonstration. Before a campus pilot, confirm degree rules, registration eligibility, and current syllabi with the relevant USC offices.

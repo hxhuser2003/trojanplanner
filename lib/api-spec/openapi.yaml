@@ -108,7 +108,7 @@ components:
           items: { $ref: "#/components/schemas/Evidence" }
     Section:
       type: object
-      required: [id, componentIds, instructor, meetings, unknownScheduleComponents, eligibility]
+      required: [id, componentIds, instructor, meetings, unknownScheduleComponents, eligibility, syllabusUrl]
       properties:
         id: { type: string }
         componentIds:
@@ -116,6 +116,7 @@ components:
           items: { type: string }
         instructor: { type: string }
         eligibility: { type: string }
+        syllabusUrl: { type: string }
         unknownScheduleComponents:
           type: array
           items: { type: string }

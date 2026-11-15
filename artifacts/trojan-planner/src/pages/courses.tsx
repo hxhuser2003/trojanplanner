@@ -68,7 +68,7 @@ function Courses({ catalog }: { catalog: Catalog }) {
 function projectLabel(c: Course) {
   const p = c.syllabus.projectPercent;
   if (p == null) return 'project weight unknown';
-  return p >= 50 ? `project-weighted (${p}%)` : `exam-leaning (${p}% projects)`;
+  return `${p}% projects · ${c.syllabus.status === 'synthetic' ? 'mock' : 'historical'}`;
 }
 
 function Bar({ label, v, cls }: { label: string; v: number | null | undefined; cls: string }) {
@@ -126,7 +126,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
                 <td className="p-2.5">{sec.instructor}
                   <a href={`https://www.google.com/search?q=${encodeURIComponent(`"${sec.instructor}" site:usc.edu`)}`} target="_blank" rel="noreferrer" className="block text-[11px] text-primary hover:underline" data-testid={`link-instructor-${sec.id}`}>Search usc.edu</a></td>
                 <td className="p-2.5 text-xs">{sec.meetings.map((m, i) => <div key={i}>{DAYS[m.day]} {fmtTime(m.start)}–{fmtTime(m.end)} · {m.kind} · {m.location}</div>)}{sec.unknownScheduleComponents.map((item) => <div key={item} className="font-semibold text-amber-700">{item}</div>)}</td>
-                <td className="p-2.5 text-xs text-muted-foreground">{sec.eligibility}</td>
+                <td className="p-2.5 text-xs text-muted-foreground">{sec.eligibility}{sec.syllabusUrl && <a href={sec.syllabusUrl} target="_blank" rel="noreferrer" className="block mt-1 text-primary hover:underline">Check Spring 2027 syllabus listing (may be unpublished)</a>}</td>
               </tr>
             ))}
           </tbody>
@@ -137,7 +137,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
       <div className="mt-6 grid md:grid-cols-[1fr_1.4fr] gap-6">
         <div>
           <h3 className="font-display text-lg font-semibold mb-1">Assessment fit</h3>
-          <p className="text-xs text-muted-foreground mb-3">From the {s.term} syllabus ({s.status}). Unknown is not zero.</p>
+          <p className="text-xs text-muted-foreground mb-3">{s.status === 'synthetic' ? 'Mock syllabus created for this demo' : `Real USC syllabus from ${s.term}`}. These weights are not verified for Spring 2027.</p>
           <div className="space-y-3">
             <Bar label="Exams" v={s.examPercent} cls="bg-primary" />
             <Bar label="Projects" v={s.projectPercent} cls="bg-accent" />
@@ -150,7 +150,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
             <p><span className="font-semibold">Attendance:</span> {s.attendance || 'Unknown'}</p>
           </div>
           <div className="mt-3 flex flex-col gap-1.5 text-xs">
-            <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline" data-testid="link-syllabus-source"><FileText className="size-3.5" />Open syllabus listing (may be unpublished)<ExternalLink className="size-3" /></a>
+            <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline" data-testid="link-syllabus-source"><FileText className="size-3.5" />{s.status === 'synthetic' ? 'Open clearly labeled mock syllabus' : `Open USC ${s.term} syllabus PDF`}<ExternalLink className="size-3" /></a>
             <a href={course.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-muted-foreground hover:underline" data-testid="link-course-source">Course listing provenance<ExternalLink className="size-3" /></a>
           </div>
         </div>
@@ -164,7 +164,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
                     <p className="text-sm"><span className="font-semibold">{e.label}:</span> {e.value}</p>
                     <span className={cn('text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border font-semibold shrink-0', e.status === 'unknown' ? 'border-destructive/40 text-destructive' : e.status === 'historical' ? 'border-amber-600/40 text-amber-700' : 'border-primary/30 text-primary')}>{e.status}</span>
                   </div>
-                  {e.excerpt && <blockquote className="mt-2 border-l-2 border-accent pl-3 text-xs italic text-muted-foreground">"{e.excerpt}"</blockquote>}
+                  {e.excerpt && <p className="mt-2 border-l-2 border-accent pl-3 text-xs text-muted-foreground">{e.excerpt}</p>}
                   <p className="text-[10px] font-mono text-muted-foreground mt-1">p. {e.page}</p>
                 </li>
               ))}

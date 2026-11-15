@@ -35,7 +35,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
   const toggleCompleted = (id: string) => set({ completedCourses: completed.has(id) ? input.completedCourses.filter((x) => x !== id) : [...input.completedCourses, id].slice(0, 100) });
   const addManual = () => {
     const codes = manual.split(/[,\n]/).map((s) => norm(s.trim())).filter((s) => /^[A-Z]{2,5}-\d{2,4}[A-Z]?$/.test(s));
-    if (!codes.length) { toast({ title: 'Use a code like CSCI-201 or WRIT 150', variant: 'destructive' }); return; }
+    if (!codes.length) { toast({ title: 'Use a code like CSCI-570 or CSCI 585', variant: 'destructive' }); return; }
     set({ completedCourses: Array.from(new Set([...input.completedCourses, ...codes])).slice(0, 100) });
     setManual('');
   };

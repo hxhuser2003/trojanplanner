@@ -1,6 +1,6 @@
 # TrojanPlanner — local prototype
 
-A USC course-planning demo that turns preferences into checked schedules, explains conflicts, and offers explicitly approved repairs. The selected Spring 2027 CSCI offerings are cached from the [USC Schedule of Classes](https://classes.usc.edu/term/20271/program/CSCI/school/ENGV). The student profile and planning goals are illustrative; syllabi and enrollment eligibility remain unverified.
+A USC course-planning demo that turns preferences into checked schedules, explains conflicts, and offers explicitly approved repairs. Seven Spring 2027 **graduate CSCI** offerings are cached from the [USC Schedule of Classes](https://classes.usc.edu/term/20271/program/CSCI/school/ENGV). Planning goals are illustrative, and enrollment eligibility remains unverified.
 
 ## Implemented
 
@@ -10,7 +10,8 @@ A USC course-planning demo that turns preferences into checked schedules, explai
 - Three distinct feasible alternatives where available, with exact-set exclusions.
 - Proven-infeasible diagnosis, sufficient conflict sets, and solver-checked single-constraint repairs. No hard constraint changes without approval.
 - Separate TypeScript output validator. Solver timeouts are not reported as infeasibility.
-- Unknown syllabus assessments remain unknown and do not improve preference scores. Course pages link to USC's official listings and available syllabus listing URLs.
+- Five courses link directly to real USC-hosted syllabi from earlier terms (CSCI 544, 561, 570, 571, and 585). Their grading details are displayed as historical and do not affect assessment preference scores.
+- CSCI 546 and 572 have course-specific mock syllabus pages for the demo. Their grading details are visibly synthetic and may affect illustrative assessment preference scores. No syllabus here certifies Spring 2027 grading.
 - PDF text extraction and optional browser-local OCR for scanned STARS reports; reviewed completed-course candidates remain separate from current registrations.
 - Browser-local saved planner state, stale-result safeguards, reset, printable checklist, and text export.
 
@@ -40,8 +41,8 @@ The shared Express API invokes a bounded Python CP-SAT worker, rather than intro
 
 ## Try the conflict demo
 
-1. Start with the default plan: Fridays free, Tuesday/Thursday afternoon work, and three illustrative requirement groups.
-2. The illustrative Algorithms goal includes real **CSCI 270**, whose Spring 2027 discussion and quiz meet Friday.
+1. Start with the default plan: Fridays free, Tuesday/Thursday morning work, and three illustrative graduate planning goals.
+2. The illustrative Algorithms goal includes real **CSCI 570**, whose listed Spring 2027 lecture/discussion bundles also include a Friday quiz.
 3. Inspect the verified Friday conflict and approve the tested repair that removes the Friday rule.
 4. Compare the resulting section combinations and open their official USC course listings.
 
@@ -51,8 +52,8 @@ The shared Express API invokes a bounded Python CP-SAT worker, rather than intro
 - Clicking “Find course candidates” sends extracted text to this app's backend parser; it is not sent to the LLM, logged, or saved server-side.
 - Confirmed course codes and planning state are saved in that browser's local storage. Raw documents/text are not persisted.
 - Import is conservative course-row extraction, not an official STARS degree-audit parser. Repeated courses, exceptions, transfer-credit applicability, and graduate requirements require manual review.
-- The sample is a selected undergraduate CSCI subset, not a reproduction of the supplied graduate report or a degree audit. The checked-in snapshot can become stale; refresh it and recheck official listings before registration.
-- No live seat availability, registration, official requirement certification, or real syllabus ingestion pipeline is implemented.
+- The sample is a selected graduate CSCI subset, not a reproduction of the supplied graduate report or a degree audit. The checked-in snapshot can become stale; refresh it and recheck official listings before registration.
+- No live seat availability, registration, official requirement certification, or automated syllabus ingestion pipeline is implemented. Historical syllabi may not match the Spring 2027 instructor or section; mock syllabi are hypothetical.
 - Registration eligibility stays explicitly unknown. Neither CP-SAT nor published section times guarantee enrollment. TBA quiz times prevent a full conflict check for affected combinations.
 - No account system is included. Before public release, add abuse/rate controls for the paid AI endpoint and review privacy/security requirements.
 
@@ -64,4 +65,4 @@ The shared Express API invokes a bounded Python CP-SAT worker, rather than intro
 4. Representative, redacted STARS samples and advisor-reviewed expected results.
 5. Full browser workflow testing, especially OCR across different report scans.
 
-The real-course integration was checked with workspace typechecking, a production build, and API smoke requests covering the default Friday conflict, its repair, an alternative prerequisite, and a TBA quiz warning. Full browser interaction testing and real-report OCR accuracy have not been verified.
+The graduate-course integration is checked with workspace typechecking, a production build, and API smoke requests covering the default Friday conflict, its repair, and syllabus links. Full browser interaction testing and real-report OCR accuracy have not been verified.

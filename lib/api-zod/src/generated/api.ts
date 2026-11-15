@@ -72,6 +72,7 @@ export const GetCatalogResponse = zod.object({
   "componentIds": zod.array(zod.string()),
   "instructor": zod.string(),
   "eligibility": zod.string(),
+  "syllabusUrl": zod.string(),
   "unknownScheduleComponents": zod.array(zod.string()),
   "meetings": zod.array(zod.object({
   "day": zod.number().int().min(getCatalogResponseCoursesItemSectionsItemMeetingsItemDayMin).max(getCatalogResponseCoursesItemSectionsItemMeetingsItemDayMax),

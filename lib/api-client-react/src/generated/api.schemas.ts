@@ -85,6 +85,7 @@ export interface Section {
   componentIds: string[];
   instructor: string;
   eligibility: string;
+  syllabusUrl: string;
   unknownScheduleComponents: string[];
   meetings: Meeting[];
 }

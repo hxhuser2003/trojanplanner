@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { GetCatalogResponse, ParsePreferencesBody, ParsePreferencesResponse, ParseStarsBody, ParseStarsResponse, SolvePlannerBody } from "@workspace/api-zod";
 import { catalog } from "../planner/catalog";
+import { mockSyllabi, renderMockSyllabus } from "../planner/syllabi";
 import { solve, validateInput } from "../planner/service";
 import { parsePreferences } from "../planner/ai";
 import { parseStarsText } from "../planner/stars";
@@ -43,5 +44,11 @@ router.get("/planner/sources/:id", (req, res) => {
   const course = catalog.courses.find(c => c.id === req.params.id);
   if (!course) { res.status(404).send("Source not found."); return; }
   res.redirect(302, course.sourceUrl);
+});
+router.get("/planner/mock-syllabi/:id", (req, res) => {
+  const id = req.params.id;
+  if (!id || !Object.prototype.hasOwnProperty.call(mockSyllabi, id)) { res.status(404).send("Mock syllabus not found."); return; }
+  res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'");
+  res.type("html").send(renderMockSyllabus(id as keyof typeof mockSyllabi));
 });
 export default router;

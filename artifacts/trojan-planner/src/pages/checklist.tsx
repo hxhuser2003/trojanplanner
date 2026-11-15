@@ -24,7 +24,7 @@ function buildItems(catalog: Catalog, sched: Schedule) {
   rows.forEach(({ course, section, sel }) => {
     if (!course) { unknowns.push(`${sel.courseId}: course details unavailable`); return; }
     const s = course.syllabus;
-    if (s.status !== 'synthetic') unknowns.push(`${course.code}: syllabus status is ${s.status}`);
+    unknowns.push(`${course.code}: ${s.status === 'synthetic' ? 'mock syllabus is illustrative' : s.status === 'historical' ? `${s.term} syllabus is historical` : 'syllabus is unavailable'}; verify the Spring 2027 syllabus`);
     if (s.examPercent == null) unknowns.push(`${course.code}: exam weight unknown`);
     if (s.projectPercent == null) unknowns.push(`${course.code}: project weight unknown`);
     if (s.projectMode === 'unspecified') unknowns.push(`${course.code}: individual vs group work not specified`);
