@@ -43,10 +43,10 @@ export function progressIntent(message: string, input: PlannerInput, selections:
   }
   const units = selections.reduce((n, s) => n + (catalog.courses.find(c => c.id === s.courseId)?.units ?? 0), 0);
   const unitText = input.minUnits === input.maxUnits ? `your target is ${input.minUnits}` : `your range is ${input.minUnits}–${input.maxUnits}`;
-  const more = others.length ? `\n\nOther optional goals you can pick on the Degree page: ${others.join(", ")}.` : "";
+  const more = others.length ? `\n\nOther goals in this demo catalog: ${others.join(", ")}.` : "";
   return {
     kind: "answer",
-    message: `TrojanPlanner tracks the planning goals you picked, not USC's official graduation requirements. Here is where you stand:\n\n${lines.join("\n") || "No goals picked yet."}${more}\n\nThis plan has ${units} units (${unitText}). Update goals and completed courses on the Degree page.`,
+    message: `TrojanPlanner tracks the planning goals you picked, not USC's official graduation requirements. Here is where you stand:\n\n${lines.join("\n") || "No goals picked yet."}${more}\n\nThis plan has ${units} units (${unitText}). Update completed courses on the Degree page.`,
     warnings: ["Computed from the demo catalog's illustrative rules. This is not an official degree audit."],
   };
 }
@@ -75,6 +75,10 @@ const TOPICS: [GradeKind, RegExp, string][] = [
 ];
 
 /** "Which of my classes have a midterm?", "When is the CSCI 561 final?", "How is CSCI 570 graded?" — answered from grading tables. */
+/** Where a grading table came from, so a mock is never read as a USC syllabus. */
+const sourceText = (c: (typeof catalog.courses)[number]) =>
+  c.syllabus.status === "synthetic" ? "labeled mock syllabus" : `${c.syllabus.term} USC syllabus`;
+
 export function gradingIntent(message: string, selections: Ref[]): Reply | null {
   // Only questions; "I don't want midterms" is a preference and goes to the rule handlers.
   if (/\b(want|avoid|prefer|hate|rather|don'?t like|no more)\b/i.test(message)) return null;
@@ -104,20 +108,20 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
     const withIt = known.filter(c => c.syllabus.grading.some(i => i.kind === kind));
     const without = known.filter(c => !withIt.includes(c));
     const bare = phrase.replace(/^an? /, "");
-    if (known.length === 1) lines.push(withIt.length ? `${known[0]!.code}'s dated breakdown lists ${phrase}:` : `${known[0]!.code}'s dated breakdown does not list ${bare}.`);
+    if (known.length === 1) lines.push(withIt.length ? `${known[0]!.code}'s grading table lists ${phrase}:` : `${known[0]!.code}'s grading table does not list ${bare}.`);
     else if (known.length) lines.push(withIt.length
-      ? `${withIt.length} of the ${known.length} dated breakdowns${scope ? ` ${scope}` : ""} list ${phrase}:`
-      : `None of the ${known.length} dated breakdowns${scope ? ` ${scope}` : ""} lists ${phrase}.`);
+      ? `${withIt.length} of the ${known.length} grading tables${scope ? ` ${scope}` : ""} list ${phrase}:`
+      : `None of the ${known.length} grading tables${scope ? ` ${scope}` : ""} lists ${phrase}.`);
     for (const c of withIt) {
       const items = c.syllabus.grading.filter(i => i.kind === kind);
-      lines.push(...items.map(i => `• ${c.code} ${i.item}: ${i.percent}% of the grade${i.when ? `, ${i.when}` : ""}`));
+      lines.push(...items.map(i => `• ${c.code} ${i.item}: ${i.percent}% of the grade${i.when ? `, ${i.when}` : ""} (${sourceText(c)})`));
       citations.push(...items.flatMap(i => cite(c, i.item)));
     }
     // "Exam 1 / Exam 2" rows are not labeled midterm or final, so those courses are reported separately.
     const unlabeled = kind === "midterm" || kind === "final" ? without.filter(c => c.syllabus.grading.some(i => i.kind === "exam")) : [];
     for (const c of unlabeled) lines.push(`• ${c.code}: ${c.syllabus.grading.filter(i => i.kind === "exam").map(i => `${i.item} ${i.percent}%`).join(", ")} (not labeled midterm or final in the syllabus)`);
     const none = without.filter(c => !unlabeled.includes(c));
-    if (withIt.length && none.length) lines.push(`No ${bare} listed in the dated breakdown: ${none.map(c => c.code).join(", ")}.`);
+    if (withIt.length && none.length) lines.push(`No ${bare} listed in the grading table: ${none.map(c => c.code).join(", ")}.`);
     // Flag exams that fall in the same week, the usual crunch point.
     if (kind === "midterm") {
       const byWeek = new Map<string, string[]>();

@@ -2,86 +2,80 @@
 
 Internal only: delete this file from GitHub before submitting (see PLAN.md §14).
 
-One storyline for the submission video. Every step below was dry-run against the current branch; the AI step is marked and has a fallback.
+One storyline for the submission video. Every non-AI step below was run in the browser on the current branch in this exact order, using the AI fallback; the AI step has a no-AI fallback that leads to the same screen.
 
 ## The one idea judges should remember
 
 **"The AI talks, the solver decides, and every fact has a receipt."**
 
-Most AI schedulers ask a chatbot to write a timetable and hope it is right. TrojanPlanner uses AI only to understand the student. A constraint solver (OR-Tools CP-SAT) builds the week from real USC Spring 2027 sections, and every grading fact links back to a syllabus. When the student asks for something impossible, it says so, explains why, and offers a tested fix instead of silently breaking a rule.
+Most AI schedulers ask a chatbot to write a timetable and hope it is right. TrojanPlanner uses AI to understand the student. A constraint solver (OR-Tools CP-SAT) builds the week from real USC Spring 2027 sections, and every grading fact links to its source: a dated USC syllabus, or a clearly labeled mock. When the student asks for something impossible, it says so, explains why, and offers tested fixes instead of silently breaking a rule.
 
-Three moments carry the video. Everything else is connective tissue.
+Three moments carry the video:
 
-1. **The solver finds the best week in about 0.1 s**, with alternatives whose names are guaranteed true.
-2. **An impossible request is caught and repaired**, with the real reason (every CSCI 570 section meets on Friday).
-3. **The copilot answers from data, with citations**, and changes rules only when the student presses Apply.
+1. **The solver proves the best week in a fraction of a second**, with alternatives whose names are guaranteed true.
+2. **Plain English becomes a rule, and an impossible week is caught and repaired** with the real reason (every CSCI 566 section meets Monday 5:00–8:20pm).
+3. **The copilot answers from data and names its sources**, and changes rules only when the student presses Apply.
 
 ## The student
 
-**Maya, a second-semester USC MS in Computer Science (General) student.** In her first semester (Fall 2026) she took CSCI 561 and CSCI 567. CSCI 570 is required for her degree and she hasn't taken it yet. She works Tue/Thu 9 AM–1 PM. For Spring 2027 she wants 8 units: CSCI 570 plus a Web/search course, and she'd love Fridays free.
+**Maya, a second-semester USC MS in Computer Science (General) student.** In her first semester (Fall 2026) she took CSCI 561 and CSCI 567. For Spring 2027 she wants 8 units: she must take **CSCI 566 Deep Learning**, plus a Web/search course. She works Tue/Thu 9 AM–1 PM, and she is saving CSCI 570 for next semester.
 
-Why this student: almost every General MS student hits this exact semester, with the required algorithms course still to fit in around a job.
-
-Maya is a made-up student. The courses, sections, times and syllabi are real USC data (Spring 2027 Schedule of Classes; dated past-term syllabi or labeled mocks).
+Maya is a made-up student. Courses, sections and times are real USC Spring 2027 data. Grading comes from dated past-term USC syllabi, except CSCI 572, whose grading table is a labeled mock (the app says so everywhere it appears).
 
 ## Before recording
 
-- [ ] Replit is on the latest `main`, and `ANTHROPIC_API_KEY` is set in Secrets (needed only for the optional AI moment).
-- [ ] Press **Reset** (top-right), then **Keep demo rules** in the setup dialog. Rules: *Work Tue/Thu · 9 AM–1 PM* (hard), *Prefer Fridays free*, *Prefer starts after 10 AM*.
-- [ ] Copy this fake STARS text to the clipboard (never use a real transcript):
+- [ ] Merge the branch into `main`; Replit runs the latest `main` with `ANTHROPIC_API_KEY` in Secrets.
+- [ ] Press **Reset** (top-right), then **Keep demo rules**. Rules: *Work Tue/Thu · 9 AM–1 PM* (hard), *Prefer Fridays free*, *Prefer starts after 10 AM*.
+- [ ] Copy this fake STARS text (never use a real transcript):
 
 ```
 20263 CSCI 561 4.0 A Foundations of Artificial Intelligence
 20263 CSCI 567 4.0 A- Machine Learning
 ```
 
-- [ ] Browser at 1440×900, zoom 110%, dark mode off, other tabs closed.
-- [ ] Test the optional AI moment once with the key. If the AI reply is slow or odd, use the fallback.
-- [ ] Do one full rehearsal with a timer. Narration is about 400 words; speak at a calm pace.
+- [ ] Run the AI step once on Replit: `I also work Mon/Wed 3-6pm` must propose a hard time block Mon/Wed 3:00–6:00pm. If it doesn't, use the fallback.
+- [ ] Rehearse the whole video in this order with a timer, then press **Reset** again before the real take. Each step changes the state the next step relies on.
+- [ ] Browser at 1440×900, zoom 110%, light mode, other tabs closed.
+- [ ] Say the solve time that appears on screen; don't promise a number.
 
 ## Script
 
 | Time | Screen | Say |
 |---|---|---|
-| **0:00–0:15** | Planner page with the finished calendar. | "Registering at USC means juggling a degree plan, a job, and dozens of section combinations, and one wrong pick costs you a semester. TrojanPlanner turns that into one conversation, and it never makes things up." |
-| **0:15–0:40** | **Degree** page → paste the STARS text → **Find course candidates** → **Add 2 as completed**. Show the Algorithms and Web goals and **Units: 8**. Click **Re-solve with these**. | "Maya is starting her second semester of the General MS. She pastes her first-semester courses from STARS and confirms each one. She still needs CSCI 570, which is required, plus a web course, in 8 units, and re-solves." |
-| **0:40–1:10** | Lands on the planner. Point at **Optimal · ~100 ms**, the empty Tue/Thu mornings, and the option tabs. Click **No graded quizzes**, then back. Open **Compare** for one second. | "A constraint solver checked every real section combination and found the best week in a tenth of a second. Work hours are untouched. It also offers truly different alternatives, and their names are promises: *No graded quizzes* means every course in it has no graded quizzes in its syllabus." |
-| **1:10–1:45** | **Rules** tab → click **Soft** on *Prefer Fridays free* to make it **Hard** (label becomes *Keep Fri free*). Conflict panel appears. Point at the reason and the preview, then click **Approve this repair**. | "Now Maya insists on Fridays off. Instead of quietly breaking a rule, it tells her no plan fits, and why: every CSCI 570 section meets on Friday, including the exam slot. It offers a tested repair with a preview, and nothing changes until she approves." |
-| **1:45–2:00** | **Ask** tab: `what do I need for graduation?` | "She can just ask. Progress is counted by code, not guessed: done, in this plan, or still open. And it's clear these are planning goals, not an official audit." |
-| **2:00–2:15** | `which classes in my schedule have a midterm?` | "Grading answers come straight from the syllabi, with the weight and the week, and every one links to its source." |
-| **2:15–2:30** | `I don't want to take CSCI 572` → **Apply & update**. Calendar swaps to CSCI 571. | "When she changes her mind, the copilot proposes a rule. She stays in control: one click applies it and the week re-solves." |
-| **2:30–2:45** | **Courses** → CSCI 570: grading bar, *Course at a glance*, the source link. | "Every course comes with receipts: the grading breakdown, key dates, workload and team format, each tied to a dated USC syllabus." |
-| **2:45–3:00** | **Checklist** page → section numbers → **Download .txt**. | "Finally, the exact section numbers to register, ready for her enrollment window. AI to understand you, a solver to get it right, and sources for every fact. That's TrojanPlanner." |
+| **0:00–0:15** | Planner with a finished calendar. | "Registering at USC means juggling degree goals, a job, and dozens of section combinations, and one wrong pick can cost you a semester. TrojanPlanner turns that into one conversation, and it never makes things up." |
+| **0:15–0:30** | **Degree**: paste the STARS rows → **Find course candidates** → **Add 2 as completed**. **Units** stays at 8. | "Maya is starting her second semester. She pastes last semester's courses from STARS and confirms each one." |
+| **0:30–0:45** | **Courses** → open **CSCI 572** (point at "Mock syllabus made for this demo"). Then open **CSCI 566** (point at "From the Fall 2026 USC syllabus") → **Add as required**. It jumps to the planner. | "Every course shows where its grading comes from. 572's is a labeled mock; 566's is the real Fall 2026 USC syllabus. Maya has to take 566, so she makes it required." |
+| **0:45–1:05** | Planner: **Optimal** status, CSCI 566 + 572 on Mon/Tue evenings, Tue/Thu mornings empty, and the note *not covered this semester: Algorithms goal*. Click **Fewer graded quizzes** (566 + 571), then back. | "The solver proved there's no better combination among the loaded sections, in a fraction of a second. Her work hours are untouched, and it says plainly that 570 doesn't fit in 8 units this time. The alternatives' names are promises: this one really has fewer graded quizzes." |
+| **1:05–1:25** | **Ask**: `I also work Mon/Wed 3-6pm` → proposal **Mon/Wed 3:00–6:00pm** → **Apply & update**. | "She just tells it about her other job. The AI turns that into a rule she can see and edit, and the solver re-plans." |
+| **1:25–2:00** | **"No plan fits every rule"** panel → click **Explain in plain words** (reason appears: every CSCI 566 section is blocked, Mon 5:00pm–8:20pm). Point at the two repairs and their previews. Click **Approve this repair** on the one that allows changing the work rule. | "And it refuses to cheat. Every CSCI 566 section meets Monday from five to eight-twenty, right on top of that shift. It doesn't drop either rule silently; it shows both tested fixes: give up 566 and take 570 with 572, or move the Monday shift and keep 566 with 572. Maya keeps 566." |
+| **2:00–2:15** | **Ask** tab: `which classes in my schedule have a midterm?` Point at the source tags under the answer. | "Answers come from the grading tables, with their sources: 566's midterm is 35% from its Fall 2026 USC syllabus, and 572's is from a labeled mock, and it says so." |
+| **2:15–2:30** | **Ask**: `I don't want to take CSCI 572` → **Apply & update**. Calendar swaps to CSCI 571. | "When she changes her mind, the copilot proposes a rule, she approves it, and the week re-solves around 571." |
+| **2:30–2:40** | **Ask**: `what do I need for graduation?` | "Progress is counted by code, not guessed: 570 is still open for next semester, and it's clear these are planning goals, not an official audit." |
+| **2:40–3:00** | **Checklist**: the section numbers → **Download .txt**. | "Finally, the exact section numbers to register in her window. AI to understand you, a solver to get it right, and a source for every fact. That's TrojanPlanner." |
 
-### Optional AI moment (swap with 2:15–2:30 if the key works well)
+### AI fallback for 1:05–1:25 (no key, or a slow reply)
 
-Type `I work Mon/Wed 3-6pm too` → the copilot proposes a **Time block Mon/Wed 3:00–6:00pm** → **Apply & update**. Say: "Plain English becomes a rule she can see and edit, and the solver re-plans around it."
+**Rules** tab → **Add a rule or time block** → **Time block** → label `Work`, days **Mon** and **Wed**, **3:00 PM–6:00 PM** → **Save rule**. The planner re-solves on its own and shows the same conflict. Say: "She adds her Monday and Wednesday shift."
 
-**Fallback:** if the AI reply is slow or unclear, cut it and keep the CSCI 572 step, which runs without AI.
+## What the screens should show (checked against the API)
 
-## What to show and what to skip
-
-**Show** (strongest for judges):
-- Solver speed and **Optimal** status; real USC sections.
-- The Friday conflict with a real reason and a previewed one-click repair.
-- Option names that are guaranteed true.
-- Code-first chat answers with citations; rules change only on **Apply**.
-- Syllabus "receipts" on the Courses page.
-- The registration checklist as the concrete end result.
-
-**Skip** (true, but costs seconds):
-- The full rule editor dialog, Compare details, the explain panel.
-- Unit ranges and the "unreachable units" hint.
-- Any claim about seats, eligibility, or official degree audits.
+| Step | Expected |
+|---|---|
+| After 566 is required | *Best preference fit*: CSCI 566 + CSCI 572, 2 campus days, note "not covered this semester: Algorithms goal". Alternatives: *Fewer graded quizzes* (566 + 571), *Try CSCI 570* (566 + 570). |
+| After the Mon/Wed job | Infeasible. Reason: every CSCI 566 section is blocked (Mon 5:00pm–8:20pm breaks the work rule). After **Explain in plain words**: "every CSCI 566 section is blocked (Mon 5:00pm–8:20pm breaks …)". Repairs: *Allow change: Take CSCI 566* (preview 570 + 572); *Allow change: Work* (preview 566 + 572; the name is whatever the work rule is called). |
+| Midterm question | CSCI 566 Midterm 35% (Fall 2026 USC syllabus); CSCI 572 Midterm exam 30%, Week 9, in class (labeled mock syllabus). Citation links read "Fall 2026 USC syllabus" and "Mock syllabus (made for this demo)". |
+| After excluding 572 | CSCI 566 + CSCI 571. Checklist: 566 Lecture Mon 5:00pm–8:20pm; 571 Lecture Tue/Thu 5:30pm–7:20pm. |
+| Graduation question | Algorithms: not covered by this plan, option CSCI 570. AI or NLP: done (561, 567). Web or search: in this plan (571). Other goals in one line. |
 
 ## Lines to avoid
 
-- "Guaranteed enrollment" or "official degree audit": we only promise conflict-free against the loaded data.
-- "Spring 2027 grading policy": syllabi are past-term or labeled mocks.
-- "Covers all of USC": the demo covers 15 graduate CSCI courses.
+- "Guaranteed enrollment" or "official degree audit": we promise conflict-free against the loaded data only.
+- "Spring 2027 grading policy": grading is from past-term syllabi or labeled mocks.
+- "Checked every combination": the solver proves optimality; it doesn't enumerate.
+- "Covers all of USC": the demo has 15 graduate CSCI courses.
 
-## If there is time left in Q&A or the slide deck
+## If there is time in Q&A or the slide deck
 
 - **Why trust it:** the LLM never writes the schedule. Solver output is re-validated by independent code before it is shown.
 - **Privacy:** STARS import is paste-only. Only the rows she pastes are sent, when she asks for course candidates; they are not stored, and nothing counts as completed until she confirms it.
-- **Next:** more departments, live seat data via an official feed, and an advisor-reviewed pilot with one department.
+- **Next:** more departments, live seat data from an official feed, and an advisor-reviewed pilot with one department.
