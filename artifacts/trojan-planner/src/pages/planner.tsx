@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'wouter';
-import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info } from 'lucide-react';
 import type { Catalog, Constraint, PlannerInput, Repair } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,7 +13,7 @@ import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
 import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
-import { fmtTime, type ScheduleDiff } from '@/lib/format';
+import { fmtTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -107,7 +107,6 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4 min-w-0">
-          {p.lastChange && !stale && !solving && <WhatChanged diff={p.lastChange} catalog={catalog} onDismiss={p.dismissChange} />}
 
           {result && result.schedules.length > 1 && !infeasible && (
             <div className="inline-flex flex-wrap max-w-full rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
@@ -211,22 +210,6 @@ function SolveStatus() {
   );
 }
 
-function WhatChanged({ diff, catalog, onDismiss }: { diff: ScheduleDiff; catalog: Catalog; onDismiss: () => void }) {
-  const code = (id: string) => catalog.courses.find((c) => c.id === id)?.code ?? id;
-  const parts = [
-    ...diff.added.map((x) => `added ${code(x.courseId)} §${x.sectionId}`),
-    ...diff.removed.map((x) => `dropped ${code(x.courseId)}`),
-    ...diff.moved.map((x) => `moved ${code(x.courseId)} §${x.from} → §${x.to}`),
-    ...diff.stats.map((x) => `${x.label.toLowerCase()} ${x.before} → ${x.after}`),
-  ];
-  return (
-    <div className="rounded-lg border bg-secondary/60 px-3 py-2 text-sm flex items-start gap-2 rise" data-testid="status-what-changed">
-      <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-      <p className="flex-1"><span className="font-medium">{diff.same ? 'Your schedule stayed the same.' : 'What changed:'}</span> {parts.join(' · ')}</p>
-      <button onClick={onDismiss} className="p-0.5 rounded hover:bg-background" aria-label="Dismiss"><X className="size-3.5" /></button>
-    </div>
-  );
-}
 
 function Conflicts({ result, catalog, input, solvedInput, onApprove, solving, stale }: { result: NonNullable<ReturnType<typeof usePlanner>['result']>; catalog: Catalog; input: PlannerInput; solvedInput: PlannerInput | null; onApprove: (r: Repair) => void; solving: boolean; stale: boolean }) {
   return (
