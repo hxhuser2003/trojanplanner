@@ -5,9 +5,10 @@ import type { Catalog, Schedule } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CatalogGate } from '@/components/gate';
+import { SectionDelivery } from '@/components/section-delivery';
 import { PageHeader } from '@/components/shell';
 import { usePlanner } from '@/lib/planner-store';
-import { sectionParts } from '@/lib/format';
+import { sectionDeliveryLabel, sectionParts } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 export default function ChecklistPage() {
@@ -61,11 +62,11 @@ function Checklist({ catalog }: { catalog: Catalog }) {
       `TrojanPlanner registration checklist — ${catalog.term}`,
       `USC course snapshot retrieved ${catalog.sourceDate}. Illustrative planning goals; not an enrollment guarantee or degree audit.`,
       '',
-      `Plan: ${sched.title} · ${sched.units} units · ${sched.campusDays} campus days`,
+      `Plan: ${sched.title} · ${sched.units} units · ${sched.campusDays} class days`,
       '',
       'SECTIONS',
       ...rows.flatMap(({ sel, course, section }) => [
-        `[${p.checklist[`sec:${sel.sectionId}`] ? 'x' : ' '}] ${course?.code ?? sel.courseId} ${course?.title ?? ''} — ${section?.instructor ?? ''}`,
+        `[${p.checklist[`sec:${sel.sectionId}`] ? 'x' : ' '}] ${course?.code ?? sel.courseId} ${course?.title ?? ''} — ${section?.instructor ?? ''}${section ? ` — ${sectionDeliveryLabel(section)} (session ${section.sessionCode})` : ''}`,
         ...(section ? sectionParts(section).map((part) => `      ${part.kind.padEnd(11)} ${part.id}  ${part.tba ? 'time TBA' : part.times.join(', ')}`) : []),
       ]),
       '',
@@ -103,7 +104,7 @@ function Checklist({ catalog }: { catalog: Catalog }) {
         <div role="alert" className="mb-4 rounded-xl border border-accent bg-accent/15 p-3 text-sm" data-testid="status-checklist-stale">Your rules changed after this plan was solved. Checking and export are paused until you <Link href="/" className="underline font-semibold">re-solve on the planner</Link>.</div>
       )}
       <div className="h-1.5 rounded-full bg-muted mb-6 overflow-hidden"><div className="h-full bg-primary transition-all duration-500" style={{ width: `${(done / total) * 100}%` }} /></div>
-      <p className="text-sm mb-4"><strong>{sched.title}</strong> · {sched.units} units · {sched.campusDays} campus days. This list does not reserve seats.</p>
+      <p className="text-sm mb-4"><strong>{sched.title}</strong> · {sched.units} units · {sched.campusDays} class days. This list does not reserve seats.</p>
 
       <h2 className="text-base font-semibold">Sections to register</h2>
       <p className="text-xs text-muted-foreground mt-0.5 mb-2">The numbers are USC section numbers. Register every number listed for a course together: the lecture plus its linked discussion or quiz.</p>
@@ -112,7 +113,7 @@ function Checklist({ catalog }: { catalog: Catalog }) {
           <Item key={sel.sectionId} k={`sec:${sel.sectionId}`} accent={course?.color}>
             <div className="flex flex-wrap items-baseline justify-between gap-x-3">
               <p className={cn(p.checklist[`sec:${sel.sectionId}`] && 'line-through decoration-primary/50')}>
-                <span className="font-semibold">{course?.code ?? sel.courseId}</span> <span className="text-muted-foreground">{course?.title}</span>
+                <span className="font-semibold">{course?.code ?? sel.courseId}</span> <span className="text-muted-foreground">{course?.title}</span>{section && <SectionDelivery section={section} className="ml-2 align-middle" />}
               </p>
               <span className="text-xs text-muted-foreground">{course?.units} units · {section?.instructor}</span>
             </div>

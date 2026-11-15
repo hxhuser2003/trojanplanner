@@ -107,10 +107,21 @@ export interface Syllabus {
   evidence: Evidence[];
 }
 
+export type SectionDelivery = typeof SectionDelivery[keyof typeof SectionDelivery];
+
+
+export const SectionDelivery = {
+  den: 'den',
+  campus: 'campus',
+  unknown: 'unknown',
+} as const;
+
 export interface Section {
   id: string;
   componentIds: string[];
   instructor: string;
+  sessionCode: string;
+  delivery: SectionDelivery;
   eligibility: string;
   syllabusUrl: string;
   unknownScheduleComponents: string[];

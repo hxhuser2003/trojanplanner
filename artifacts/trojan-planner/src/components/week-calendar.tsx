@@ -4,7 +4,8 @@ import type { Catalog, Constraint, PlannerInput, Schedule } from '@workspace/api
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ExplainButton } from '@/components/explain';
-import { DAYS, fmtTime } from '@/lib/format';
+import { SectionDelivery } from '@/components/section-delivery';
+import { DAYS, fmtTime, sectionDeliveryLabel } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const START = 8 * 60;
@@ -74,7 +75,7 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
                     <button key={`${section.id}-${i}`} type="button"
                       onClick={input ? undefined : () => onToggleLock(course.id, section.id)}
                       data-testid={`block-${course.id}-${day}-${i}`}
-                      aria-label={`${course.code} ${m.kind} ${fmtTime(m.start)} to ${fmtTime(m.end)}. ${input ? 'Show details' : locked ? 'Unlock section' : 'Lock section'}`}
+                      aria-label={`${course.code} ${sectionDeliveryLabel(section)} ${m.kind} ${fmtTime(m.start)} to ${fmtTime(m.end)}. ${input ? 'Show details' : locked ? 'Unlock section' : 'Lock section'}`}
                       title={input ? 'Details, explain, lock' : locked ? 'Locked. Click to unlock this section' : 'Click to lock this section'}
                       className="group absolute inset-x-1 rounded-md px-2 py-1 text-left overflow-hidden text-foreground border-l-[3px] transition-colors hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring rise"
                       style={{ top: top(m.start), height: Math.max(top(m.end) - top(m.start), 22), background: `color-mix(in srgb, ${course.color} 14%, transparent)`, borderLeftColor: course.color }}>
@@ -82,7 +83,7 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
                         <span className="text-xs font-semibold">{course.code}</span>
                         {locked ? <Lock className="size-3" /> : <LockOpen className="size-3 opacity-0 group-hover:opacity-80 transition-opacity" />}
                       </div>
-                      <div className="text-[11px] text-muted-foreground leading-tight">{m.kind} · {fmtTime(m.start)}</div>
+                      <div className="text-[11px] text-muted-foreground leading-tight">{m.kind} · {fmtTime(m.start)}{section.delivery === 'den' && ' · DEN'}</div>
                     </button>
                   );
                   if (!input || !schedule) return block;
@@ -93,6 +94,7 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
                         <div>
                           <p className="font-semibold text-sm">{course.code}</p>
                           <p className="text-xs text-muted-foreground">{course.title} · {section.instructor}</p>
+                          <SectionDelivery section={section} className="mt-1.5" />
                           <ul className="mt-1.5 text-xs font-mono text-muted-foreground">
                             {section.meetings.map((x, j) => <li key={j}>{DAYS[x.day]} {fmtTime(x.start)}–{fmtTime(x.end)} · {x.kind}</li>)}
                           </ul>

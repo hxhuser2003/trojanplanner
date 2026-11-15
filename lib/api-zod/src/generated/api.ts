@@ -71,6 +71,8 @@ export const GetCatalogResponse = zod.object({
   "id": zod.string(),
   "componentIds": zod.array(zod.string()),
   "instructor": zod.string(),
+  "sessionCode": zod.string(),
+  "delivery": zod.enum(['den', 'campus', 'unknown']),
   "eligibility": zod.string(),
   "syllabusUrl": zod.string(),
   "unknownScheduleComponents": zod.array(zod.string()),

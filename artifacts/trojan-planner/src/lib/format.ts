@@ -32,7 +32,7 @@ export const KIND_META: Record<ConstraintKind, { label: string; hint: string; us
   prefer_projects: { label: 'Prefer project-weighted', hint: 'Favor syllabi with project weight at or above 50%', uses: [] },
   prefer_exams: { label: 'Prefer exam-weighted', hint: 'Favor syllabi with exam weight at or above 50%', uses: [] },
   prefer_individual: { label: 'Prefer individual work', hint: 'Favor individually graded projects', uses: [] },
-  prefer_fewer_days: { label: 'Fewer campus days', hint: 'Compress the week', uses: [] },
+  prefer_fewer_days: { label: 'Fewer class days', hint: 'Compress the week', uses: [] },
   prefer_less_frequent: { label: 'Less frequent meetings', hint: 'Favor 2x/week over 3x/week', uses: [] },
   prefer_no_quizzes: { label: 'Avoid graded quizzes', hint: 'Favor courses without graded quizzes', uses: [] },
   prefer_no_attendance: { label: 'Avoid graded attendance', hint: 'Favor courses that do not grade attendance', uses: [] },
@@ -82,6 +82,12 @@ export function autoLabel(c: Constraint, catalog: Catalog | undefined, previous:
 }
 
 export interface SectionPart { id: string; kind: string; times: string[]; tba: boolean }
+
+export function sectionDeliveryLabel(section: Section): string {
+  if (section.delivery === 'den') return 'DEN@Viterbi';
+  if (section.delivery === 'campus') return 'On campus';
+  return 'Format unverified';
+}
 
 /** Splits a registration combination ("30071+30070+30034") into its USC section numbers, each with
  *  its type and meeting times. Parts are listed lecture first, in the same order as their meetings;

@@ -13,7 +13,7 @@ export function StatTable({ catalog, columns }: { catalog: Catalog; columns: { t
   const rows: [string, (s: Schedule) => string][] = [
     ['Courses', (s) => s.selections.map((x) => catalog.courses.find((c) => c.id === x.courseId)?.code ?? x.courseId).join(', ')],
     ['Units', (s) => String(s.units)],
-    ['Campus days', (s) => String(s.campusDays)],
+    ['Class days', (s) => String(s.campusDays)],
     ['Class hours', (s) => s.classHours.toFixed(1)],
     ['First class', (s) => fmtTime(s.earliestStart)],
     ['Gaps', (s) => `${s.gapMinutes} min`],

@@ -5,11 +5,14 @@
  * OpenAPI spec version: 0.2.0
  */
 import type { Meeting } from './meeting';
+import type { SectionDelivery } from './sectionDelivery';
 
 export interface Section {
   id: string;
   componentIds: string[];
   instructor: string;
+  sessionCode: string;
+  delivery: SectionDelivery;
   eligibility: string;
   syllabusUrl: string;
   unknownScheduleComponents: string[];

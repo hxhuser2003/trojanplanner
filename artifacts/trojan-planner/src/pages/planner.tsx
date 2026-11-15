@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { CatalogGate } from '@/components/gate';
+import { SectionDelivery } from '@/components/section-delivery';
 import { WeekCalendar } from '@/components/week-calendar';
 import { ConstraintEditor } from '@/components/constraint-editor';
 import { Copilot, type RuleEdits } from '@/components/copilot';
@@ -137,7 +138,7 @@ function Planner({ catalog }: { catalog: Catalog }) {
             <dl className="flex flex-wrap gap-x-8 gap-y-2" data-testid="stats-schedule">
               {[
                 ['Units', sched.units],
-                ['Campus days', sched.campusDays],
+                ['Class days', sched.campusDays],
                 ['Class hours', sched.classHours.toFixed(1)],
                 ['First class', fmtTime(sched.earliestStart)],
               ].map(([k, v]) => (
@@ -165,10 +166,11 @@ function Planner({ catalog }: { catalog: Catalog }) {
                 <ul className="space-y-2">
                   {sched.selections.map((s) => {
                     const c = catalog.courses.find((x) => x.id === s.courseId);
+                    const section = c?.sections.find((x) => x.id === s.sectionId);
                     return (
                       <li key={s.sectionId} className="flex gap-2 text-sm" data-testid={`text-selection-${s.courseId}`}>
                         <span className="mt-1.5 size-2 rounded-full shrink-0" style={{ background: c?.color }} />
-                        <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId}</Link> <span className="text-muted-foreground">{s.reason}</span></span>
+                        <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId}</Link> {section && <SectionDelivery section={section} className="align-middle" />} <span className="text-muted-foreground">{s.reason}</span></span>
                       </li>
                     );
                   })}

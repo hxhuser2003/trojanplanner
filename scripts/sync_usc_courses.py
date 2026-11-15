@@ -19,6 +19,11 @@ COURSES = (
 )
 OUTPUT = Path(__file__).resolve().parents[1] / "artifacts/api-server/src/planner/usc-spring-2027.json"
 DAY = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4}
+# USC's Spring 2027 DEN guidance names session 034; its section examples pair
+# session 034 / DEN@Viterbi with session 048 / an on-campus room.
+# https://viterbigrad.usc.edu/den-current-students/
+# https://viterbigrad.usc.edu/wp-content/uploads/2022/07/20223_MFD_DEN.pdf
+DELIVERY_BY_SESSION = {"034": "den", "048": "campus"}
 
 
 def fetch_course(code):
@@ -77,6 +82,10 @@ def bundles(data):
         choices = [[s for s in linked if s["rnrMode"] == kind] for kind in kinds]
         for selected in itertools.product(*choices) if choices else [()]:
             parts = [lecture, *selected]
+            session_codes = {s.get("session", {}).get("rnrSessionCode") for s in parts}
+            if len(session_codes) != 1:
+                raise ValueError(f"Mixed session codes in {data['fullCourseName']} bundle: {session_codes}")
+            session_code = session_codes.pop() or ""
             component_ids = [str(s["sisSectionId"]) for s in parts]
             all_meetings, unknown = [], []
             for part in parts:
@@ -94,6 +103,8 @@ def bundles(data):
                 eligibility += "; some meeting times are TBA"
             rows.append({"id": "+".join(component_ids), "componentIds": component_ids,
                          "instructor": ", ".join(instructors) or "Not listed", "meetings": all_meetings,
+                         "sessionCode": session_code,
+                         "delivery": DELIVERY_BY_SESSION.get(session_code, "unknown"),
                          "unknownScheduleComponents": unknown, "eligibility": eligibility,
                          "syllabusUrl": lecture.get("syllabus") or ""})
     covered = {part for row in rows for part in row["componentIds"]}

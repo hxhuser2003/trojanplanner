@@ -1,7 +1,7 @@
 {
   "term": "Spring 2027",
   "termCode": "20271",
-  "retrievedAt": "2026-11-15T01:41:07+00:00",
+  "retrievedAt": "2026-11-15T02:42:00+00:00",
   "source": "USC Schedule of Classes public course API",
   "courses": [
     {
@@ -39,6 +39,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/530/30393"
@@ -70,6 +72,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [
             "Discussion 30031 time TBA"
           ],
@@ -92,6 +96,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "034",
+          "delivery": "den",
           "unknownScheduleComponents": [
             "Discussion 30032 time TBA"
           ],
@@ -131,6 +137,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/544/30063"
@@ -157,6 +165,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "034",
+          "delivery": "den",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/544/30105"
@@ -195,6 +205,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/545/30323"
@@ -222,6 +234,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/545/30323"
@@ -259,6 +273,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/546/30132"
@@ -305,6 +321,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/551/30053"
@@ -344,6 +362,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [
             "Quiz 30034 time TBA"
           ],
@@ -374,6 +394,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "034",
+          "delivery": "den",
           "unknownScheduleComponents": [
             "Quiz 30035 time TBA"
           ],
@@ -406,6 +428,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/566/30387"
@@ -425,6 +449,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "034",
+          "delivery": "den",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/566/30366"
@@ -464,6 +490,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [
             "Quiz 30265 time TBA"
           ],
@@ -494,6 +522,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "034",
+          "delivery": "den",
           "unknownScheduleComponents": [
             "Quiz 30266 time TBA"
           ],
@@ -542,6 +572,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/570/30395"
@@ -577,6 +609,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/570/30198"
@@ -612,6 +646,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "034",
+          "delivery": "den",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/570/30099"
@@ -649,6 +685,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/571/30378"
@@ -675,6 +713,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "034",
+          "delivery": "den",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/571/30016"
@@ -705,6 +745,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/572/30370"
@@ -724,6 +766,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "034",
+          "delivery": "den",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/572/30210"
@@ -762,6 +806,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [
             "Discussion 29998 time TBA"
           ],
@@ -810,6 +856,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/585/30150"
@@ -845,6 +893,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "034",
+          "delivery": "den",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/585/30149"
@@ -882,6 +932,8 @@
               "location": "See USC Schedule of Classes"
             }
           ],
+          "sessionCode": "048",
+          "delivery": "campus",
           "unknownScheduleComponents": [],
           "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
           "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/587/30306"

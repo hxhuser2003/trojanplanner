@@ -34,6 +34,7 @@ export const catalog = CatalogSchema.parse({
       requirement, description: course.description, prerequisiteGroups: course.prerequisiteGroups,
       sections: course.sections.map((section) => ({
         id: section.id, componentIds: section.componentIds, instructor: section.instructor,
+        sessionCode: section.sessionCode, delivery: section.delivery,
         meetings: section.meetings, unknownScheduleComponents: section.unknownScheduleComponents,
         eligibility: section.eligibility, syllabusUrl: section.syllabusUrl,
       })),

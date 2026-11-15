@@ -5,6 +5,7 @@ import type { Catalog, Course, Constraint } from '@workspace/api-client-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CatalogGate } from '@/components/gate';
+import { SectionDelivery } from '@/components/section-delivery';
 import { PageHeader } from '@/components/shell';
 import { usePlanner } from '@/lib/planner-store';
 import { sectionParts } from '@/lib/format';
@@ -141,9 +142,10 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
       </div>
 
       <h3 className="text-base font-semibold mt-6 mb-2">Registration combinations</h3>
+      <p className="text-xs text-muted-foreground mb-2">DEN@Viterbi sections are reserved for DEN off-campus students and require D-clearance. On-campus students need an approved petition to register for a DEN section. <a href="https://www.cs.usc.edu/ms-cs-new-student-guide/" target="_blank" rel="noreferrer" className="text-primary hover:underline">USC MS CS guidance</a></p>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
-          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Meets</th><th className="p-2.5">Instructor</th><th className="p-2.5">Eligibility</th></tr></thead>
+          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Meets</th><th className="p-2.5">Format</th><th className="p-2.5">Instructor</th><th className="p-2.5">Eligibility</th></tr></thead>
           <tbody>
             {course.sections.map((sec) => (
               <tr key={sec.id} className="border-t" data-testid={`row-section-${sec.id}`}>
@@ -153,6 +155,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
                       <span className={cn('whitespace-nowrap', part.tba && 'font-medium text-amber-700')}>{part.tba ? 'Time TBA' : part.times.join(', ')}</span></div>
                   ))}
                 </td>
+                <td className="p-2.5 align-top"><SectionDelivery section={sec} /><span className="block mt-1 text-[11px] text-muted-foreground">Session {sec.sessionCode || 'unknown'}</span></td>
                 <td className="p-2.5">{sec.instructor}
                   <a href={`https://www.google.com/search?q=${encodeURIComponent(`"${sec.instructor}" site:usc.edu`)}`} target="_blank" rel="noreferrer" className="block text-[11px] text-primary hover:underline" data-testid={`link-instructor-${sec.id}`}>Search usc.edu</a></td>
                 <td className="p-2.5 text-xs text-muted-foreground">{sec.eligibility}{sec.syllabusUrl && <a href={sec.syllabusUrl} target="_blank" rel="noreferrer" className="block mt-1 text-primary hover:underline">Check Spring 2027 syllabus listing (may be unpublished)</a>}</td>
