@@ -133,7 +133,7 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
     }
   }
   if (unknown.length) lines.push(`${unknown.map(c => c.code).join(", ")}: no grading breakdown on file, so this is unknown (not zero).`);
-  return { kind: "answer", message: lines.join("\n"), citations, warnings: ["From past-term USC syllabi or labeled mocks. Check the Spring 2027 syllabus before deciding."] };
+  return { kind: "answer", message: lines.join("\n"), citations };
 }
 
 const AVOIDABLE: [Constraint["kind"], RegExp, string][] = [
