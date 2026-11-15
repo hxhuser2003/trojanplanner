@@ -8,7 +8,7 @@ import {
   type Schedule,
   type SolveResult,
 } from '@workspace/api-client-react';
-import { errMessage } from './format';
+import { diffSchedules, errMessage, type ScheduleDiff } from './format';
 
 const KEY = 'trojanplanner.v5';
 const SOLVE_TIMEOUT_MS = 20000;
@@ -23,6 +23,7 @@ interface Persisted {
   solvedInputJson: string | null;
   onboarded: boolean;
   /** What moved between the schedule before and after the latest re-solve. */
+  lastChange: ScheduleDiff | null;
 }
 
 interface Ctx {
@@ -48,9 +49,11 @@ interface Ctx {
   storageError: string | null;
   onboarded: boolean;
   setOnboarded: (v: boolean) => void;
+  lastChange: ScheduleDiff | null;
+  dismissChange: () => void;
 }
 
-const EMPTY: Persisted = { input: null, result: null, chosenScheduleId: null, checklist: {}, solvedInputJson: null, onboarded: false };
+const EMPTY: Persisted = { input: null, result: null, chosenScheduleId: null, checklist: {}, solvedInputJson: null, onboarded: false, lastChange: null };
 
 const PlannerCtx = createContext<Ctx | null>(null);
 
@@ -98,7 +101,11 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       ]);
       if (id !== reqId.current) return;
       setState((s) => {
-        return { ...s, input, result: res, chosenScheduleId: res.schedules[0]?.id ?? null, solvedInputJson: JSON.stringify(input) };
+        const before = s.result?.schedules.find((x) => x.id === s.chosenScheduleId) ?? s.result?.schedules[0] ?? null;
+        const after = res.schedules[0] ?? null;
+        // Only report a change when there was a previous plan to compare against.
+        const lastChange = s.result ? diffSchedules(before, after, catalogQ.data) : null;
+        return { ...s, input, result: res, chosenScheduleId: after?.id ?? null, solvedInputJson: JSON.stringify(input), lastChange };
       });
       setSolveState(res.status === 'unknown' ? 'timeout' : 'done');
     } catch (e) {
@@ -112,7 +119,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
         setSolveError(msg);
       }
     }
-  }, [state.input]);
+  }, [state.input, catalogQ.data]);
 
   const solveRef = useRef(solve);
   solveRef.current = solve;
@@ -181,6 +188,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
     storageError,
     onboarded: state.onboarded,
     setOnboarded: (v) => setState((s) => ({ ...s, onboarded: v })),
+    lastChange: state.lastChange,
+    dismissChange: () => setState((s) => ({ ...s, lastChange: null })),
   };
 
   return <PlannerCtx.Provider value={value}>{children}</PlannerCtx.Provider>;

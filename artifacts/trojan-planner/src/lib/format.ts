@@ -24,22 +24,38 @@ export function fmtRange(start: number, end: number): string {
   return `${samePeriod ? from.slice(0, -2) : from}–${to}`;
 }
 
-export function formatSectionTimes(catalog: Catalog, courseId: string, sectionId: string): string {
+export function formatSectionMeetings(catalog: Catalog, courseId: string, sectionId: string): { kind: string; time: string }[] {
   const course = catalog.courses.find((item) => item.id === courseId);
   const section = course?.sections.find((item) => item.id === sectionId);
-  if (!section) return 'class time unavailable';
+  if (!section) return [{ kind: 'Schedule', time: 'class time unavailable' }];
 
-  const groups = new Map<string, { start: number; end: number; days: number[] }>();
+  const groups = new Map<string, { kind: string; start: number; end: number; days: number[] }>();
   for (const meeting of section.meetings) {
-    const key = `${meeting.start}-${meeting.end}`;
-    const group = groups.get(key) ?? { start: meeting.start, end: meeting.end, days: [] };
+    const key = `${meeting.kind}-${meeting.start}-${meeting.end}`;
+    const group = groups.get(key) ?? { kind: meeting.kind, start: meeting.start, end: meeting.end, days: [] };
     group.days.push(meeting.day);
     groups.set(key, group);
   }
-  const times = [...groups.values()]
-    .map(({ start, end, days }) => `${days.map((day) => DAYS[day] ?? `Day ${day}`).join('/') } ${fmtRange(start, end)}`);
-  if (section.unknownScheduleComponents.length) times.push(`TBA: ${section.unknownScheduleComponents.join(', ')}`);
-  return times.join('; ') || 'class time unavailable';
+  const meetings = [...groups.values()]
+    .map(({ kind, start, end, days }) => ({
+      kind,
+      time: `${days.map((day) => DAYS[day] ?? `Day ${day}`).join('/')} ${fmtTime(start)}–${fmtTime(end)}`,
+    }));
+  for (const component of section.unknownScheduleComponents) {
+    const kind = component.match(/^([A-Za-z]+)/)?.[1] ?? 'Other';
+    meetings.push({ kind, time: 'TBA' });
+  }
+  return meetings.length ? meetings : [{ kind: 'Schedule', time: 'class time unavailable' }];
+}
+
+export function latestEndTime(catalog: Catalog, schedule: Schedule | null): number | null {
+  if (!schedule) return null;
+  const ends = schedule.selections.flatMap((selection) => {
+    const course = catalog.courses.find((item) => item.id === selection.courseId);
+    const section = course?.sections.find((item) => item.id === selection.sectionId);
+    return section?.meetings.map((meeting) => meeting.end) ?? [];
+  });
+  return ends.length ? Math.max(...ends) : null;
 }
 
 export function toHHMM(min: number): string {
@@ -173,4 +189,33 @@ export function errMessage(e: unknown): string {
   // Drop the transport prefix ("HTTP 503 Service Unavailable: ") so users see only the server's message.
   const msg = e instanceof Error ? e.message : String(e);
   return msg.replace(/^HTTP \d{3}[^:]*: /, '');
+}
+
+export interface ScheduleDiff {
+  added: { courseId: string; sectionId: string }[];
+  removed: { courseId: string; sectionId: string }[];
+  moved: { courseId: string; from: string; to: string }[];
+  stats: { label: string; before: string; after: string }[];
+  same: boolean;
+}
+
+/** Deterministic before/after comparison of two validated schedules. */
+export function diffSchedules(before: Schedule | null, after: Schedule | null, catalog?: Catalog): ScheduleDiff {
+  const a = new Map((before?.selections ?? []).map((s) => [s.courseId, s.sectionId]));
+  const b = new Map((after?.selections ?? []).map((s) => [s.courseId, s.sectionId]));
+  const added = [...b].filter(([c]) => !a.has(c)).map(([courseId, sectionId]) => ({ courseId, sectionId }));
+  const removed = [...a].filter(([c]) => !b.has(c)).map(([courseId, sectionId]) => ({ courseId, sectionId }));
+  const moved = [...b].filter(([c, s]) => a.has(c) && a.get(c) !== s).map(([courseId, to]) => ({ courseId, from: a.get(courseId)!, to }));
+  const stat = (label: string, f: (s: Schedule) => string) => ({ label, before: before ? f(before) : '—', after: after ? f(after) : '—' });
+  const stats = [
+    stat('Units', (s) => `${s.units} units`),
+    stat('Campus days', (s) => `${s.campusDays} days`),
+    stat('Class hours', (s) => `${s.classHours.toFixed(1)} hours`),
+    stat('First class', (s) => (s.selections.length ? fmtTime(s.earliestStart) : '—')),
+    ...(catalog ? [stat('Latest scheduled end', (s) => {
+      const end = latestEndTime(catalog, s);
+      return end === null ? '—' : fmtTime(end);
+    })] : []),
+  ].filter((x) => x.before !== x.after);
+  return { added, removed, moved, stats, same: !added.length && !removed.length && !moved.length && !stats.length };
 }

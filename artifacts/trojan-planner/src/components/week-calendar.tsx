@@ -4,7 +4,7 @@ import type { Catalog, Constraint, PlannerInput, Schedule } from '@workspace/api
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ExplainButton } from '@/components/explain';
-import { DAYS, fmtRange, fmtTime } from '@/lib/format';
+import { DAYS, fmtTime, latestEndTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const START = 8 * 60;
@@ -35,6 +35,11 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
   return (
     <div className={cn('rounded-lg border bg-card overflow-x-auto transition-opacity', dim && 'opacity-50')} data-testid="calendar-week">
       <div className="min-w-[640px]">
+        {schedule && latestEndTime(catalog, schedule) !== null && (
+          <div className="flex items-center justify-end gap-1.5 border-b px-3 py-1.5 text-xs text-muted-foreground" data-testid="calendar-latest-end">
+            <span>Latest scheduled end</span><span className="font-mono font-semibold text-foreground">{fmtTime(latestEndTime(catalog, schedule)!)}</span>
+          </div>
+        )}
         <div className="grid grid-cols-[52px_repeat(5,1fr)] border-b sticky top-0 bg-card z-10">
           <div />
           {DAYS.map((d) => (
@@ -82,7 +87,7 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
                         <span className="text-xs font-semibold">{course.code}</span>
                         {locked ? <Lock className="size-3" /> : <LockOpen className="size-3 opacity-0 group-hover:opacity-80 transition-opacity" />}
                       </div>
-                      <div className="text-[10px] text-muted-foreground leading-tight">{m.kind} · {fmtRange(m.start, m.end)}</div>
+                      <div className="text-[10px] text-muted-foreground leading-tight">{m.kind} · {fmtTime(m.start)}–{fmtTime(m.end)}</div>
                     </button>
                   );
                   if (!input || !schedule) return block;
