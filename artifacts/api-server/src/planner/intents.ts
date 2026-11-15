@@ -2,7 +2,7 @@
 // degree progress, locking a section in the current plan, and switching schedule options.
 // Each returns null when the message is not that kind of request.
 import { catalog } from "./catalog";
-import { fmt, meetingText } from "./explain";
+import { fmt, hoursText, meetingText } from "./explain";
 import type { Constraint, PlannerInput } from "./service";
 
 type Ref = { courseId: string; sectionId: string };
@@ -177,7 +177,7 @@ const METRICS: { pattern: RegExp; pick: (o: Option) => number; best: "min" | "ma
   { pattern: /\b(fewe(r|st)|less|least|min(imum)?) (campus )?days\b|\bcompress/i, pick: o => o.campusDays, best: "min", describe: o => `${o.campusDays} campus days` },
   { pattern: /\b(later|latest) (start|morning)|\bstarts? later\b|\bsleep in\b|\bno early\b/i, pick: o => o.earliestStart, best: "max", describe: o => `first class at ${fmt(o.earliestStart)}` },
   { pattern: /\b(fewe(r|st)|less|least|no|smallest) gaps?\b|\bcompact\b/i, pick: o => o.gapMinutes, best: "min", describe: o => `${o.gapMinutes} min of gaps` },
-  { pattern: /\b(fewe(r|st)|less|least) (class )?(hours|time in class)\b/i, pick: o => o.classHours, best: "min", describe: o => `${o.classHours.toFixed(1)} class hours` },
+  { pattern: /\b(fewe(r|st)|less|least) (class )?(hours|time in class)\b/i, pick: o => o.classHours, best: "min", describe: o => `${hoursText(o.classHours)} in class per week` },
   { pattern: /\b(more|most) units\b/i, pick: o => o.units, best: "max", describe: o => `${o.units} units` },
   { pattern: /\b(fewe(r|st)|less|least) units\b/i, pick: o => o.units, best: "min", describe: o => `${o.units} units` },
 ];

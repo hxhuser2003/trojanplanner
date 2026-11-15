@@ -29,9 +29,9 @@ The chatbot never changes your rules by itself. Rule changes appear as a proposa
 ### Grading questions (from the grading tables)
 - [ ] `which classes in my schedule have a midterm?` → lists each planned course with a midterm, its weight and timing, with citations.
 - [ ] `when is the CSCI 572 midterm?` → "Midterm exam: 30% of the grade, Week 9, in class".
-- [ ] `how is CSCI 570 graded?` → full breakdown (Homework 24%, Exam 1 36%, Exam 2 40%).
+- [ ] `how is CSCI 570 graded?` → full breakdown (Homework 24%, Midterm (Exam 1) 36%, Final (Exam 2) 40%).
 - [ ] `does anything in my plan grade attendance?` → yes/no per course.
-- [ ] Courses whose syllabus says "Exam 1 / Exam 2" are reported as *not labeled midterm or final*. The bot does not guess.
+- [ ] Where a syllabus says "Exam 1 / Exam 2" (CSCI 570, 571, 585), Exam 1 is treated as the midterm and Exam 2 as the final, and both names are shown.
 - [ ] Answers say whether the source is a past-term USC syllabus or a labeled mock.
 
 ### Excluding a course
@@ -79,4 +79,5 @@ The chatbot never changes your rules by itself. Rule changes appear as a proposa
 
 ## Related things to try while testing
 - [ ] Set **Units** on the Degree page to 4, 8, 12 or 16. Lower targets cover as many goals as fit and say which goal is not covered; 2 units says no mix of courses adds up to that.
+- [ ] Option labels such as **No graded quizzes** or **No final exams** must be true for every course in that option; check them against the Grading section on the Courses page.
 - [ ] Switch **Prefer Fridays free** to **Hard** in the Rules tab → "No plan fits every rule" with a one-click repair, because every CSCI 570 section has a Friday quiz.

@@ -35,6 +35,12 @@ export function goalsFit(input: PlannerInput): boolean {
   return total <= input.maxUnits;
 }
 
+/** Weekly time in class. Quiz slots are reserved exam times, not weekly classes, so they are left out. */
+export function classMinutes(meetings: Section["meetings"]): number {
+  return meetings.filter(m => m.kind !== "Quiz").reduce((n, m) => n + m.end - m.start, 0);
+}
+export const hoursText = (h: number) => { const m = Math.round(h * 60); return `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`; };
+
 export function meetingText(section: Section) {
   const groups = new Map<string, number[]>();
   for (const m of section.meetings) {
@@ -207,7 +213,7 @@ function metrics(picked: Picked[], input: PlannerInput): Metrics {
   return {
     units: picked.reduce((n, [c]) => n + c.units, 0),
     days: [...daysOf(picked.map(([, s]) => s))].sort(),
-    hours: Math.round(meetings.reduce((n, m) => n + m.end - m.start, 0) / 6) / 10,
+    hours: classMinutes(meetings) / 60,
     earliest: meetings.length ? Math.min(...meetings.map(m => m.start)) : 0,
     gaps, softBroken,
     projectHeavy: picked.filter(([c]) => c.syllabus.status === "synthetic" && (c.syllabus.projectPercent ?? 0) >= 50).length,
@@ -231,7 +237,7 @@ export function explainCompare(input: PlannerInput, refsA: Ref[], refsB: Ref[]):
   const cmp = (label: string, x: string, y: string) => { if (x !== y) facts.push(`${label}: ${x} here vs ${y} in the other option.`); };
   cmp("Units", String(ma.units), String(mb.units));
   cmp("Campus days", `${ma.days.length} (${ma.days.map(d => DAY[d]).join("/")})`, `${mb.days.length} (${mb.days.map(d => DAY[d]).join("/")})`);
-  cmp("Class hours per week", ma.hours.toFixed(1), mb.hours.toFixed(1));
+  cmp("Class time per week", hoursText(ma.hours), hoursText(mb.hours));
   cmp("First class", fmt(ma.earliest), fmt(mb.earliest));
   cmp("Time between classes", `${ma.gaps} min`, `${mb.gaps} min`);
   cmp("Mock project-weighted courses", String(ma.projectHeavy), String(mb.projectHeavy));

@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import type { Catalog, PlannerInput, Schedule } from '@workspace/api-client-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ExplainButton } from '@/components/explain';
-import { fmtTime } from '@/lib/format';
+import { fmtHours, fmtTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const refs = (s: Schedule) => s.selections.map((x) => ({ courseId: x.courseId, sectionId: x.sectionId }));
@@ -14,7 +14,7 @@ export function StatTable({ catalog, columns }: { catalog: Catalog; columns: { t
     ['Courses', (s) => s.selections.map((x) => catalog.courses.find((c) => c.id === x.courseId)?.code ?? x.courseId).join(', ')],
     ['Units', (s) => String(s.units)],
     ['Campus days', (s) => String(s.campusDays)],
-    ['Class hours', (s) => s.classHours.toFixed(1)],
+    ['Class time / week', (s) => fmtHours(s.classHours)],
     ['First class', (s) => fmtTime(s.earliestStart)],
     ['Gaps', (s) => `${s.gapMinutes} min`],
   ];

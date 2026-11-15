@@ -100,14 +100,14 @@ const SPECS: Record<string, Spec> = {
     projectMode: "unspecified", cadence: "Six homework assignments and two exams in the Spring 2025 syllabus.",
     attendance: "No attendance grading rule extracted from the Spring 2025 syllabus.",
     // The extract names "exam 1" and "exam 2" without saying whether either is a midterm or final.
-    grading: [g("Homework", "homework", 24, "Six assignments"), g("Exam 1", "exam", 36), g("Exam 2", "exam", 40)],
+    grading: [g("Homework", "homework", 24, "Six assignments"), g("Midterm (Exam 1)", "midterm", 36), g("Final (Exam 2)", "final", 40)],
     notes: [{ label: "Grading table", value: "Spring 2025", excerpt: "Spring 2025 weighting gives 36% to exam 1, 40% to exam 2, and 24% to homework.", page: 3 }],
   },
   "CSCI-571": {
     term: "Spring 2025", status: "historical", sourceUrl: "https://web-app.usc.edu/soc/syllabus/20251/30378.pdf", page: 3,
     projectMode: "individual", cadence: "Three assignments, two exams, and a final project in the Spring 2025 syllabus.",
     attendance: "The Spring 2025 syllabus gives no grade credit for participation.",
-    grading: [g("Assignments", "homework", 12, "Three assignments"), g("Final project", "project", 8), g("Written exam 1", "exam", 40), g("Written exam 2", "exam", 40)],
+    grading: [g("Assignments", "homework", 12, "Three assignments"), g("Final project", "project", 8), g("Midterm (Written exam 1)", "midterm", 40), g("Final (Written exam 2)", "final", 40)],
     notes: [
       { label: "Grading table", value: "Spring 2025", excerpt: "Spring 2025 grading table lists two 40% written exams, 12% assignments, and an 8% final project.", page: 3 },
       { label: "Project format", value: "Individual", excerpt: "Spring 2025 assignment policy states that assignments are worked on individually.", page: 4 },
@@ -132,7 +132,7 @@ const SPECS: Record<string, Spec> = {
     term: "Fall 2024", status: "historical", sourceUrl: "https://web-app.usc.edu/soc/syllabus/20243/30150.pdf", page: 1,
     projectMode: "unspecified", cadence: "Two exams and in-class participation in the Fall 2024 syllabus.",
     attendance: "Fall 2024 on-campus participation is 20%; DEN grading uses two exams at 50% each.",
-    grading: [g("Participation", "participation", 20, "On campus; DEN students exempt"), g("Exam 1", "exam", 40), g("Exam 2", "exam", 40)],
+    grading: [g("Participation", "participation", 20, "On campus; DEN students exempt"), g("Midterm (Exam 1)", "midterm", 40), g("Final (Exam 2)", "final", 40)],
     notes: [{ label: "Grading table", value: "Fall 2024, on campus", excerpt: "Fall 2024 syllabus assigns two 40% exams and 20% participation on campus; DEN students are exempt from participation.", page: 1 }],
   },
   "CSCI-587": {

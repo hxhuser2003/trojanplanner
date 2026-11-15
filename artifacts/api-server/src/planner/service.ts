@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { SolvePlannerBody, SolvePlannerResponse } from "@workspace/api-zod";
 import type { z } from "zod";
 import { catalog } from "./catalog";
-import { goalsFit } from "./explain";
+import { classMinutes, goalsFit } from "./explain";
 
 export type PlannerInput = z.infer<typeof SolvePlannerBody>;
 export type Constraint = PlannerInput["constraints"][number];
@@ -122,7 +122,7 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
       reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. Published linked meeting times checked. ${c.syllabus.examPercent == null || c.syllabus.projectPercent == null ? `Assessment weights are partly or fully unknown in the ${c.syllabus.status === "synthetic" ? "mock" : `historical ${c.syllabus.term}`} source; verify current policy.` : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (${c.syllabus.status === "synthetic" ? "illustrative mock" : `historical ${c.syllabus.term}`}; verify current policy).`}`,
     })),
     units: selected.reduce((sum, [c]) => sum + c.units, 0), campusDays: days,
-    classHours: Math.round(meetings.reduce((sum, m) => sum + m.end - m.start, 0) / 6) / 10,
+    classHours: Math.round(classMinutes(meetings) / 60 * 100) / 100,
     gapMinutes, earliestStart: earliest, score: raw.score,
     projectHeavy, examHeavy, individual, quizCourses, attendanceCourses, midtermCourses, finalCourses,
     checks: ["No overlapping published meetings in the loaded data", "All enabled hard constraints respected for published times", "Unit target checked; goals covered as far as the units allow", "Published linked meetings and listed prerequisite groups checked against entered completions"],
@@ -175,7 +175,7 @@ const clock = (min: number) => {
 /** Names an alternative by its single biggest advantage over the best schedule, e.g. "Only 2 campus days" or "No quizzes". */
 type GradeKind = Course["syllabus"]["grading"][number]["kind"];
 const ASSESSMENT_LABELS: [{ has: GradeKind[]; maybe: GradeKind[] }, number, string, string][] = [
-  [{ has: ["quiz"], maybe: [] }, 18, "No quizzes", "Fewer quizzes"],
+  [{ has: ["quiz"], maybe: [] }, 18, "No graded quizzes", "Fewer graded quizzes"],
   [{ has: ["attendance", "participation"], maybe: [] }, 18, "No graded attendance", "Less graded attendance"],
   [{ has: ["midterm"], maybe: ["exam"] }, 20, "No midterms", "Fewer midterms"],
   [{ has: ["final"], maybe: ["exam"] }, 20, "No final exams", "Fewer final exams"],
