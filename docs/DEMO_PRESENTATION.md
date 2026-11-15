@@ -1,5 +1,7 @@
 # TrojanPlanner: 3-minute demo script
 
+Internal only: delete this file from GitHub before submitting (see PLAN.md §14).
+
 One storyline for the submission video. Every step below was dry-run against the current branch; the AI step is marked and has a fallback.
 
 ## The one idea judges should remember
@@ -16,7 +18,9 @@ Three moments carry the video. Everything else is connective tissue.
 
 ## The student
 
-**Maya, first-year USC MS CS student.** She has already taken CSCI 561, CSCI 567, CSCI 585 and EE 559. She works Tue/Thu 9 AM–1 PM. This semester she wants 8 units that cover the Algorithms and Web/search goals, and she'd love Fridays free.
+**Maya, a second-semester USC MS in Computer Science (General) student.** In her first semester (Fall 2026) she took CSCI 561 and CSCI 567. CSCI 570 is required for her degree and she hasn't taken it yet. She works Tue/Thu 9 AM–1 PM. For Spring 2027 she wants 8 units: CSCI 570 plus a Web/search course, and she'd love Fridays free.
+
+Why this student: almost every General MS student hits this exact semester, with the required algorithms course still to fit in around a job.
 
 Maya is a made-up student. The courses, sections, times and syllabi are real USC data (Spring 2027 Schedule of Classes; dated past-term syllabi or labeled mocks).
 
@@ -27,10 +31,8 @@ Maya is a made-up student. The courses, sections, times and syllabi are real USC
 - [ ] Copy this fake STARS text to the clipboard (never use a real transcript):
 
 ```
-20251 CSCI 561 4.0 A Foundations of Artificial Intelligence
-20251 CSCI 567 4.0 A- Machine Learning
-20252 CSCI 585 4.0 B+ Database Systems
-20252 EE 559 4.0 A Mathematical Pattern Recognition
+20263 CSCI 561 4.0 A Foundations of Artificial Intelligence
+20263 CSCI 567 4.0 A- Machine Learning
 ```
 
 - [ ] Browser at 1440×900, zoom 110%, dark mode off, other tabs closed.
@@ -42,7 +44,7 @@ Maya is a made-up student. The courses, sections, times and syllabi are real USC
 | Time | Screen | Say |
 |---|---|---|
 | **0:00–0:15** | Planner page with the finished calendar. | "Registering at USC means juggling a degree plan, a job, and dozens of section combinations, and one wrong pick costs you a semester. TrojanPlanner turns that into one conversation, and it never makes things up." |
-| **0:15–0:40** | **Degree** page → paste the STARS text → **Find course candidates** → **Add 4 as completed**. Show the Algorithms and Web goals and **Units: 8**. Click **Re-solve with these**. | "Maya pastes her course rows from STARS, and she confirms every course before it counts. She picks this semester's goals and a unit target, and re-solves." |
+| **0:15–0:40** | **Degree** page → paste the STARS text → **Find course candidates** → **Add 2 as completed**. Show the Algorithms and Web goals and **Units: 8**. Click **Re-solve with these**. | "Maya is starting her second semester of the General MS. She pastes her first-semester courses from STARS and confirms each one. She still needs CSCI 570, which is required, plus a web course, in 8 units, and re-solves." |
 | **0:40–1:10** | Lands on the planner. Point at **Optimal · ~100 ms**, the empty Tue/Thu mornings, and the option tabs. Click **No graded quizzes**, then back. Open **Compare** for one second. | "A constraint solver checked every real section combination and found the best week in a tenth of a second. Work hours are untouched. It also offers truly different alternatives, and their names are promises: *No graded quizzes* means every course in it has no graded quizzes in its syllabus." |
 | **1:10–1:45** | **Rules** tab → click **Soft** on *Prefer Fridays free* to make it **Hard** (label becomes *Keep Fri free*). Conflict panel appears. Point at the reason and the preview, then click **Approve this repair**. | "Now Maya insists on Fridays off. Instead of quietly breaking a rule, it tells her no plan fits, and why: every CSCI 570 section meets on Friday, including the exam slot. It offers a tested repair with a preview, and nothing changes until she approves." |
 | **1:45–2:00** | **Ask** tab: `what do I need for graduation?` | "She can just ask. Progress is counted by code, not guessed: done, in this plan, or still open. And it's clear these are planning goals, not an official audit." |
