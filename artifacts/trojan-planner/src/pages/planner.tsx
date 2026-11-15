@@ -108,7 +108,7 @@ function Planner({ catalog }: { catalog: Catalog }) {
           {p.lastChange && !stale && !solving && <WhatChanged diff={p.lastChange} catalog={catalog} onDismiss={p.dismissChange} />}
 
           {result && result.schedules.length > 1 && !infeasible && (
-            <div className="inline-flex max-w-full overflow-x-auto rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
+            <div className="inline-flex flex-wrap max-w-full rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
               {result.schedules.map((s) => (
                 <button key={s.id} role="tab" aria-selected={sched?.id === s.id} onClick={() => p.chooseSchedule(s.id)} data-testid={`tab-schedule-${s.id}`}
                   className={cn('shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors', sched?.id === s.id ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground')}>

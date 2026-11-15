@@ -93,7 +93,7 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
   const earliest = meetings.length ? Math.min(...meetings.map(m => m.start)) : 0;
   return {
     id: createHash("sha256").update(selected.map(([, s]) => s.id).sort().join(",")).digest("hex").slice(0, 16),
-    title: index === 0 ? "Best preference fit" : `${days} campus days · alternative ${index}`,
+    title: index === 0 ? "Best preference fit" : `Alternative ${index}`,
     selections: selected.map(([c, s]) => ({
       courseId: c.id, sectionId: s.id,
       reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. All linked meetings included. ${c.syllabus.status === "unknown" ? "Assessment information not specified." : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (synthetic).`}`,
@@ -131,12 +131,51 @@ async function worker(input: PlannerInput): Promise<WorkerResult> {
     process.stdin.end(JSON.stringify({ catalog, input }));
   });
 }
+type Summary = ReturnType<typeof summarize>;
+const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+const clock = (min: number) => {
+  const h = Math.floor(min / 60), m = min % 60;
+  return `${h % 12 === 0 ? 12 : h % 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h >= 12 ? "pm" : "am"}`;
+};
+/** Names an alternative by what differs from the best schedule, e.g. "With CSCI 202 instead of CSCI 201 · Starts 1pm". */
+function alternativeTitle(best: Summary, alt: Summary): string {
+  const code = (id: string) => catalog.courses.find(c => c.id === id)?.code ?? id;
+  const bestIds = new Set(best.selections.map(s => s.courseId));
+  const altIds = new Set(alt.selections.map(s => s.courseId));
+  const added = alt.selections.filter(s => !bestIds.has(s.courseId)).map(s => code(s.courseId));
+  const dropped = best.selections.filter(s => !altIds.has(s.courseId)).map(s => code(s.courseId));
+  const parts: string[] = [];
+  if (added.length === 1 && dropped.length === 1) parts.push(`With ${added[0]} instead of ${dropped[0]}`);
+  else if (added.length) parts.push(`With ${added.join(" + ")}`);
+  else if (dropped.length) parts.push(`Without ${dropped.join(" + ")}`);
+  else {
+    // Same courses, different sections: name each course whose section changed (at most two).
+    const moved = alt.selections.filter(s => best.selections.find(b => b.courseId === s.courseId)?.sectionId !== s.sectionId).flatMap(s => {
+      const section = catalog.courses.find(c => c.id === s.courseId)?.sections.find(x => x.id === s.sectionId);
+      return section ? [`${code(s.courseId)} on ${[...new Set(section.meetings.map(m => m.day))].sort().map(d => DAY_NAMES[d]).join("/")}`] : [];
+    });
+    if (moved.length) parts.push(moved.slice(0, 2).join(", "));
+  }
+  // Add the clearest advantage over the best option, if any.
+  if (alt.campusDays < best.campusDays) parts.push(`${alt.campusDays} campus days`);
+  else if (alt.earliestStart > best.earliestStart) parts.push(`Starts ${clock(alt.earliestStart)}`);
+  else if (alt.gapMinutes < best.gapMinutes) parts.push("Fewer gaps");
+  else if (alt.units !== best.units) parts.push(`${alt.units} units`);
+  return parts.slice(0, 2).join(" · ") || alt.title;
+}
+
 export async function solve(input: PlannerInput) {
   if (activeSolves >= 3) throw new Error("BUSY");
   activeSolves++;
   try {
     const result = await worker(input);
     const schedules = result.solutions.map((s, i) => summarize(s, input, i));
+    const seen = new Set<string>();
+    for (const [i, s] of schedules.entries()) {
+      if (i > 0) s.title = alternativeTitle(schedules[0]!, s);
+      while (seen.has(s.title)) s.title = `${s.title} (${i + 1})`;
+      seen.add(s.title);
+    }
     const repairs = result.repairs.map((r, i) => ({
       id: `repair-${i}`, title: `Allow change: ${r.constraint.label}`,
       explanation: `Disable only “${r.constraint.label}”. All other enabled hard constraints, units, and requirements remain unchanged. This preview was re-solved and independently validated. Approve to apply. No multi-semester graduation effects are verified.`,
