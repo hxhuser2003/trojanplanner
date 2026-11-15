@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info } from 'lucide-react';
 import type { Catalog, Constraint, PlannerInput, Repair } from '@workspace/api-client-react';
@@ -71,6 +71,18 @@ function Planner({ catalog }: { catalog: Catalog }) {
   const solving = p.solveState === 'solving';
   const stale = p.dirty;
   const infeasible = result && (result.status === 'infeasible' || result.schedules.length === 0);
+
+  // Re-solve shortly after rules change, so a rule that leaves no valid plan shows the conflict right away
+  // instead of leaving the old schedule on screen. The solver is deterministic and never calls AI.
+  // Each input is tried once, so a solver error does not retry in a loop.
+  const inputJson = JSON.stringify(input);
+  const autoSolved = useRef<string | null>(null);
+  useEffect(() => {
+    if (!stale || solving || autoSolved.current === inputJson) return;
+    const t = setTimeout(() => { autoSolved.current = inputJson; void p.solve(); }, 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputJson, stale, solving]);
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 md:px-6 py-6">

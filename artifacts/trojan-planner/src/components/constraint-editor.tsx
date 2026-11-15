@@ -32,6 +32,11 @@ export function ConstraintEditor({ catalog, constraints, onChange }: Props) {
   });
   const hard = constraints.filter((c) => c.hard);
   const soft = constraints.filter((c) => !c.hard);
+  // "Prefer Fri free" becomes "Keep Fri free"; a label the student wrote stays as it is.
+  const toggleHard = (c: Constraint): Constraint => {
+    const next = { ...c, hard: !c.hard };
+    return c.label === autoLabel(c, catalog, c.label) ? { ...next, label: autoLabel(next, catalog, c.label) } : next;
+  };
 
   const save = () => {
     if (!editing) return;
@@ -51,7 +56,7 @@ export function ConstraintEditor({ catalog, constraints, onChange }: Props) {
         <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded border cursor-default" title="Preferences are always soft: the solver favors them but never fails because of them">Soft</span>
       ) : (
         <button className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded border hover:bg-secondary transition-colors"
-          onClick={() => onChange((cs) => cs.map((x) => (x.id === c.id ? { ...x, hard: !x.hard } : x)))}
+          onClick={() => onChange((cs) => cs.map((x) => (x.id === c.id ? toggleHard(x) : x)))}
           aria-label={`Make ${c.hard ? 'soft' : 'hard'}`} data-testid={`button-hardness-${c.id}`}>{c.hard ? 'Hard' : 'Soft'}</button>
       )}
       <button className="p-1.5 rounded hover:bg-secondary" aria-label={`Edit ${c.label}`} onClick={() => open({ ...c }, false)} data-testid={`button-edit-${c.id}`}><Pencil className="size-3.5" /></button>
