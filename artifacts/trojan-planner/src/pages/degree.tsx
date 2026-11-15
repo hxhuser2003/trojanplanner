@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { Upload, ScanText, AlertTriangle, X, Plus, ShieldAlert, FileSearch } from 'lucide-react';
+import { Upload, ScanText, AlertTriangle, X, ShieldAlert, FileSearch } from 'lucide-react';
 import { useParseStars, type Catalog, type PlannerInput, type StarsResult } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,6 @@ export default function DegreePage() {
   return <CatalogGate>{(c) => <Degree catalog={c} />}</CatalogGate>;
 }
 
-const norm = (s: string) => s.toUpperCase().replace(/\s+/g, '').replace(/^([A-Z]+)(\d)/, '$1-$2');
 
 function Degree({ catalog }: { catalog: Catalog }) {
   const p = usePlanner();
@@ -30,15 +29,8 @@ function Degree({ catalog }: { catalog: Catalog }) {
   const completed = new Set(input.completedCourses);
   const known = new Set([...catalog.completedOptions, ...catalog.courses.map((c) => c.id), ...catalog.courses.map((c) => c.code)]);
   const outside = input.completedCourses.filter((c) => !known.has(c));
-  const [manual, setManual] = useState('');
 
   const toggleCompleted = (id: string) => set({ completedCourses: completed.has(id) ? input.completedCourses.filter((x) => x !== id) : [...input.completedCourses, id].slice(0, 100) });
-  const addManual = () => {
-    const codes = manual.split(/[,\n]/).map((s) => norm(s.trim())).filter((s) => /^[A-Z]{2,5}-\d{2,4}[A-Z]?$/.test(s));
-    if (!codes.length) { toast({ title: 'Use a code like CSCI-570 or CSCI 585', variant: 'destructive' }); return; }
-    set({ completedCourses: Array.from(new Set([...input.completedCourses, ...codes])).slice(0, 100) });
-    setManual('');
-  };
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6">
@@ -72,13 +64,6 @@ function Degree({ catalog }: { catalog: Catalog }) {
                   <Checkbox checked={completed.has(id)} onCheckedChange={() => toggleCompleted(id)} data-testid={`checkbox-completed-${id}`} />{id}
                 </label>
               ))}
-            </div>
-            <div className="mt-4">
-              <Label htmlFor="manual">Add a course code not listed</Label>
-              <div className="flex gap-2 mt-1">
-                <Input id="manual" value={manual} onChange={(e) => setManual(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addManual()} placeholder="e.g. CSCI 567, EE 559" data-testid="input-manual-course" />
-                <Button variant="outline" onClick={addManual} data-testid="button-add-manual"><Plus className="size-4" />Add</Button>
-              </div>
             </div>
             {outside.length > 0 && (
               <div className="mt-3 rounded-lg bg-accent/20 border border-accent/50 p-3" data-testid="list-outside-demo">
