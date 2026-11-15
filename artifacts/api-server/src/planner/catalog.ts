@@ -7,19 +7,33 @@ const meeting = (day: number, start: number, end: number, kind = "Lecture") => (
 const section = (id: string, instructor: string, meetings: ReturnType<typeof meeting>[]) => ({
   id, instructor, meetings, eligibility: "Seat availability and enrollment restrictions not verified",
 });
-const syllabus = (id: string, exams: number | null, projects: number | null, mode: string, cadence = "Weekly assignments") => ({
+// Synthetic quiz and graded-attendance weights, carved out of each course's "other" share.
+const SMALL_ITEMS: Record<string, { quizzes: number; attendance: number }> = {
+  "CSCI-270": { quizzes: 10, attendance: 0 }, "CSCI-271": { quizzes: 0, attendance: 5 },
+  "CSCI-201": { quizzes: 0, attendance: 10 }, "CSCI-202": { quizzes: 10, attendance: 0 },
+  "CSCI-310": { quizzes: 0, attendance: 10 }, "CSCI-360": { quizzes: 10, attendance: 0 },
+  "CSCI-350": { quizzes: 10, attendance: 0 }, "WRIT-340": { quizzes: 0, attendance: 15 },
+};
+const syllabus = (id: string, exams: number | null, projects: number | null, mode: string, cadence = "Weekly assignments") => {
+  const small = exams === null ? null : SMALL_ITEMS[id] ?? { quizzes: 0, attendance: 0 };
+  return {
   term: "Spring 2027 (synthetic)", status: exams === null ? "unknown" : "synthetic",
   examPercent: exams, projectPercent: projects,
   otherPercent: exams === null || projects === null ? null : 100 - exams - projects,
-  projectMode: mode, cadence, attendance: exams === null ? "Not specified" : "Participation is included in other assessments; attendance is not separately graded.",
+  quizPercent: small?.quizzes ?? null, attendancePercent: small?.attendance ?? null,
+  projectMode: mode, cadence,
+  attendance: !small ? "Not specified" : small.attendance ? `Attendance is graded (${small.attendance}% of the final grade).` : "Attendance is not separately graded.",
   sourceUrl: `/api/planner/sources/${id}`,
   evidence: exams === null ? [] : [
     { label: "Exam weighting", value: `${exams}%`, page: 1, status: "synthetic", excerpt: `Exams contribute ${exams}% of the final course grade.` },
     { label: "Project weighting", value: `${projects}%`, page: 1, status: "synthetic", excerpt: `Projects contribute ${projects}% of the final course grade.` },
     { label: "Project format", value: mode, page: 1, status: "synthetic", excerpt: `Projects are completed in ${mode === "group" ? "groups of three" : mode === "individual" ? "individual submissions" : "a mixture of individual and group submissions"}.` },
     { label: "Assignment cadence", value: cadence, page: 1, status: "synthetic", excerpt: `${cadence}.` },
+    { label: "Quizzes", value: `${small!.quizzes}%`, page: 2, status: "synthetic", excerpt: small!.quizzes ? `Short in-class quizzes contribute ${small!.quizzes}% of the final grade.` : "There are no graded quizzes." },
+    { label: "Attendance", value: `${small!.attendance}%`, page: 2, status: "synthetic", excerpt: small!.attendance ? `Attendance is taken each session and counts for ${small!.attendance}% of the final grade.` : "Attendance is not graded." },
   ],
-});
+  };
+};
 const course = (id: string, title: string, requirement: string, prerequisites: string[], sections: ReturnType<typeof section>[], exams: number | null, projects: number | null, mode: string, color: string, cadence?: string) => ({
   id, code: id.replace("-", " "), title, units: 4, requirement, prerequisites, sections,
   syllabus: syllabus(id, exams, projects, mode, cadence),

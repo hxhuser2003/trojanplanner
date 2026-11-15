@@ -85,6 +85,8 @@ export const GetCatalogResponse = zod.object({
   "examPercent": zod.number().nullish(),
   "projectPercent": zod.number().nullish(),
   "otherPercent": zod.number().nullish(),
+  "quizPercent": zod.number().nullish(),
+  "attendancePercent": zod.number().nullish(),
   "projectMode": zod.enum(['individual', 'group', 'mixed', 'unspecified']),
   "cadence": zod.string(),
   "attendance": zod.string(),
@@ -110,7 +112,7 @@ export const GetCatalogResponse = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(getCatalogResponseDefaultInputConstraintsItemIdMax),
   "label": zod.string().max(getCatalogResponseDefaultInputConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(getCatalogResponseDefaultInputConstraintsItemValueMax),
@@ -161,7 +163,7 @@ export const SolvePlannerBody = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(solvePlannerBodyConstraintsItemIdMax),
   "label": zod.string().max(solvePlannerBodyConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(solvePlannerBodyConstraintsItemValueMax),
@@ -238,7 +240,7 @@ export const SolvePlannerResponse = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(solvePlannerResponseRepairsItemInputConstraintsItemIdMax),
   "label": zod.string().max(solvePlannerResponseRepairsItemInputConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(solvePlannerResponseRepairsItemInputConstraintsItemValueMax),
@@ -313,7 +315,7 @@ export const ParsePreferencesBody = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(parsePreferencesBodyCurrentConstraintsItemIdMax),
   "label": zod.string().max(parsePreferencesBodyCurrentConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(parsePreferencesBodyCurrentConstraintsItemValueMax),
@@ -353,7 +355,7 @@ export const ParsePreferencesResponse = zod.object({
   "proposedConstraints": zod.array(zod.object({
   "id": zod.string().min(1).max(parsePreferencesResponseProposedConstraintsItemIdMax),
   "label": zod.string().max(parsePreferencesResponseProposedConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(parsePreferencesResponseProposedConstraintsItemValueMax),
@@ -416,7 +418,7 @@ export const ExplainPlannerBody = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(explainPlannerBodyInputConstraintsItemIdMax),
   "label": zod.string().max(explainPlannerBodyInputConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(explainPlannerBodyInputConstraintsItemValueMax),
@@ -509,7 +511,7 @@ export const ChatCopilotBody = zod.object({
   "constraints": zod.array(zod.object({
   "id": zod.string().min(1).max(chatCopilotBodyCurrentConstraintsItemIdMax),
   "label": zod.string().max(chatCopilotBodyCurrentConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(chatCopilotBodyCurrentConstraintsItemValueMax),
@@ -582,7 +584,7 @@ export const ChatCopilotResponse = zod.object({
   "proposedConstraints": zod.array(zod.object({
   "id": zod.string().min(1).max(chatCopilotResponseProposedConstraintsItemIdMax),
   "label": zod.string().max(chatCopilotResponseProposedConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(chatCopilotResponseProposedConstraintsItemValueMax),
@@ -594,7 +596,7 @@ export const ChatCopilotResponse = zod.object({
   "updatedConstraints": zod.array(zod.object({
   "id": zod.string().min(1).max(chatCopilotResponseUpdatedConstraintsItemIdMax),
   "label": zod.string().max(chatCopilotResponseUpdatedConstraintsItemLabelMax),
-  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent']),
+  "kind": zod.enum(['no_day', 'earliest', 'latest', 'blocked', 'require_course', 'lock_section', 'prefer_projects', 'prefer_exams', 'prefer_individual', 'prefer_fewer_days', 'prefer_less_frequent', 'prefer_no_quizzes', 'prefer_no_attendance']),
   "hard": zod.boolean(),
   "enabled": zod.boolean(),
   "value": zod.string().max(chatCopilotResponseUpdatedConstraintsItemValueMax),

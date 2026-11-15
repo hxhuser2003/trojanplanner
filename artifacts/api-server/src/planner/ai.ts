@@ -34,7 +34,7 @@ export async function parsePreferences(text: string, current: PlannerInput) {
     const json = await complete(`You extract proposed scheduling constraints, not schedules or academic advice.
 Return ONLY JSON {"message":string,"proposedConstraints":Constraint[],"warnings":string[],"provider":"Anthropic Claude"}.
 Constraint shape: {id:string,label:string,kind:enum,hard:boolean,enabled:true,value:string,days:number[],start:number,end:number}.
-Allowed kind: no_day,earliest,latest,blocked,require_course,lock_section,prefer_projects,prefer_exams,prefer_individual,prefer_fewer_days,prefer_less_frequent.
+Allowed kind: no_day,earliest,latest,blocked,require_course,lock_section,prefer_projects,prefer_exams,prefer_individual,prefer_fewer_days,prefer_less_frequent,prefer_no_quizzes,prefer_no_attendance.
 day 0 Monday to 4 Friday, time integer minutes after midnight. Irrelevant fields: value "", days [], start/end 0.
 blocked needs days and start<end; earliest needs start; latest needs end; no_day needs days.
 require_course value must be a listed course ID. lock_section value must be a listed section ID.
@@ -113,7 +113,7 @@ kind "select": the student wants to view a different schedule option from schedu
 kind "answer": a question about courses, sections, or syllabi. Answer ONLY from the catalog JSON below and cite each syllabus fact as {courseId,label} using an evidence label that exists. If the catalog does not say, reply that the information is not available. Unknown is not zero. No rule changes.
 
 Constraint shape: {id:string,label:string,kind,hard:boolean,enabled:boolean,value:string,days:number[],start:number,end:number}.
-Allowed kind: no_day,earliest,latest,blocked,require_course,lock_section,prefer_projects,prefer_exams,prefer_individual,prefer_fewer_days,prefer_less_frequent.
+Allowed kind: no_day,earliest,latest,blocked,require_course,lock_section,prefer_projects,prefer_exams,prefer_individual,prefer_fewer_days,prefer_less_frequent,prefer_no_quizzes,prefer_no_attendance.
 day 0 Monday to 4 Friday; times are minutes after midnight. Unused fields: value "", days [], start/end 0.
 blocked needs days and start<end; earliest needs start; latest needs end; no_day needs days. require_course value is a course id; lock_section value is a section id.
 must/never/work/can't are hard; prefer/ideally/would like are soft; prefer_* kinds are always soft. Labels are short (under 40 characters).

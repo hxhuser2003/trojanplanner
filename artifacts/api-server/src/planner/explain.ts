@@ -67,7 +67,7 @@ function courseBlocker(course: Course, input: PlannerInput): string | null {
 }
 
 function assessmentFacts(course: Course, input: PlannerInput): string[] {
-  const prefs = enabled(input).filter(c => c.kind === "prefer_projects" || c.kind === "prefer_exams" || c.kind === "prefer_individual" || c.kind === "prefer_less_frequent");
+  const prefs = enabled(input).filter(c => c.kind === "prefer_projects" || c.kind === "prefer_exams" || c.kind === "prefer_individual" || c.kind === "prefer_less_frequent" || c.kind === "prefer_no_quizzes" || c.kind === "prefer_no_attendance");
   if (!prefs.length) return [];
   const s = course.syllabus;
   if (s.status !== "synthetic") return [`No syllabus evidence for ${course.code}, so ${list(prefs.map(p => `“${p.label}”`))} could not be credited. Unknown is not zero.`];
@@ -76,6 +76,8 @@ function assessmentFacts(course: Course, input: PlannerInput): string[] {
     if (p.kind === "prefer_projects") out.push(`${course.code} weights projects ${s.projectPercent}% and exams ${s.examPercent}% (synthetic syllabus)${(s.projectPercent ?? 0) >= 50 ? ", which matches “" + p.label + "”" : ""}.`);
     if (p.kind === "prefer_exams") out.push(`${course.code} weights exams ${s.examPercent}% and projects ${s.projectPercent}% (synthetic syllabus)${(s.examPercent ?? 0) >= 50 ? ", which matches “" + p.label + "”" : ""}.`);
     if (p.kind === "prefer_individual") out.push(`${course.code} projects are ${s.projectMode}${s.projectMode === "individual" ? ", which matches “" + p.label + "”" : ""}.`);
+    if (p.kind === "prefer_no_quizzes") out.push(s.quizPercent ? `${course.code} has graded quizzes (${s.quizPercent}% of the grade), which works against “${p.label}”.` : `${course.code} has no graded quizzes, which matches “${p.label}”.`);
+    if (p.kind === "prefer_no_attendance") out.push(s.attendancePercent ? `${course.code} grades attendance (${s.attendancePercent}% of the grade), which works against “${p.label}”.` : `${course.code} does not grade attendance, which matches “${p.label}”.`);
     if (p.kind === "prefer_less_frequent") out.push(`${course.code} cadence: ${s.cadence.toLowerCase()}${s.cadence.toLowerCase().includes("milestone") ? ", which matches “" + p.label + "”" : ""}.`);
   }
   return out;

@@ -73,6 +73,10 @@ export interface Syllabus {
   projectPercent?: number | null;
   /** @nullable */
   otherPercent?: number | null;
+  /** @nullable */
+  quizPercent?: number | null;
+  /** @nullable */
+  attendancePercent?: number | null;
   projectMode: SyllabusProjectMode;
   cadence: string;
   attendance: string;
@@ -124,6 +128,8 @@ export const ConstraintKind = {
   prefer_individual: 'prefer_individual',
   prefer_fewer_days: 'prefer_fewer_days',
   prefer_less_frequent: 'prefer_less_frequent',
+  prefer_no_quizzes: 'prefer_no_quizzes',
+  prefer_no_attendance: 'prefer_no_attendance',
 } as const;
 
 export interface Constraint {

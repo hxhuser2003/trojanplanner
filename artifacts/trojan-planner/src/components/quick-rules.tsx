@@ -16,10 +16,10 @@ type Weighting = 'projects' | 'exams' | 'none';
 interface Answers {
   hasBlock: boolean; blockDays: number[]; blockStart: number; blockEnd: number; blockLabel: string;
   freeDays: number[]; freeHard: boolean;
-  weighting: Weighting; solo: boolean; fewerDeadlines: boolean;
+  weighting: Weighting; solo: boolean; noQuizzes: boolean; noAttendance: boolean;
 }
 
-const INITIAL: Answers = { hasBlock: false, blockDays: [], blockStart: 840, blockEnd: 1080, blockLabel: 'Work', freeDays: [], freeHard: true, weighting: 'none', solo: false, fewerDeadlines: false };
+const INITIAL: Answers = { hasBlock: false, blockDays: [], blockStart: 840, blockEnd: 1080, blockLabel: 'Work', freeDays: [], freeHard: true, weighting: 'none', solo: false, noQuizzes: false, noAttendance: false };
 
 export function answersToRules(a: Answers): Constraint[] {
   const out: Constraint[] = [];
@@ -35,7 +35,8 @@ export function answersToRules(a: Answers): Constraint[] {
   if (a.weighting === 'projects') out.push(rule('prefer_projects', 'Prefer project-based assessment', false));
   if (a.weighting === 'exams') out.push(rule('prefer_exams', 'Prefer exam-based assessment', false));
   if (a.solo) out.push(rule('prefer_individual', 'Prefer individual projects', false));
-  if (a.fewerDeadlines) out.push(rule('prefer_less_frequent', 'Prefer fewer, larger deadlines', false));
+  if (a.noQuizzes) out.push(rule('prefer_no_quizzes', 'Avoid graded quizzes', false));
+  if (a.noAttendance) out.push(rule('prefer_no_attendance', 'Avoid graded attendance', false));
   return out;
 }
 
@@ -140,10 +141,17 @@ export function Onboarding({ open, onOpenChange, current, onApply }: {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Deadlines?</Label>
+              <Label>Graded quizzes?</Label>
               <div className="grid grid-cols-2 gap-2">
-                <Choice on={a.fewerDeadlines} onClick={() => set({ fewerDeadlines: true })} testid="onboard-deadlines-fewer">Fewer, bigger ones</Choice>
-                <Choice on={!a.fewerDeadlines} onClick={() => set({ fewerDeadlines: false })} testid="onboard-deadlines-any">No preference</Choice>
+                <Choice on={a.noQuizzes} onClick={() => set({ noQuizzes: true })} testid="onboard-quiz-avoid">Avoid quizzes</Choice>
+                <Choice on={!a.noQuizzes} onClick={() => set({ noQuizzes: false })} testid="onboard-quiz-ok">Quizzes are fine</Choice>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Graded attendance?</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <Choice on={a.noAttendance} onClick={() => set({ noAttendance: true })} testid="onboard-attendance-avoid">Avoid it</Choice>
+                <Choice on={!a.noAttendance} onClick={() => set({ noAttendance: false })} testid="onboard-attendance-ok">Fine either way</Choice>
               </div>
             </div>
             <p className="text-xs text-muted-foreground">Based on syllabus weights. Courses without a syllabus are never assumed to match.</p>

@@ -20,4 +20,6 @@ export const ConstraintKind = {
   prefer_individual: 'prefer_individual',
   prefer_fewer_days: 'prefer_fewer_days',
   prefer_less_frequent: 'prefer_less_frequent',
+  prefer_no_quizzes: 'prefer_no_quizzes',
+  prefer_no_attendance: 'prefer_no_attendance',
 } as const;

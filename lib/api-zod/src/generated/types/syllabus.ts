@@ -17,6 +17,10 @@ export interface Syllabus {
   projectPercent?: number | null;
   /** @nullable */
   otherPercent?: number | null;
+  /** @nullable */
+  quizPercent?: number | null;
+  /** @nullable */
+  attendancePercent?: number | null;
   projectMode: SyllabusProjectMode;
   cadence: string;
   attendance: string;

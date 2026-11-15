@@ -90,6 +90,8 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
   const individual = known.filter(([c]) => c.syllabus.projectMode === "individual").length;
   const projectHeavy = known.filter(([c]) => (c.syllabus.projectPercent ?? -1) >= 50).length;
   const examHeavy = known.filter(([c]) => (c.syllabus.examPercent ?? -1) >= 50).length;
+  const quizCourses = known.filter(([c]) => (c.syllabus.quizPercent ?? 0) > 0).length;
+  const attendanceCourses = known.filter(([c]) => (c.syllabus.attendancePercent ?? 0) > 0).length;
   const days = new Set(meetings.map(m => m.day)).size;
   const earliest = meetings.length ? Math.min(...meetings.map(m => m.start)) : 0;
   return {
@@ -102,10 +104,11 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     units: selected.reduce((sum, [c]) => sum + c.units, 0), campusDays: days,
     classHours: Math.round(meetings.reduce((sum, m) => sum + m.end - m.start, 0) / 6) / 10,
     gapMinutes, earliestStart: earliest, score: raw.score,
+    projectHeavy, examHeavy, individual, quizCourses, attendanceCourses,
     checks: ["No overlapping meetings in the loaded data", "All enabled hard constraints respected", "Unit bounds and selected illustrative requirements checked", "Linked meetings and known prerequisites checked"],
     warnings: ["Synthetic data only—not an official degree audit.", "Seat availability, restrictions, real prerequisites, and current USC degree eligibility remain unverified.",
       ...(known.length < selected.length ? ["Some syllabi are missing; absence of evidence does not mean fewer exams or projects."] : [])],
-    assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses. Evidence coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
+    assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses; ${quizCourses} with graded quizzes; ${attendanceCourses} with graded attendance. Evidence coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
   };
 }
 let activeSolves = 0;
@@ -138,31 +141,29 @@ const clock = (min: number) => {
   const h = Math.floor(min / 60), m = min % 60;
   return `${h % 12 === 0 ? 12 : h % 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h >= 12 ? "pm" : "am"}`;
 };
-/** Names an alternative by what differs from the best schedule, e.g. "With CSCI 202 instead of CSCI 201 · Starts 1pm". */
-function alternativeTitle(best: Summary, alt: Summary): string {
+/** Names an alternative by its single biggest advantage over the best schedule, e.g. "Only 2 campus days" or "No quizzes". */
+function alternativeTitle(best: Summary, alt: Summary, used: Set<string>): string {
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  // Each candidate is [rough size of the win, label]. Sizes put different units on one scale.
+  const wins: [number, string][] = [];
+  if (alt.campusDays < best.campusDays) wins.push([(best.campusDays - alt.campusDays) * 30, `Only ${plural(alt.campusDays, "campus day")}`]);
+  if (alt.earliestStart > best.earliestStart) wins.push([(alt.earliestStart - best.earliestStart) / 3, `No class before ${clock(alt.earliestStart)}`]);
+  if (alt.quizCourses < best.quizCourses) wins.push([(best.quizCourses - alt.quizCourses) * 18, alt.quizCourses ? "Fewer quizzes" : "No quizzes"]);
+  if (alt.attendanceCourses < best.attendanceCourses) wins.push([(best.attendanceCourses - alt.attendanceCourses) * 18, alt.attendanceCourses ? "Less graded attendance" : "No graded attendance"]);
+  if (alt.gapMinutes < best.gapMinutes) wins.push([(best.gapMinutes - alt.gapMinutes) / 6, alt.gapMinutes ? "Fewer gaps between classes" : "Back-to-back classes, no gaps"]);
+  if (alt.classHours < best.classHours) wins.push([(best.classHours - alt.classHours) * 8, "Less time in class"]);
+  if (alt.projectHeavy > best.projectHeavy) wins.push([(alt.projectHeavy - best.projectHeavy) * 15, "More project-based"]);
+  if (alt.examHeavy > best.examHeavy) wins.push([(alt.examHeavy - best.examHeavy) * 15, "More exam-based"]);
+  if (alt.individual > best.individual) wins.push([(alt.individual - best.individual) * 15, "More solo projects"]);
+  if (alt.units < best.units) wins.push([10, `Lighter load · ${alt.units} units`]);
+  if (alt.units > best.units) wins.push([10, `More progress · ${alt.units} units`]);
+  const pick = wins.sort((a, b) => b[0] - a[0]).find(([, label]) => !used.has(label));
+  if (pick) return pick[1];
+  // No measurable win: say what changed instead.
   const code = (id: string) => catalog.courses.find(c => c.id === id)?.code ?? id;
   const bestIds = new Set(best.selections.map(s => s.courseId));
-  const altIds = new Set(alt.selections.map(s => s.courseId));
   const added = alt.selections.filter(s => !bestIds.has(s.courseId)).map(s => code(s.courseId));
-  const dropped = best.selections.filter(s => !altIds.has(s.courseId)).map(s => code(s.courseId));
-  const parts: string[] = [];
-  if (added.length === 1 && dropped.length === 1) parts.push(`With ${added[0]} instead of ${dropped[0]}`);
-  else if (added.length) parts.push(`With ${added.join(" + ")}`);
-  else if (dropped.length) parts.push(`Without ${dropped.join(" + ")}`);
-  else {
-    // Same courses, different sections: name each course whose section changed (at most two).
-    const moved = alt.selections.filter(s => best.selections.find(b => b.courseId === s.courseId)?.sectionId !== s.sectionId).flatMap(s => {
-      const section = catalog.courses.find(c => c.id === s.courseId)?.sections.find(x => x.id === s.sectionId);
-      return section ? [`${code(s.courseId)} on ${[...new Set(section.meetings.map(m => m.day))].sort().map(d => DAY_NAMES[d]).join("/")}`] : [];
-    });
-    if (moved.length) parts.push(moved.slice(0, 2).join(", "));
-  }
-  // Add the clearest advantage over the best option, if any.
-  if (alt.campusDays < best.campusDays) parts.push(`${alt.campusDays} campus days`);
-  else if (alt.earliestStart > best.earliestStart) parts.push(`Starts ${clock(alt.earliestStart)}`);
-  else if (alt.gapMinutes < best.gapMinutes) parts.push("Fewer gaps");
-  else if (alt.units !== best.units) parts.push(`${alt.units} units`);
-  return parts.slice(0, 2).join(" · ") || alt.title;
+  return added.length ? `Try ${added.join(" + ")}` : "Same courses, other sections";
 }
 
 export async function solve(input: PlannerInput) {
@@ -173,7 +174,7 @@ export async function solve(input: PlannerInput) {
     const schedules = result.solutions.map((s, i) => summarize(s, input, i));
     const seen = new Set<string>();
     for (const [i, s] of schedules.entries()) {
-      if (i > 0) s.title = alternativeTitle(schedules[0]!, s);
+      if (i > 0) s.title = alternativeTitle(schedules[0]!, s, seen);
       while (seen.has(s.title)) s.title = `${s.title} (${i + 1})`;
       seen.add(s.title);
     }
