@@ -173,7 +173,7 @@ const clock = (min: number) => {
   const h = Math.floor(min / 60), m = min % 60;
   return `${h % 12 === 0 ? 12 : h % 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h >= 12 ? "pm" : "am"}`;
 };
-/** Names an alternative by its single biggest advantage over the best schedule, e.g. "Only 2 campus days" or "No quizzes". */
+/** Names an alternative by its single biggest advantage over the best schedule, e.g. "Only 2 class days" or "No quizzes". */
 type GradeKind = Course["syllabus"]["grading"][number]["kind"];
 const ASSESSMENT_LABELS: [{ has: GradeKind[]; maybe: GradeKind[] }, number, string, string][] = [
   [{ has: ["quiz"], maybe: [] }, 18, "No graded quizzes", "Fewer graded quizzes"],
@@ -196,7 +196,7 @@ function alternativeTitle(best: Summary, alt: Summary, used: Set<string>): strin
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
   // Each candidate is [rough size of the win, label]. Sizes put different units on one scale.
   const wins: [number, string][] = [];
-  if (alt.campusDays < best.campusDays) wins.push([(best.campusDays - alt.campusDays) * 30, `Only ${plural(alt.campusDays, "campus day")}`]);
+  if (alt.campusDays < best.campusDays) wins.push([(best.campusDays - alt.campusDays) * 30, `Only ${plural(alt.campusDays, "class day")}`]);
   if (alt.earliestStart > best.earliestStart) wins.push([(alt.earliestStart - best.earliestStart) / 3, `No class before ${clock(alt.earliestStart)}`]);
   // Assessment labels are promises, so they come from every course's grading table and are only used when
   // certainly true: an unlabeled "Exam 1" might be a midterm, and a course with no table might have anything.

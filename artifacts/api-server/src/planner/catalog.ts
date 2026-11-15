@@ -36,7 +36,7 @@ export const catalog = CatalogSchema.parse({
       id: course.id, code: course.code, title: course.title, units: course.units,
       requirement, description: course.description, prerequisiteGroups: course.prerequisiteGroups,
       sections: course.sections.map((section) => ({
-        id: section.id, componentIds: section.componentIds, instructor: section.instructor,
+        id: section.id, deliveryMode: section.deliveryMode, componentIds: section.componentIds, instructor: section.instructor,
         meetings: section.meetings.map(examSlot), unknownScheduleComponents: section.unknownScheduleComponents.map((u) => u.replace(/^Quiz\b/, "Exam")),
         eligibility: section.eligibility, syllabusUrl: section.syllabusUrl,
       })),

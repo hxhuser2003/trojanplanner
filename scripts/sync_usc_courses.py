@@ -7,6 +7,7 @@ The checked-in snapshot keeps the planner usable without a live USC request.
 import itertools
 import json
 from datetime import datetime, timezone
+from functools import cache
 from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -28,6 +29,20 @@ def fetch_course(code):
     if data.get("scheduledCourseCode", {}).get("courseHyphen") != code or str(data.get("termCode")) != TERM:
         raise ValueError(f"Unexpected course response for {code}")
     return data
+
+
+@cache
+def delivery_mode(session_id):
+    url = "https://classes.usc.edu/api/Pe/SessionByRnrSessionId?" + urlencode({"rnrSessionId": session_id})
+    with urlopen(Request(url, headers={"User-Agent": "TrojanPlanner course snapshot (academic demo)"}), timeout=20) as response:
+        session = json.load(response)
+    description = session.get("description", "")
+    campus = session.get("uscCampusCode")
+    if "DEN" in description and campus == "VIR-1":
+        return "den"
+    if "DEN" not in description and campus == "UPC-1":
+        return "on_campus"
+    raise ValueError(f"Unrecognized USC delivery session {session_id}: {description} ({campus})")
 
 
 def meetings(section):
@@ -92,7 +107,8 @@ def bundles(data):
                 eligibility += "; D-clearance required"
             if unknown:
                 eligibility += "; some meeting times are TBA"
-            rows.append({"id": "+".join(component_ids), "componentIds": component_ids,
+            rows.append({"id": "+".join(component_ids), "deliveryMode": delivery_mode(lecture["rnrSessionId"]),
+                         "componentIds": component_ids,
                          "instructor": ", ".join(instructors) or "Not listed", "meetings": all_meetings,
                          "unknownScheduleComponents": unknown, "eligibility": eligibility,
                          "syllabusUrl": lecture.get("syllabus") or ""})

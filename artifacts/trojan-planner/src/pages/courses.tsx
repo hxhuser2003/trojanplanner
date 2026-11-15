@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CatalogGate } from '@/components/gate';
 import { PageHeader } from '@/components/shell';
+import { SectionDelivery } from '@/components/section-delivery';
 import { usePlanner } from '@/lib/planner-store';
 import { sectionParts } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -192,10 +193,11 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
       <h3 className="text-base font-semibold mt-6 mb-2">Registration combinations</h3>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
-          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Meets</th><th className="p-2.5">Instructor</th></tr></thead>
+          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Section</th><th className="p-2.5">Meets</th><th className="p-2.5">Instructor</th></tr></thead>
           <tbody>
             {course.sections.map((sec) => (
               <tr key={sec.id} className="border-t" data-testid={`row-section-${sec.id}`}>
+                <td className="p-2.5 align-top"><div className="flex flex-col items-start gap-1"><SectionDelivery section={sec} /><span className="font-mono text-xs text-muted-foreground">{sec.componentIds.join(' + ')}</span></div></td>
                 <td className="p-2.5 text-xs">
                   {sectionParts(sec).map((part) => (
                     <div key={part.id} className="flex gap-2"><span className="w-20 shrink-0 text-muted-foreground">{part.kind}</span>

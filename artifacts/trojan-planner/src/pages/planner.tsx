@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { CatalogGate } from '@/components/gate';
 import { WeekCalendar } from '@/components/week-calendar';
+import { SectionDelivery } from '@/components/section-delivery';
 import { ConstraintEditor } from '@/components/constraint-editor';
 import { Copilot, type RuleEdits } from '@/components/copilot';
 import { ExplainButton } from '@/components/explain';
@@ -137,7 +138,7 @@ function Planner({ catalog }: { catalog: Catalog }) {
             <dl className="grid w-full grid-cols-2 sm:grid-cols-5 gap-x-4 gap-y-2 px-1" data-testid="stats-schedule">
               {[
                 ['Units', sched.units],
-                ['Campus days', sched.campusDays],
+                ['Class days', sched.campusDays],
                 ['Class time / week', fmtHours(sched.classHours)],
                 ['First class', fmtTime(sched.earliestStart)],
                 ['Latest scheduled end', latestEndTime(catalog, sched) === null ? '—' : fmtTime(latestEndTime(catalog, sched)!)],
@@ -177,10 +178,11 @@ function Planner({ catalog }: { catalog: Catalog }) {
                     <ul className="space-y-2">
                       {sched.selections.map((s) => {
                         const c = catalog.courses.find((x) => x.id === s.courseId);
+                        const section = c?.sections.find((x) => x.id === s.sectionId);
                         return (
                           <li key={s.sectionId} className="flex gap-2 text-sm" data-testid={`text-selection-${s.courseId}`}>
                             <span className="mt-1.5 size-2 rounded-full shrink-0" style={{ background: c?.color }} />
-                            <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId}</Link> <span className="text-muted-foreground">{s.reason}</span></span>
+                            <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId}</Link> {section && <SectionDelivery section={section} />} <span className="text-muted-foreground">{s.reason}</span></span>
                           </li>
                         );
                       })}
@@ -241,8 +243,14 @@ function Conflicts({ result, catalog, input, solvedInput, onApprove, solving, st
                 <p className="font-semibold">{r.title}</p>
                 <p className="text-xs text-muted-foreground mt-1 flex-1">{r.explanation}</p>
                 {removed.length > 0 && <p className="text-xs mt-2"><span className="font-semibold">Changes:</span> {removed.join(', ')}</p>}
-                <div className="mt-2 text-xs font-mono text-muted-foreground">
-                  Preview: {r.preview.selections.map((s) => catalog.courses.find((c) => c.id === s.courseId)?.code ?? s.courseId).join(' + ')} · {r.preview.units}u · {r.preview.campusDays} days
+                <div className="mt-2 text-xs text-muted-foreground">
+                  <span>Preview: </span>
+                  {r.preview.selections.map((selection, index) => {
+                    const course = catalog.courses.find((item) => item.id === selection.courseId);
+                    const section = course?.sections.find((item) => item.id === selection.sectionId);
+                    return <span key={selection.sectionId} className="inline-flex items-center gap-1 mr-1">{index > 0 && <span>+</span>}<span className="font-mono">{course?.code ?? selection.courseId}</span>{section && <SectionDelivery section={section} />}</span>;
+                  })}
+                  <span>· {r.preview.units}u · {r.preview.campusDays} class days</span>
                 </div>
                 <Button size="sm" className="mt-3" disabled={solving || stale} onClick={() => onApprove(r)} data-testid={`button-approve-repair-${r.id}`}>Approve this repair</Button>
               </div>

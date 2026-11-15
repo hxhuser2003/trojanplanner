@@ -51,7 +51,8 @@ export function meetingText(section: Section) {
     const key = `${fmt(m.start)}–${fmt(m.end)}${m.kind === "Lecture" ? "" : ` (${m.kind})`}`;
     groups.set(key, [...(groups.get(key) ?? []), m.day]);
   }
-  return [...groups].map(([time, days]) => `${days.sort().map(d => DAY[d]).join("/")} ${time}`).join("; ");
+  const when = [...groups].map(([time, days]) => `${days.sort().map(d => DAY[d]).join("/")} ${time}`).join("; ") || "time TBA";
+  return `${when} (${section.deliveryMode === "den" ? "DEN@Viterbi" : "on campus"})`;
 }
 
 const enabled = (input: PlannerInput) => input.constraints.filter(c => c.enabled);
@@ -170,7 +171,7 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
     const altSoft = breaks(alt, softTime(input));
     if (altSoft.length > chosenSoft) diffs.push(`it breaks ${list(altSoft.map(l => `“${l}”`))}`);
     const altDays = daysOf([...others, alt]).size;
-    if (altDays > chosenDays) diffs.push(`it needs ${altDays} campus days instead of ${chosenDays}`);
+    if (altDays > chosenDays) diffs.push(`it needs ${altDays} class days instead of ${chosenDays}`);
     facts.push(diffs.length
       ? `The section meeting ${meetingText(alt)} also fits your hard rules, but ${list(diffs)}.`
       : `The section meeting ${meetingText(alt)} also fits your hard rules and scores about the same; it is a valid swap.`);
@@ -236,7 +237,7 @@ export function explainCompare(input: PlannerInput, refsA: Ref[], refsB: Ref[]):
   const ma = metrics(a, input), mb = metrics(b, input);
   const cmp = (label: string, x: string, y: string) => { if (x !== y) facts.push(`${label}: ${x} here vs ${y} in the other option.`); };
   cmp("Units", String(ma.units), String(mb.units));
-  cmp("Campus days", `${ma.days.length} (${ma.days.map(d => DAY[d]).join("/")})`, `${mb.days.length} (${mb.days.map(d => DAY[d]).join("/")})`);
+  cmp("Class days", `${ma.days.length} (${ma.days.map(d => DAY[d]).join("/")})`, `${mb.days.length} (${mb.days.map(d => DAY[d]).join("/")})`);
   cmp("Class time per week", hoursText(ma.hours), hoursText(mb.hours));
   cmp("First class", fmt(ma.earliest), fmt(mb.earliest));
   cmp("Time between classes", `${ma.gaps} min`, `${mb.gaps} min`);

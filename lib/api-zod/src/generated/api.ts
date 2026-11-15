@@ -69,6 +69,7 @@ export const GetCatalogResponse = zod.object({
   "prerequisiteGroups": zod.array(zod.array(zod.string())),
   "sections": zod.array(zod.object({
   "id": zod.string(),
+  "deliveryMode": zod.enum(['on_campus', 'den']),
   "componentIds": zod.array(zod.string()),
   "instructor": zod.string(),
   "eligibility": zod.string(),

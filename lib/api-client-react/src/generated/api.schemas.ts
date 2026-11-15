@@ -109,6 +109,7 @@ export interface Syllabus {
 
 export interface Section {
   id: string;
+  deliveryMode: SectionDeliveryMode;
   componentIds: string[];
   instructor: string;
   eligibility: string;
@@ -116,6 +117,13 @@ export interface Section {
   unknownScheduleComponents: string[];
   meetings: Meeting[];
 }
+
+export type SectionDeliveryMode = typeof SectionDeliveryMode[keyof typeof SectionDeliveryMode];
+
+export const SectionDeliveryMode = {
+  on_campus: 'on_campus',
+  den: 'den',
+} as const;
 
 export interface Course {
   id: string;

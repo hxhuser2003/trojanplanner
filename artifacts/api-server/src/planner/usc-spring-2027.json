@@ -18,6 +18,7 @@
       "sections": [
         {
           "id": "30393+30396",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30393",
             "30396"
@@ -56,6 +57,7 @@
       "sections": [
         {
           "id": "30320+30031",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30320",
             "30031"
@@ -78,6 +80,7 @@
         },
         {
           "id": "30321+30032",
+          "deliveryMode": "den",
           "componentIds": [
             "30321",
             "30032"
@@ -111,6 +114,7 @@
       "sections": [
         {
           "id": "30063",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30063"
           ],
@@ -137,6 +141,7 @@
         },
         {
           "id": "30105",
+          "deliveryMode": "den",
           "componentIds": [
             "30105"
           ],
@@ -174,6 +179,7 @@
       "sections": [
         {
           "id": "30323+30064",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30323",
             "30064"
@@ -201,6 +207,7 @@
         },
         {
           "id": "30323+30080",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30323",
             "30080"
@@ -239,6 +246,7 @@
       "sections": [
         {
           "id": "30132",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30132"
           ],
@@ -285,6 +293,7 @@
       "sections": [
         {
           "id": "30053",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30053"
           ],
@@ -322,6 +331,7 @@
       "sections": [
         {
           "id": "30071+30070+30034",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30071",
             "30070",
@@ -352,6 +362,7 @@
         },
         {
           "id": "29936+30030+30035",
+          "deliveryMode": "den",
           "componentIds": [
             "29936",
             "30030",
@@ -393,6 +404,7 @@
       "sections": [
         {
           "id": "30387",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30387"
           ],
@@ -412,6 +424,7 @@
         },
         {
           "id": "30366",
+          "deliveryMode": "den",
           "componentIds": [
             "30366"
           ],
@@ -442,6 +455,7 @@
       "sections": [
         {
           "id": "30079+30081+30265",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30079",
             "30081",
@@ -472,6 +486,7 @@
         },
         {
           "id": "30213+30264+30266",
+          "deliveryMode": "den",
           "componentIds": [
             "30213",
             "30264",
@@ -513,6 +528,7 @@
       "sections": [
         {
           "id": "30395+30089+30227",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30395",
             "30089",
@@ -548,6 +564,7 @@
         },
         {
           "id": "30198+30290+30291",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30198",
             "30290",
@@ -583,6 +600,7 @@
         },
         {
           "id": "30099+29952+29953",
+          "deliveryMode": "den",
           "componentIds": [
             "30099",
             "29952",
@@ -629,6 +647,7 @@
       "sections": [
         {
           "id": "30378",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30378"
           ],
@@ -655,6 +674,7 @@
         },
         {
           "id": "30016",
+          "deliveryMode": "den",
           "componentIds": [
             "30016"
           ],
@@ -692,6 +712,7 @@
       "sections": [
         {
           "id": "30370",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30370"
           ],
@@ -711,6 +732,7 @@
         },
         {
           "id": "30210",
+          "deliveryMode": "den",
           "componentIds": [
             "30210"
           ],
@@ -741,6 +763,7 @@
       "sections": [
         {
           "id": "30390+29998",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30390",
             "29998"
@@ -781,6 +804,7 @@
       "sections": [
         {
           "id": "30150+30288+30371",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30150",
             "30288",
@@ -816,6 +840,7 @@
         },
         {
           "id": "30149+30146+30157",
+          "deliveryMode": "den",
           "componentIds": [
             "30149",
             "30146",
@@ -862,6 +887,7 @@
       "sections": [
         {
           "id": "30306",
+          "deliveryMode": "on_campus",
           "componentIds": [
             "30306"
           ],

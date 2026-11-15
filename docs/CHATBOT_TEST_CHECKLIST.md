@@ -50,7 +50,7 @@ The chatbot never changes your rules by itself. Rule changes appear as a proposa
 ### Switching between plan options
 - [ ] `switch to the second option` / `show option 3` → switches the calendar to that option.
 - [ ] `go with No midterms` (an option's name) → switches to it.
-- [ ] `show me the one with the fewest campus days` → picks the best option for that number, or says you're already on it.
+- [ ] `show me the one with the fewest class days` → picks the best option for that number, or says you're already on it.
 - [ ] `use the first one` while already on it → "You're already viewing …".
 
 ## B. Catalog lookup (shown when AI is unavailable)
@@ -73,7 +73,7 @@ The chatbot never changes your rules by itself. Rule changes appear as a proposa
 
 ## D. Things that should never happen
 - [ ] The chatbot changes a rule without you pressing Apply.
-- [ ] A reply shows section-number strings like `29936+30030+30035` (these appear only on the Checklist page, where you register with them).
+- [ ] A reply shows section-number strings like `29936+30030+30035` (registration numbers belong in Courses and Checklist, not chat answers).
 - [ ] A reply states a grading fact that is not in the course's grading table.
 - [ ] A chat error leaves your rules or plan different from before.
 

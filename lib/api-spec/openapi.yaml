@@ -149,9 +149,10 @@ components:
           items: { $ref: "#/components/schemas/Evidence" }
     Section:
       type: object
-      required: [id, componentIds, instructor, meetings, unknownScheduleComponents, eligibility, syllabusUrl]
+      required: [id, deliveryMode, componentIds, instructor, meetings, unknownScheduleComponents, eligibility, syllabusUrl]
       properties:
         id: { type: string }
+        deliveryMode: { type: string, enum: [on_campus, den] }
         componentIds:
           type: array
           items: { type: string }

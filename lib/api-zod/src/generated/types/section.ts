@@ -5,9 +5,11 @@
  * OpenAPI spec version: 0.2.0
  */
 import type { Meeting } from './meeting';
+import type { SectionDeliveryMode } from './sectionDeliveryMode';
 
 export interface Section {
   id: string;
+  deliveryMode: SectionDeliveryMode;
   componentIds: string[];
   instructor: string;
   eligibility: string;

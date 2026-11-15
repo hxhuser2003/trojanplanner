@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import type { Catalog, PlannerInput, Schedule } from '@workspace/api-client-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ExplainButton } from '@/components/explain';
+import { SectionDelivery } from '@/components/section-delivery';
 import { fmtHours, fmtTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -12,18 +13,21 @@ const refs = (s: Schedule) => s.selections.map((x) => ({ courseId: x.courseId, s
 function OptionCards({ catalog, columns }: { catalog: Catalog; columns: { title: string; schedule: Schedule }[] }) {
   const rows: [string, (s: Schedule) => string][] = [
     ['Units', (s) => String(s.units)],
-    ['Campus days', (s) => String(s.campusDays)],
+    ['Class days', (s) => String(s.campusDays)],
     ['Class time / week', (s) => fmtHours(s.classHours)],
     ['First class', (s) => fmtTime(s.earliestStart)],
     ['Gaps', (s) => `${s.gapMinutes} min`],
   ];
-  const courseCodes = (s: Schedule) => s.selections.map((x) => catalog.courses.find((c) => c.id === x.courseId)?.code ?? x.courseId);
+  const courses = (s: Schedule) => s.selections.map((x) => {
+    const course = catalog.courses.find((c) => c.id === x.courseId);
+    return { code: course?.code ?? x.courseId, section: course?.sections.find((section) => section.id === x.sectionId), sectionId: x.sectionId };
+  });
   const shown = columns[0].schedule;
   return (
     <div className="space-y-3" data-testid="compare-options">
       {columns.map(({ title, schedule }, index) => {
-        const codes = courseCodes(schedule);
-        const coursesDiffer = index > 0 && codes.join(', ') !== courseCodes(shown).join(', ');
+        const selected = courses(schedule);
+        const coursesDiffer = index > 0 && selected.map((item) => `${item.code}:${item.sectionId}`).join(',') !== courses(shown).map((item) => `${item.code}:${item.sectionId}`).join(',');
         return (
           <div key={schedule.id} className="rounded-md border bg-background p-3">
             <div className="flex items-start justify-between gap-2">
@@ -33,8 +37,8 @@ function OptionCards({ catalog, columns }: { catalog: Catalog; columns: { title:
             <dl className="mt-2 divide-y text-sm">
               <div className="grid grid-cols-2 gap-3 py-1.5">
                 <dt className="text-muted-foreground">Courses</dt>
-                <dd className={cn('min-w-0 text-right text-xs', coursesDiffer && 'font-semibold text-primary')}>
-                  {codes.map((code, i) => <span key={`${code}-${i}`} className="inline-block whitespace-nowrap ml-1">{code}{i < codes.length - 1 ? ',' : ''}</span>)}
+                <dd className={cn('min-w-0 space-y-1 text-right text-xs', coursesDiffer && 'font-semibold text-primary')}>
+                  {selected.map(({ code, section, sectionId }) => <div key={`${code}-${sectionId}`} className="flex flex-wrap items-center justify-end gap-1"><span>{code}</span>{section && <SectionDelivery section={section} />}</div>)}
                 </dd>
               </div>
               {rows.map(([label, value]) => {

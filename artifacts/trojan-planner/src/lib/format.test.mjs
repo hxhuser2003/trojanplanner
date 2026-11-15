@@ -57,7 +57,7 @@ test("an absent previous plan starts numeric stats at zero and times at no class
   const diff = diffSchedules(null, schedule("lecture-discussion-quiz", { units: 8, campusDays: 2, classHours: 6.5, earliestStart: 1020 }), catalog);
   assert.deepEqual(diff.stats, [
     { label: "Units", before: "0 units", after: "8 units" },
-    { label: "Campus days", before: "0 days", after: "2 days" },
+    { label: "Class days", before: "0 days", after: "2 days" },
     { label: "Class hours", before: "0 hours", after: "6.5 hours" },
     { label: "First class", before: "No classes", after: "5:00pm" },
     { label: "Latest scheduled end", before: "No classes", after: "9:20pm" },
@@ -69,7 +69,7 @@ test("schedule stat changes include units, days, class hours, and latest end lab
   const after = schedule("new-section", { units: 12, campusDays: 5, classHours: 12, earliestStart: 630 });
   const diff = diffSchedules(before, after, catalog);
 
-  assert.deepEqual(diff.stats.map((item) => item.label), ["Units", "Campus days", "Class hours", "First class", "Latest scheduled end"]);
+  assert.deepEqual(diff.stats.map((item) => item.label), ["Units", "Class days", "Class hours", "First class", "Latest scheduled end"]);
   assert.deepEqual(diff.stats.slice(0, 3).map(({ before, after }) => [before, after]), [
     ["11 units", "12 units"],
     ["3 days", "5 days"],

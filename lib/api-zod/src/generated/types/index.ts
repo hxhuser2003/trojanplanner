@@ -32,6 +32,7 @@ export * from './requirement';
 export * from './schedule';
 export * from './scheduleOption';
 export * from './section';
+export * from './sectionDeliveryMode';
 export * from './sectionRef';
 export * from './selection';
 export * from './solveResult';

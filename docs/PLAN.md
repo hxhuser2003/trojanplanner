@@ -75,7 +75,7 @@ Example request: “Protect my work hours and prefer individual projects over ex
 
 Return one valid schedule first. Offer a second or third only when genuinely distinct. Changing objective weights alone does not ensure diversity: add exclusion constraints and, where useful, a minimum difference in selected courses/sections or meaningful schedule attributes.
 
-Label alternatives by observed benefits: “Fewest campus days,” “Later mornings,” or “Better match for assessment preferences.” Report units, requirement coverage, campus days, earliest/latest meetings, scheduled class hours, gaps, and preference matches. Scheduled class hours are not estimated study hours.
+Label alternatives by observed benefits: “Fewest class days,” “Later mornings,” or “Better match for assessment preferences.” Report units, requirement coverage, class days, earliest/latest meetings, scheduled class hours, gaps, and preference matches. Scheduled class hours are not estimated study hours.
 
 If only one feasible option is established, show one. Do not claim uniqueness unless the search proves it; if search was limited, say no further alternatives were found within the search budget.
 

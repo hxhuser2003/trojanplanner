@@ -181,7 +181,7 @@ export function excludeIntent(message: string, current: PlannerInput): Reply | n
 }
 
 const METRICS: { pattern: RegExp; pick: (o: Option) => number; best: "min" | "max"; describe: (o: Option) => string }[] = [
-  { pattern: /\b(fewe(r|st)|less|least|min(imum)?) (campus )?days\b|\bcompress/i, pick: o => o.campusDays, best: "min", describe: o => `${o.campusDays} campus days` },
+  { pattern: /\b(fewe(r|st)|less|least|min(imum)?) (class )?days\b|\bcompress/i, pick: o => o.campusDays, best: "min", describe: o => `${o.campusDays} class days` },
   { pattern: /\b(later|latest) (start|morning)|\bstarts? later\b|\bsleep in\b|\bno early\b/i, pick: o => o.earliestStart, best: "max", describe: o => `first class at ${fmt(o.earliestStart)}` },
   { pattern: /\b(fewe(r|st)|less|least|no|smallest) gaps?\b|\bcompact\b/i, pick: o => o.gapMinutes, best: "min", describe: o => `${o.gapMinutes} min of gaps` },
   { pattern: /\b(fewe(r|st)|less|least) (class )?(hours|time in class)\b/i, pick: o => o.classHours, best: "min", describe: o => `${hoursText(o.classHours)} in class per week` },
@@ -198,7 +198,7 @@ export function selectIntent(message: string, options: Option[], chosenId: strin
   if (named) {
     if (named.id === (chosenId ?? options[0]!.id)) return { kind: "answer", message: `You're already viewing "${named.title}".` };
     return { kind: "select", selectScheduleId: named.id,
-      message: `Switched to "${named.title}": ${named.units} units, ${named.campusDays} campus days, first class ${fmt(named.earliestStart)}.` };
+      message: `Switched to "${named.title}": ${named.units} units, ${named.campusDays} class days, first class ${fmt(named.earliestStart)}.` };
   }
   const metric = METRICS.find(m => m.pattern.test(message));
   if (!metric) return null;
@@ -211,6 +211,6 @@ export function selectIntent(message: string, options: Option[], chosenId: strin
   }
   return {
     kind: "select", selectScheduleId: top.id,
-    message: `"${top.title}" has ${metric.describe(top)}, compared with ${metric.describe(chosen)} in the option you're viewing. Its other numbers: ${top.units} units, ${top.campusDays} campus days, first class ${fmt(top.earliestStart)}.`,
+    message: `"${top.title}" has ${metric.describe(top)}, compared with ${metric.describe(chosen)} in the option you're viewing. Its other numbers: ${top.units} units, ${top.campusDays} class days, first class ${fmt(top.earliestStart)}.`,
   };
 }

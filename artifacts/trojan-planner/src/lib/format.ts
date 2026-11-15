@@ -79,7 +79,7 @@ export const KIND_META: Record<ConstraintKind, { label: string; hint: string; us
   prefer_projects: { label: 'Prefer project-weighted', hint: 'Favor syllabi with project weight at or above 50%', uses: [] },
   prefer_exams: { label: 'Prefer exam-weighted', hint: 'Favor syllabi with exam weight at or above 50%', uses: [] },
   prefer_individual: { label: 'Prefer individual work', hint: 'Favor individually graded projects', uses: [] },
-  prefer_fewer_days: { label: 'Fewer campus days', hint: 'Compress the week', uses: [] },
+  prefer_fewer_days: { label: 'Fewer class days', hint: 'Compress the week', uses: [] },
   prefer_less_frequent: { label: 'Less frequent meetings', hint: 'Favor 2x/week over 3x/week', uses: [] },
   prefer_no_quizzes: { label: 'Avoid graded quizzes', hint: 'Favor courses without graded quizzes', uses: [] },
   prefer_no_attendance: { label: 'Avoid graded attendance', hint: 'Favor courses that do not grade attendance', uses: [] },
@@ -152,9 +152,13 @@ export function sectionParts(section: Section): SectionPart[] {
   });
 }
 
-/** A short, readable name for a section: when its lecture starts ("Tue/Thu 2:00pm"). */
+export function sectionDeliveryLabel(section: Section): string {
+  return section.deliveryMode === 'den' ? 'DEN@Viterbi' : 'On campus';
+}
+
+/** A short, readable name for a section, including its delivery mode. */
 export function sectionWhen(section: Section): string {
-  return sectionParts(section)[0]?.times[0]?.split('–')[0] ?? 'time TBA';
+  return `${sectionParts(section)[0]?.times[0]?.split('–')[0] ?? 'time TBA'} · ${sectionDeliveryLabel(section)}`;
 }
 
 export function courseCode(catalog: Catalog | undefined, id: string): string | undefined {
@@ -202,7 +206,7 @@ export interface ScheduleDiff {
 export function emptyScheduleStat(label: string): string {
   switch (label) {
     case 'Units': return '0 units';
-    case 'Campus days': return '0 days';
+    case 'Class days': return '0 days';
     case 'Class hours': return '0 hours';
     default: return 'No classes';
   }
@@ -218,7 +222,7 @@ export function diffSchedules(before: Schedule | null, after: Schedule | null, c
   const stat = (label: string, f: (s: Schedule) => string) => ({ label, before: before ? f(before) : emptyScheduleStat(label), after: after ? f(after) : emptyScheduleStat(label) });
   const stats = [
     stat('Units', (s) => `${s.units} units`),
-    stat('Campus days', (s) => `${s.campusDays} days`),
+    stat('Class days', (s) => `${s.campusDays} days`),
     stat('Class hours', (s) => `${s.classHours.toFixed(1)} hours`),
     stat('First class', (s) => (s.selections.length ? fmtTime(s.earliestStart) : 'No classes')),
     ...(catalog ? [stat('Latest scheduled end', (s) => {
