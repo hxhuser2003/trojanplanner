@@ -177,6 +177,7 @@ function Planner({ catalog }: { catalog: Catalog }) {
             {/* forceMount keeps the conversation when switching tabs */}
             <TabsContent value="copilot" forceMount className="mt-3 space-y-3 data-[state=inactive]:hidden">
               <Copilot catalog={catalog} input={input} onApply={applyEdits}
+                schedules={!infeasible && result ? result.schedules : []} chosenId={sched?.id ?? null} onSelect={p.chooseSchedule}
                 selections={sched && !infeasible ? sched.selections.map((x) => ({ courseId: x.courseId, sectionId: x.sectionId })) : []} />
               <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setSetupOpen(true)} data-testid="button-open-onboarding">Redo the 3 setup questions</button>
             </TabsContent>

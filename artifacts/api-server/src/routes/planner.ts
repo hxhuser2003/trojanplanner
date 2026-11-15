@@ -4,6 +4,7 @@ import { catalog } from "../planner/catalog";
 import { solve, validateInput } from "../planner/service";
 import { catalogLookup, chat, parsePreferences, rephrase } from "../planner/ai";
 import { explainCompare, explainConflict, explainSection } from "../planner/explain";
+import { lockIntent, progressIntent, selectIntent } from "../planner/intents";
 import { parseStarsText } from "../planner/stars";
 
 const router: IRouter = Router();
@@ -69,9 +70,16 @@ router.post("/planner/explain", async (req, res): Promise<void> => {
 router.post("/planner/chat", async (req, res): Promise<void> => {
   const parsed = ChatCopilotBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Enter a message of up to 2,000 characters with valid current rules." }); return; }
-  const { message, history, current, selections = [] } = parsed.data;
+  const { message, history, current, selections = [], scheduleOptions = [], chosenScheduleId } = parsed.data;
   const error = validateInput(current);
   if (error) { res.status(400).json({ error }); return; }
+  // Progress, lock, and option-switch requests are answered from data, with or without AI.
+  const direct = progressIntent(message, current, selections) ?? lockIntent(message, current, selections) ?? selectIntent(message, scheduleOptions, chosenScheduleId);
+  if (direct) {
+    res.json(ChatCopilotResponse.parse({ proposedConstraints: [], removeConstraintIds: [], updatedConstraints: [], options: [], citations: [], warnings: [],
+      ...direct, provider: "Computed from catalog and solver facts" }));
+    return;
+  }
   // "Why is CSCI 271 in my plan?" is answered from solver facts, not by the model.
   const named = /\bwhy\b/i.test(message) ? catalog.courses.find(c => new RegExp(`\\b${c.id.replace("-", "[- ]?")}\\b`, "i").test(message)) : undefined;
   const asked = named && selections.some(s => s.courseId === named.id) ? named : undefined;
@@ -90,7 +98,7 @@ router.post("/planner/chat", async (req, res): Promise<void> => {
       return;
     } catch { /* unknown selection: fall through to the model */ }
   }
-  try { res.json(ChatCopilotResponse.parse(await chat(message, history, current, selections))); }
+  try { res.json(ChatCopilotResponse.parse(await chat(message, history, current, selections, scheduleOptions, chosenScheduleId))); }
   catch (e) {
     const kind = e instanceof Error ? e.message : "";
     const fallback = catalogLookup(message);
@@ -98,7 +106,7 @@ router.post("/planner/chat", async (req, res): Promise<void> => {
     req.log.warn({ kind: kind.startsWith("INVALID_PROPOSAL") ? "invalid_proposal" : kind === "AI_UNCONFIGURED" ? "ai_unconfigured" : "chat_error" }, "Copilot chat unavailable");
     res.status(kind === "BUSY" ? 429 : 503).json({ error: kind === "BUSY" ? "The copilot is busy. Please retry in a moment."
       : kind.startsWith("INVALID_PROPOSAL") ? "The AI proposed rules that failed validation, so nothing changed. Try rephrasing with days and times."
-      : "The AI copilot is unavailable. Your rules have not changed. Use Quick rules or the Rules tab." });
+      : "The AI copilot is unavailable. Your rules have not changed. Edit them in the Rules tab." });
   }
 });
 router.post("/planner/stars", (req, res) => {

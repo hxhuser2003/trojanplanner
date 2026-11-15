@@ -489,6 +489,14 @@ export const chatCopilotBodySelectionsItemSectionIdMax = 40;
 
 export const chatCopilotBodySelectionsMax = 10;
 
+export const chatCopilotBodyScheduleOptionsItemIdMax = 40;
+
+export const chatCopilotBodyScheduleOptionsItemTitleMax = 200;
+
+export const chatCopilotBodyScheduleOptionsMax = 5;
+
+export const chatCopilotBodyChosenScheduleIdMax = 40;
+
 
 
 export const ChatCopilotBody = zod.object({
@@ -517,7 +525,17 @@ export const ChatCopilotBody = zod.object({
   "selections": zod.array(zod.object({
   "courseId": zod.string().max(chatCopilotBodySelectionsItemCourseIdMax),
   "sectionId": zod.string().max(chatCopilotBodySelectionsItemSectionIdMax)
-})).max(chatCopilotBodySelectionsMax).optional()
+})).max(chatCopilotBodySelectionsMax).optional(),
+  "scheduleOptions": zod.array(zod.object({
+  "id": zod.string().max(chatCopilotBodyScheduleOptionsItemIdMax),
+  "title": zod.string().max(chatCopilotBodyScheduleOptionsItemTitleMax),
+  "units": zod.number().int(),
+  "campusDays": zod.number().int(),
+  "classHours": zod.number(),
+  "earliestStart": zod.number().int(),
+  "gapMinutes": zod.number().int()
+})).max(chatCopilotBodyScheduleOptionsMax).optional(),
+  "chosenScheduleId": zod.string().max(chatCopilotBodyChosenScheduleIdMax).optional()
 })
 
 export const chatCopilotResponseProposedConstraintsItemIdMax = 80;
@@ -557,9 +575,10 @@ export const chatCopilotResponseUpdatedConstraintsItemEndMax = 1440;
 
 
 export const ChatCopilotResponse = zod.object({
-  "kind": zod.enum(['rules', 'clarify', 'answer']),
+  "kind": zod.enum(['rules', 'clarify', 'answer', 'select']),
   "message": zod.string(),
   "provider": zod.string(),
+  "selectScheduleId": zod.string().optional(),
   "proposedConstraints": zod.array(zod.object({
   "id": zod.string().min(1).max(chatCopilotResponseProposedConstraintsItemIdMax),
   "label": zod.string().max(chatCopilotResponseProposedConstraintsItemLabelMax),

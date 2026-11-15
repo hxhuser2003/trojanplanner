@@ -12,4 +12,5 @@ export const ChatResultKind = {
   rules: 'rules',
   clarify: 'clarify',
   answer: 'answer',
+  select: 'select',
 } as const;

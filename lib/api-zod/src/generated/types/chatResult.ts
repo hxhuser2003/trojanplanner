@@ -12,6 +12,7 @@ export interface ChatResult {
   kind: ChatResultKind;
   message: string;
   provider: string;
+  selectScheduleId?: string;
   proposedConstraints: Constraint[];
   removeConstraintIds: string[];
   updatedConstraints: Constraint[];

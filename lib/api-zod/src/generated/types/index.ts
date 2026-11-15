@@ -28,6 +28,7 @@ export * from './preferenceResult';
 export * from './repair';
 export * from './requirement';
 export * from './schedule';
+export * from './scheduleOption';
 export * from './section';
 export * from './sectionRef';
 export * from './selection';

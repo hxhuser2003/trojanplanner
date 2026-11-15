@@ -364,13 +364,30 @@ components:
           type: array
           maxItems: 10
           items: { $ref: "#/components/schemas/SectionRef" }
+        scheduleOptions:
+          type: array
+          maxItems: 5
+          items: { $ref: "#/components/schemas/ScheduleOption" }
+        chosenScheduleId: { type: string, maxLength: 40 }
+    ScheduleOption:
+      type: object
+      required: [id, title, units, campusDays, classHours, earliestStart, gapMinutes]
+      properties:
+        id: { type: string, maxLength: 40 }
+        title: { type: string, maxLength: 200 }
+        units: { type: integer }
+        campusDays: { type: integer }
+        classHours: { type: number }
+        earliestStart: { type: integer }
+        gapMinutes: { type: integer }
     ChatResult:
       type: object
       required: [kind, message, proposedConstraints, removeConstraintIds, updatedConstraints, options, citations, warnings, provider]
       properties:
-        kind: { type: string, enum: [rules, clarify, answer] }
+        kind: { type: string, enum: [rules, clarify, answer, select] }
         message: { type: string }
         provider: { type: string }
+        selectScheduleId: { type: string }
         proposedConstraints:
           type: array
           items: { $ref: "#/components/schemas/Constraint" }

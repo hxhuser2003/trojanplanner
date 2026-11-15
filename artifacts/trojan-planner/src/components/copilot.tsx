@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ArrowUp, Check, FileText, X } from 'lucide-react';
-import { useChatCopilot, type Catalog, type ChatResult, type ChatTurn, type Constraint, type PlannerInput, type SectionRef } from '@workspace/api-client-react';
+import { AlertTriangle, ArrowUp, ArrowRight, Check, FileText, X } from 'lucide-react';
+import { useChatCopilot, type Catalog, type ChatResult, type ChatTurn, type Constraint, type PlannerInput, type Schedule, type SectionRef } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,12 +22,15 @@ interface Props {
   catalog: Catalog;
   input: PlannerInput;
   selections: SectionRef[];
+  schedules: Schedule[];
+  chosenId: string | null;
   onApply: (edits: RuleEdits, resolve: boolean) => void;
+  onSelect: (scheduleId: string) => void;
 }
 
 let seq = 0;
 
-export function Copilot({ catalog, input, selections, onApply }: Props) {
+export function Copilot({ catalog, input, selections, schedules, chosenId, onApply, onSelect }: Props) {
   const chat = useChatCopilot();
   const [text, setText] = useState('');
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -46,7 +49,8 @@ export function Copilot({ catalog, input, selections, onApply }: Props) {
     setMsgs([...base, { id: ++seq, role: 'user', text: message }]);
     setText('');
     try {
-      const result = await chat.mutateAsync({ data: { message, history: past, current: input, selections } });
+      const scheduleOptions = schedules.slice(0, 5).map(({ id, title, units, campusDays, classHours, earliestStart, gapMinutes }) => ({ id, title, units, campusDays, classHours, earliestStart, gapMinutes }));
+      const result = await chat.mutateAsync({ data: { message, history: past, current: input, selections, scheduleOptions, chosenScheduleId: chosenId ?? undefined } });
       setMsgs((m) => [...m, { id: ++seq, role: 'assistant', result, status: 'open' }]);
     } catch (e) {
       setMsgs((m) => [...m, { id: ++seq, role: 'error', text: errMessage(e), retry: message }]);
@@ -70,6 +74,8 @@ export function Copilot({ catalog, input, selections, onApply }: Props) {
             </div>
           ) : (
             <Reply key={m.id} catalog={catalog} input={input} result={m.result} status={m.status}
+              available={!!m.result.selectScheduleId && schedules.some((s) => s.id === m.result.selectScheduleId)}
+              onSelect={() => { if (m.result.selectScheduleId) { onSelect(m.result.selectScheduleId); close(m.id, 'applied'); } }}
               onOption={(o) => void send(o)}
               onApply={(edits, resolve) => { onApply(edits, resolve); close(m.id, 'applied'); }}
               onDismiss={() => close(m.id, 'dismissed')} />
@@ -96,9 +102,9 @@ export function Copilot({ catalog, input, selections, onApply }: Props) {
   );
 }
 
-function Reply({ catalog, input, result, status, onOption, onApply, onDismiss }: {
+function Reply({ catalog, input, result, status, available, onSelect, onOption, onApply, onDismiss }: {
   catalog: Catalog; input: PlannerInput; result: ChatResult; status: 'open' | 'applied' | 'dismissed';
-  onOption: (o: string) => void; onApply: (e: RuleEdits, resolve: boolean) => void; onDismiss: () => void;
+  available: boolean; onSelect: () => void; onOption: (o: string) => void; onApply: (e: RuleEdits, resolve: boolean) => void; onDismiss: () => void;
 }) {
   type Item = { key: string; tag: 'Add' | 'Change' | 'Remove'; title: string; detail: string };
   const items: Item[] = [
@@ -135,6 +141,12 @@ function Reply({ catalog, input, result, status, onOption, onApply, onDismiss }:
           ))}
         </div>
       )}
+
+      {result.kind === 'select' && (status === 'open' ? (
+        available ? (
+          <Button size="sm" onClick={onSelect} data-testid="button-select-option"><ArrowRight className="size-3.5" />Switch to this option</Button>
+        ) : <p className="text-xs text-destructive">That option is no longer available. Update the plan and ask again.</p>
+      ) : <p className="text-xs text-muted-foreground">Switched.</p>)}
 
       {result.citations.length > 0 && (
         <ul className="space-y-1.5">

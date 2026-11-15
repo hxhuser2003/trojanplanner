@@ -309,6 +309,18 @@ export interface Citation {
   sourceUrl: string;
 }
 
+export interface ScheduleOption {
+  /** @maxLength 40 */
+  id: string;
+  /** @maxLength 200 */
+  title: string;
+  units: number;
+  campusDays: number;
+  classHours: number;
+  earliestStart: number;
+  gapMinutes: number;
+}
+
 export interface ChatInput {
   /**
      * @minLength 1
@@ -320,6 +332,10 @@ export interface ChatInput {
   current: PlannerInput;
   /** @maxItems 10 */
   selections?: SectionRef[];
+  /** @maxItems 5 */
+  scheduleOptions?: ScheduleOption[];
+  /** @maxLength 40 */
+  chosenScheduleId?: string;
 }
 
 export type ChatResultKind = typeof ChatResultKind[keyof typeof ChatResultKind];
@@ -329,12 +345,14 @@ export const ChatResultKind = {
   rules: 'rules',
   clarify: 'clarify',
   answer: 'answer',
+  select: 'select',
 } as const;
 
 export interface ChatResult {
   kind: ChatResultKind;
   message: string;
   provider: string;
+  selectScheduleId?: string;
   proposedConstraints: Constraint[];
   removeConstraintIds: string[];
   updatedConstraints: Constraint[];

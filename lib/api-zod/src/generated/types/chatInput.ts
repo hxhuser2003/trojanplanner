@@ -6,6 +6,7 @@
  */
 import type { ChatTurn } from './chatTurn';
 import type { PlannerInput } from './plannerInput';
+import type { ScheduleOption } from './scheduleOption';
 import type { SectionRef } from './sectionRef';
 
 export interface ChatInput {
@@ -19,4 +20,8 @@ export interface ChatInput {
   current: PlannerInput;
   /** @maxItems 10 */
   selections?: SectionRef[];
+  /** @maxItems 5 */
+  scheduleOptions?: ScheduleOption[];
+  /** @maxLength 40 */
+  chosenScheduleId?: string;
 }
