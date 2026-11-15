@@ -9,14 +9,17 @@ GOAL_REWARD = 5000
 
 
 def goals_fit(catalog, request):
-    """True when the smallest courses that cover every selected goal fit within the unit target."""
+    """True when the student's required courses plus the smallest courses that cover every selected goal
+    fit within the unit target. A course the student requires outranks the illustrative goals."""
     completed = set(request["completedCourses"])
-    total = 0
+    required = {c["value"] for c in request["constraints"]
+                if c["enabled"] and c["hard"] and c["kind"] == "require_course" and c["value"] not in completed}
+    total = sum(c["units"] for c in catalog["courses"] if c["id"] in required)
     for requirement in catalog["requirements"]:
         if requirement["id"] not in request["requirementIds"]:
             continue
-        needed = max(0, requirement["needed"] - len(completed.intersection(requirement["courseIds"])))
-        sizes = [c["units"] for c in catalog["courses"] if c["id"] in requirement["courseIds"] and c["id"] not in completed]
+        needed = max(0, requirement["needed"] - len((completed | required).intersection(requirement["courseIds"])))
+        sizes = [c["units"] for c in catalog["courses"] if c["id"] in requirement["courseIds"] and c["id"] not in completed | required]
         if needed and sizes:
             total += needed * min(sizes)
     return total <= request["maxUnits"]

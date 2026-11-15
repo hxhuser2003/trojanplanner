@@ -27,17 +27,21 @@ export function resolveRefs(refs: Ref[]): Picked[] {
 
 /** Mirrors solver.goals_fit: goals are hard only when the unit target leaves room for all of them. */
 export function goalsFit(input: PlannerInput): boolean {
+  // Courses the student requires count first; a required course outranks the illustrative goals.
+  const required = new Set(input.constraints.filter(c => c.enabled && c.hard && c.kind === "require_course" && !input.completedCourses.includes(c.value)).map(c => c.value));
+  const taken = (id: string) => input.completedCourses.includes(id) || required.has(id);
+  const base = catalog.courses.filter(c => required.has(c.id)).reduce((n, c) => n + c.units, 0);
   const total = catalog.requirements.filter(r => input.requirementIds.includes(r.id)).reduce((n, r) => {
-    const needed = Math.max(0, r.needed - r.courseIds.filter(id => input.completedCourses.includes(id)).length);
-    const sizes = catalog.courses.filter(c => r.courseIds.includes(c.id) && !input.completedCourses.includes(c.id)).map(c => c.units);
+    const needed = Math.max(0, r.needed - r.courseIds.filter(taken).length);
+    const sizes = catalog.courses.filter(c => r.courseIds.includes(c.id) && !taken(c.id)).map(c => c.units);
     return n + (needed && sizes.length ? needed * Math.min(...sizes) : 0);
-  }, 0);
+  }, base);
   return total <= input.maxUnits;
 }
 
-/** Weekly time in class. Quiz slots are reserved exam times, not weekly classes, so they are left out. */
+/** Weekly time in class, including the weekly exam slot (midterms and finals are held there). */
 export function classMinutes(meetings: Section["meetings"]): number {
-  return meetings.filter(m => m.kind !== "Quiz").reduce((n, m) => n + m.end - m.start, 0);
+  return meetings.reduce((n, m) => n + m.end - m.start, 0);
 }
 export const hoursText = (h: number) => { const m = Math.round(h * 60); return `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`; };
 

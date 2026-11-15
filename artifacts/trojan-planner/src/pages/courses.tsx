@@ -118,14 +118,17 @@ function AtAGlance({ course }: { course: Course }) {
 }
 
 const GROUP = {
-  exams: { label: 'Exams', cls: 'bg-primary' },
+  midterm: { label: 'Midterm', cls: 'bg-chart-4' },
+  final: { label: 'Final', cls: 'bg-primary' },
+  exams: { label: 'Other exams', cls: 'bg-primary/55' },
   projects: { label: 'Projects', cls: 'bg-accent' },
   coursework: { label: 'Homework & quizzes', cls: 'bg-chart-3' },
   attendance: { label: 'Attendance & participation', cls: 'bg-chart-5' },
   other: { label: 'Other', cls: 'bg-muted-foreground/40' },
 };
 function gradeGroup(kind: string): keyof typeof GROUP {
-  if (kind === 'midterm' || kind === 'final' || kind === 'exam') return 'exams';
+  if (kind === 'midterm' || kind === 'final') return kind;
+  if (kind === 'exam') return 'exams';
   if (kind === 'project') return 'projects';
   if (kind === 'homework' || kind === 'quiz') return 'coursework';
   if (kind === 'attendance' || kind === 'participation') return 'attendance';
@@ -189,7 +192,7 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
       <h3 className="text-base font-semibold mt-6 mb-2">Registration combinations</h3>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
-          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Meets</th><th className="p-2.5">Instructor</th><th className="p-2.5">Eligibility</th></tr></thead>
+          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Meets</th><th className="p-2.5">Instructor</th></tr></thead>
           <tbody>
             {course.sections.map((sec) => (
               <tr key={sec.id} className="border-t" data-testid={`row-section-${sec.id}`}>
@@ -201,7 +204,6 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
                 </td>
                 <td className="p-2.5">{sec.instructor}
                   <a href={`https://www.google.com/search?q=${encodeURIComponent(`"${sec.instructor}" site:usc.edu`)}`} target="_blank" rel="noreferrer" className="block text-[11px] text-primary hover:underline" data-testid={`link-instructor-${sec.id}`}>Search usc.edu</a></td>
-                <td className="p-2.5 text-xs text-muted-foreground">{sec.eligibility}{sec.syllabusUrl && <a href={sec.syllabusUrl} target="_blank" rel="noreferrer" className="block mt-1 text-primary hover:underline">Check Spring 2027 syllabus listing (may be unpublished)</a>}</td>
               </tr>
             ))}
           </tbody>

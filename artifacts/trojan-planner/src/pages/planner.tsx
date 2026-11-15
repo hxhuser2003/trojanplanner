@@ -122,10 +122,11 @@ function Planner({ catalog }: { catalog: Catalog }) {
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4 min-w-0">
           {result && result.schedules.length > 1 && !infeasible && (
-            <div className="inline-flex flex-wrap max-w-full rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
+            // Full width, like the stats row below, however many options there are.
+            <div className="flex flex-wrap w-full rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
               {result.schedules.map((s) => (
                 <button key={s.id} role="tab" aria-selected={sched?.id === s.id} onClick={() => p.chooseSchedule(s.id)} data-testid={`tab-schedule-${s.id}`}
-                  className={cn('shrink-0 rounded-md px-3 py-1.5 text-sm transition-colors', sched?.id === s.id ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground')}>
+                  title={s.title} className={cn('flex-1 basis-40 min-w-0 truncate rounded-md px-3 py-1.5 text-sm transition-colors', sched?.id === s.id ? 'bg-background shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground')}>
                   {s.title}
                 </button>
               ))}
@@ -133,7 +134,7 @@ function Planner({ catalog }: { catalog: Catalog }) {
           )}
 
           {sched && !infeasible && (
-            <dl className="flex flex-wrap gap-x-8 gap-y-2" data-testid="stats-schedule">
+            <dl className="grid w-full grid-cols-2 sm:grid-cols-5 gap-x-4 gap-y-2 px-1" data-testid="stats-schedule">
               {[
                 ['Units', sched.units],
                 ['Campus days', sched.campusDays],

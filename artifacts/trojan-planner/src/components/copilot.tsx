@@ -30,6 +30,10 @@ interface Props {
 
 let seq = 0;
 
+/** Names a citation's document honestly: a dated USC syllabus, or a labeled mock. */
+const sourceLabel = (course?: Catalog['courses'][number]) =>
+  !course ? 'Source' : course.syllabus.status === 'synthetic' ? 'Mock syllabus (made for this demo)' : `${course.syllabus.term} USC syllabus`;
+
 export function Copilot({ catalog, input, selections, schedules, chosenId, onApply, onSelect }: Props) {
   const chat = useChatCopilot();
   const [text, setText] = useState('');
@@ -154,7 +158,7 @@ function Reply({ catalog, input, result, status, available, onSelect, onOption, 
             <li key={`${c.courseId}:${c.label}`} className="rounded-md border bg-card px-2.5 py-1.5 text-xs" data-testid="item-citation">
               <span className="font-medium">{catalog.courses.find((x) => x.id === c.courseId)?.code ?? c.courseId} · {c.label}</span>
               <span className="block text-muted-foreground">“{c.excerpt}”</span>
-              <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline mt-0.5"><FileText className="size-3" />Source (synthetic)</a>
+              <a href={c.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline mt-0.5"><FileText className="size-3" />{sourceLabel(catalog.courses.find((x) => x.id === c.courseId))}</a>
             </li>
           ))}
         </ul>

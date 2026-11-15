@@ -20,7 +20,7 @@ The chatbot never changes your rules by itself. Rule changes appear as a proposa
 ## A. Answered by code (no API key needed)
 
 ### Degree progress
-- [ ] `what do I still need?` → each goal marked done / in this plan / still needed, with options and the plan's units.
+- [ ] `what do I still need?` / `what do I need for graduation?` → the goals you picked plus any done or in this plan (done / in this plan / not covered), the other optional goals in one line, and the plan's units. It says these are planning goals, not USC graduation requirements.
 
 ### Why is a course in my plan
 - [ ] `why is CSCI 570 in my plan?` → which goal it covers, when its section meets, whether it overlaps anything, which preferences it fits or breaks, and other sections that were ruled out or are equal swaps (described by meeting time, never by section number).
@@ -80,4 +80,4 @@ The chatbot never changes your rules by itself. Rule changes appear as a proposa
 ## Related things to try while testing
 - [ ] Set **Units** on the Degree page to 4, 8, 12 or 16. Lower targets cover as many goals as fit and say which goal is not covered; 2 units says no mix of courses adds up to that.
 - [ ] Option labels such as **No graded quizzes** or **No final exams** must be true for every course in that option; check them against the Grading section on the Courses page.
-- [ ] Switch **Prefer Fridays free** to **Hard** in the Rules tab → "No plan fits every rule" with a one-click repair, because every CSCI 570 section has a Friday quiz.
+- [ ] Switch **Prefer Fridays free** to **Hard** in the Rules tab → "No plan fits every rule" with a one-click repair, because every CSCI 570 section has a Friday exam slot (midterms and finals).

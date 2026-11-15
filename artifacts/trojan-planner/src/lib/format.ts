@@ -11,7 +11,7 @@ export function fmtTime(min: number): string {
   return `${hh}:${String(m).padStart(2, '0')}${ap}`;
 }
 
-/** 8.17 hours → "8h 10m". Quiz slots are not counted in class time (see the API). */
+/** 8.17 hours → "8h 10m". */
 export function fmtHours(h: number): string {
   const m = Math.round(h * 60);
   return `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}`;
@@ -132,7 +132,7 @@ export interface SectionPart { id: string; kind: string; times: string[]; tba: b
 
 /** Splits a registration combination ("30071+30070+30034") into its USC section numbers, each with
  *  its type and meeting times. Parts are listed lecture first, in the same order as their meetings;
- *  a part without listed times is named in unknownScheduleComponents ("Quiz 30034 time TBA"). */
+ *  a part without listed times is named in unknownScheduleComponents ("Exam 30034 time TBA"). */
 export function sectionParts(section: Section): SectionPart[] {
   const kinds = [...new Set(section.meetings.map((m) => m.kind))];
   const used = new Set<string>();

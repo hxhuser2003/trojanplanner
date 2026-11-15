@@ -185,6 +185,8 @@ Emphasize campus impact, useful AI, feasible adoption, and clear UX without asse
 
 The supplied event brief requires a working prototype link, public GitHub repository, project description, video of at most three minutes, short slide deck, and at least one screenshot, with teammates added. The listed deadline is November 15, 2026 at 11:00 AM PT. Verify official rules and any changes before submission. Do not change repository visibility without explicit owner approval.
 
+**Before submitting:** delete `docs/DEMO_PRESENTATION.md` (the internal video script) from the GitHub repository, on `main` and any public branch, so judges see only the product docs.
+
 ## 15. Risks and adoption
 
 | Risk | Mitigation |

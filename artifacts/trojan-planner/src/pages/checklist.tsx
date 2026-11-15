@@ -106,7 +106,7 @@ function Checklist({ catalog }: { catalog: Catalog }) {
       <p className="text-sm mb-4"><strong>{sched.title}</strong> · {sched.units} units · {sched.campusDays} campus days. This list does not reserve seats.</p>
 
       <h2 className="text-base font-semibold">Sections to register</h2>
-      <p className="text-xs text-muted-foreground mt-0.5 mb-2">The numbers are USC section numbers. Register every number listed for a course together: the lecture plus its linked discussion or quiz.</p>
+      <p className="text-xs text-muted-foreground mt-0.5 mb-2">The numbers are USC section numbers. Register every number listed for a course together: the lecture plus its linked discussion or exam slot.</p>
       <div className="space-y-2 mb-6">
         {rows.map(({ sel, course, section }) => (
           <Item key={sel.sectionId} k={`sec:${sel.sectionId}`} accent={course?.color}>
