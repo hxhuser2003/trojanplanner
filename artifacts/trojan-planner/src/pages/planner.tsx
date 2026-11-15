@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info } from 'lucide-react';
 import type { Catalog, Constraint, PlannerInput, Repair } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,7 +13,7 @@ import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
 import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
-import { fmtTime, type ScheduleDiff } from '@/lib/format';
+import { fmtTime, sectionWhen } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,14 +30,16 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
   const toggleLock = (courseId: string, sectionId: string) => {
     const course = catalog.courses.find((c) => c.id === courseId);
+    const section = course?.sections.find((s) => s.id === sectionId);
+    const when = section ? ` · ${sectionWhen(section)}` : '';
     if (locked.has(sectionId)) {
       p.updateConstraints((cs) => cs.filter((c) => !(c.kind === 'lock_section' && (c.value === sectionId || c.value.endsWith(`:${sectionId}`)))));
-      toast({ title: `Unlocked ${course?.code} §${sectionId}`, description: 'Re-solve to let the planner move it.' });
+      toast({ title: `Unlocked ${course?.code}${when}`, description: 'Re-solve to let the planner move it.' });
     } else {
       if (input.constraints.length >= 20) { toast({ title: 'Rule limit reached', description: 'Remove a rule before locking another section.', variant: 'destructive' }); return; }
-      const c: Constraint = { id: `lock-${sectionId}`, label: `Keep ${course?.code ?? courseId} §${sectionId}`, kind: 'lock_section', hard: true, enabled: true, value: sectionId, days: [], start: 0, end: 0 };
+      const c: Constraint = { id: `lock-${sectionId}`, label: `Keep ${course?.code ?? courseId}${when}`, kind: 'lock_section', hard: true, enabled: true, value: sectionId, days: [], start: 0, end: 0 };
       p.updateConstraints((cs) => [...cs.filter((x) => x.id !== c.id), c]);
-      toast({ title: `Locked ${course?.code} §${sectionId}`, description: 'Saved as an explicit hard rule.' });
+      toast({ title: `Locked ${course?.code}${when}`, description: 'Saved as an explicit hard rule.' });
     }
   };
 
@@ -71,6 +73,18 @@ function Planner({ catalog }: { catalog: Catalog }) {
   const solving = p.solveState === 'solving';
   const stale = p.dirty;
   const infeasible = result && (result.status === 'infeasible' || result.schedules.length === 0);
+
+  // Re-solve shortly after rules change, so a rule that leaves no valid plan shows the conflict right away
+  // instead of leaving the old schedule on screen. The solver is deterministic and never calls AI.
+  // Each input is tried once, so a solver error does not retry in a loop.
+  const inputJson = JSON.stringify(input);
+  const autoSolved = useRef<string | null>(null);
+  useEffect(() => {
+    if (!stale || solving || autoSolved.current === inputJson) return;
+    const t = setTimeout(() => { autoSolved.current = inputJson; void p.solve(); }, 600);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inputJson, stale, solving]);
 
   return (
     <div className="mx-auto max-w-[1280px] px-4 md:px-6 py-6">
@@ -107,7 +121,6 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4 min-w-0">
-          {p.lastChange && !stale && !solving && <WhatChanged diff={p.lastChange} catalog={catalog} onDismiss={p.dismissChange} />}
 
           {result && result.schedules.length > 1 && !infeasible && (
             <div className="inline-flex flex-wrap max-w-full rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
@@ -155,7 +168,7 @@ function Planner({ catalog }: { catalog: Catalog }) {
                     return (
                       <li key={s.sectionId} className="flex gap-2 text-sm" data-testid={`text-selection-${s.courseId}`}>
                         <span className="mt-1.5 size-2 rounded-full shrink-0" style={{ background: c?.color }} />
-                        <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId} §{s.sectionId}</Link> <span className="text-muted-foreground">{s.reason}</span></span>
+                        <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId}</Link> <span className="text-muted-foreground">{s.reason}</span></span>
                       </li>
                     );
                   })}
@@ -211,22 +224,6 @@ function SolveStatus() {
   );
 }
 
-function WhatChanged({ diff, catalog, onDismiss }: { diff: ScheduleDiff; catalog: Catalog; onDismiss: () => void }) {
-  const code = (id: string) => catalog.courses.find((c) => c.id === id)?.code ?? id;
-  const parts = [
-    ...diff.added.map((x) => `added ${code(x.courseId)} §${x.sectionId}`),
-    ...diff.removed.map((x) => `dropped ${code(x.courseId)}`),
-    ...diff.moved.map((x) => `moved ${code(x.courseId)} §${x.from} → §${x.to}`),
-    ...diff.stats.map((x) => `${x.label.toLowerCase()} ${x.before} → ${x.after}`),
-  ];
-  return (
-    <div className="rounded-lg border bg-secondary/60 px-3 py-2 text-sm flex items-start gap-2 rise" data-testid="status-what-changed">
-      <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-      <p className="flex-1"><span className="font-medium">{diff.same ? 'Your schedule stayed the same.' : 'What changed:'}</span> {parts.join(' · ')}</p>
-      <button onClick={onDismiss} className="p-0.5 rounded hover:bg-background" aria-label="Dismiss"><X className="size-3.5" /></button>
-    </div>
-  );
-}
 
 function Conflicts({ result, catalog, input, solvedInput, onApprove, solving, stale }: { result: NonNullable<ReturnType<typeof usePlanner>['result']>; catalog: Catalog; input: PlannerInput; solvedInput: PlannerInput | null; onApprove: (r: Repair) => void; solving: boolean; stale: boolean }) {
   return (

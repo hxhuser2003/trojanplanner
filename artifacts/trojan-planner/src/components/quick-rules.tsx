@@ -13,13 +13,22 @@ const rule = (kind: ConstraintKind, label: string, hard: boolean, patch: Partial
   ({ ...newConstraint(kind, hard), label, ...patch });
 
 type Weighting = 'projects' | 'exams' | 'none';
+type Avoid = 'groups' | 'attendance' | 'quizzes' | 'midterm' | 'final';
+// Each "avoid" chip maps to one soft rule.
+const AVOID: { key: Avoid; chip: string; kind: Constraint['kind']; label: string }[] = [
+  { key: 'groups', chip: 'Group projects', kind: 'prefer_individual', label: 'Prefer individual projects' },
+  { key: 'attendance', chip: 'Graded attendance', kind: 'prefer_no_attendance', label: 'Avoid graded attendance' },
+  { key: 'quizzes', chip: 'Quizzes', kind: 'prefer_no_quizzes', label: 'Avoid graded quizzes' },
+  { key: 'midterm', chip: 'Midterms', kind: 'prefer_no_midterm', label: 'Avoid midterms' },
+  { key: 'final', chip: 'Final exam', kind: 'prefer_no_final', label: 'Avoid final exams' },
+];
 interface Answers {
   hasBlock: boolean; blockDays: number[]; blockStart: number; blockEnd: number; blockLabel: string;
   freeDays: number[]; freeHard: boolean;
-  weighting: Weighting; solo: boolean; noQuizzes: boolean; noAttendance: boolean;
+  weighting: Weighting; avoid: Avoid[];
 }
 
-const INITIAL: Answers = { hasBlock: false, blockDays: [], blockStart: 840, blockEnd: 1080, blockLabel: 'Work', freeDays: [], freeHard: true, weighting: 'none', solo: false, noQuizzes: false, noAttendance: false };
+const INITIAL: Answers = { hasBlock: false, blockDays: [], blockStart: 840, blockEnd: 1080, blockLabel: 'Work', freeDays: [], freeHard: true, weighting: 'none', avoid: [] };
 
 export function answersToRules(a: Answers): Constraint[] {
   const out: Constraint[] = [];
@@ -34,9 +43,7 @@ export function answersToRules(a: Answers): Constraint[] {
   }
   if (a.weighting === 'projects') out.push(rule('prefer_projects', 'Prefer project-based assessment', false));
   if (a.weighting === 'exams') out.push(rule('prefer_exams', 'Prefer exam-based assessment', false));
-  if (a.solo) out.push(rule('prefer_individual', 'Prefer individual projects', false));
-  if (a.noQuizzes) out.push(rule('prefer_no_quizzes', 'Avoid graded quizzes', false));
-  if (a.noAttendance) out.push(rule('prefer_no_attendance', 'Avoid graded attendance', false));
+  for (const x of AVOID) if (a.avoid.includes(x.key)) out.push(rule(x.kind, x.label, false));
   return out;
 }
 
@@ -134,27 +141,21 @@ export function Onboarding({ open, onOpenChange, current, onApply }: {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Group projects?</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Choice on={a.solo} onClick={() => set({ solo: true })} testid="onboard-solo-yes">Prefer solo work</Choice>
-                <Choice on={!a.solo} onClick={() => set({ solo: false })} testid="onboard-solo-no">Groups are fine</Choice>
+              <Label>Anything you'd rather avoid? <span className="font-normal text-muted-foreground">Pick any.</span></Label>
+              <div className="flex flex-wrap gap-2" role="group">
+                {AVOID.map((x) => {
+                  const on = a.avoid.includes(x.key);
+                  return (
+                    <button key={x.key} type="button" aria-pressed={on} data-testid={`onboard-avoid-${x.key}`}
+                      onClick={() => set({ avoid: on ? a.avoid.filter((k) => k !== x.key) : [...a.avoid, x.key] })}
+                      className={cn('rounded-full border px-3 py-1.5 text-sm transition-colors', on ? 'border-primary bg-primary/5 font-medium text-primary' : 'hover:bg-secondary')}>
+                      {x.chip}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Graded quizzes?</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Choice on={a.noQuizzes} onClick={() => set({ noQuizzes: true })} testid="onboard-quiz-avoid">Avoid quizzes</Choice>
-                <Choice on={!a.noQuizzes} onClick={() => set({ noQuizzes: false })} testid="onboard-quiz-ok">Quizzes are fine</Choice>
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Graded attendance?</Label>
-              <div className="grid grid-cols-2 gap-2">
-                <Choice on={a.noAttendance} onClick={() => set({ noAttendance: true })} testid="onboard-attendance-avoid">Avoid it</Choice>
-                <Choice on={!a.noAttendance} onClick={() => set({ noAttendance: false })} testid="onboard-attendance-ok">Fine either way</Choice>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground">Based on syllabus weights. Courses without a syllabus are never assumed to match.</p>
+            <p className="text-xs text-muted-foreground">Based on each syllabus's grading breakdown. Courses without a syllabus are never assumed to match.</p>
           </div>
         )}
 

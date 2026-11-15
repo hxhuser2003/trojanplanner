@@ -45,7 +45,7 @@ export function Shell({ children }: { children: ReactNode }) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span tabIndex={0} className="text-xs text-muted-foreground px-2 py-1 rounded-md border cursor-default" data-testid="text-synthetic-notice">
-                    {catalog.term} · Demo data
+                    {catalog.term} · USC snapshot
                   </span>
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">{catalog.notice} Nothing here reserves a seat or guarantees enrollment.</TooltipContent>

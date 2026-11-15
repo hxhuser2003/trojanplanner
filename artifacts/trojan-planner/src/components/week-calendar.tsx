@@ -91,7 +91,7 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
                       <PopoverTrigger asChild>{block}</PopoverTrigger>
                       <PopoverContent className="w-80 space-y-3" side="right" align="start" data-testid={`popover-${course.id}`}>
                         <div>
-                          <p className="font-semibold text-sm">{course.code} §{section.id}</p>
+                          <p className="font-semibold text-sm">{course.code}</p>
                           <p className="text-xs text-muted-foreground">{course.title} · {section.instructor}</p>
                           <ul className="mt-1.5 text-xs font-mono text-muted-foreground">
                             {section.meetings.map((x, j) => <li key={j}>{DAYS[x.day]} {fmtTime(x.start)}–{fmtTime(x.end)} · {x.kind}</li>)}

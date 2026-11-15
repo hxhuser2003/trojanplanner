@@ -1,100 +1,57 @@
 import { GetCatalogResponse as CatalogSchema } from "@workspace/api-zod";
-import type { z } from "zod";
+import snapshot from "./usc-spring-2027.json";
+import { syllabi } from "./syllabi";
 
-const meeting = (day: number, start: number, end: number, kind = "Lecture") => ({
-  day, start, end, kind, location: "Demo classroom",
-});
-const section = (id: string, instructor: string, meetings: ReturnType<typeof meeting>[]) => ({
-  id, instructor, meetings, eligibility: "Seat availability and enrollment restrictions not verified",
-});
-// Synthetic quiz and graded-attendance weights, carved out of each course's "other" share.
-const SMALL_ITEMS: Record<string, { quizzes: number; attendance: number }> = {
-  "CSCI-270": { quizzes: 10, attendance: 0 }, "CSCI-271": { quizzes: 0, attendance: 5 },
-  "CSCI-201": { quizzes: 0, attendance: 10 }, "CSCI-202": { quizzes: 10, attendance: 0 },
-  "CSCI-310": { quizzes: 0, attendance: 10 }, "CSCI-360": { quizzes: 10, attendance: 0 },
-  "CSCI-350": { quizzes: 10, attendance: 0 }, "WRIT-340": { quizzes: 0, attendance: 15 },
+const color: Record<string, string> = {
+  algorithms: "#9B641C", web: "#315A8C", systems: "#75528D",
+  ai: "#3C755F", data: "#2F7478",
 };
-const syllabus = (id: string, exams: number | null, projects: number | null, mode: string, cadence = "Weekly assignments") => {
-  const small = exams === null ? null : SMALL_ITEMS[id] ?? { quizzes: 0, attendance: 0 };
-  return {
-  term: "Spring 2027 (synthetic)", status: exams === null ? "unknown" : "synthetic",
-  examPercent: exams, projectPercent: projects,
-  otherPercent: exams === null || projects === null ? null : 100 - exams - projects,
-  quizPercent: small?.quizzes ?? null, attendancePercent: small?.attendance ?? null,
-  projectMode: mode, cadence,
-  attendance: !small ? "Not specified" : small.attendance ? `Attendance is graded (${small.attendance}% of the final grade).` : "Attendance is not separately graded.",
-  sourceUrl: `/api/planner/sources/${id}`,
-  evidence: exams === null ? [] : [
-    { label: "Exam weighting", value: `${exams}%`, page: 1, status: "synthetic", excerpt: `Exams contribute ${exams}% of the final course grade.` },
-    { label: "Project weighting", value: `${projects}%`, page: 1, status: "synthetic", excerpt: `Projects contribute ${projects}% of the final course grade.` },
-    { label: "Project format", value: mode, page: 1, status: "synthetic", excerpt: `Projects are completed in ${mode === "group" ? "groups of three" : mode === "individual" ? "individual submissions" : "a mixture of individual and group submissions"}.` },
-    { label: "Assignment cadence", value: cadence, page: 1, status: "synthetic", excerpt: `${cadence}.` },
-    { label: "Quizzes", value: `${small!.quizzes}%`, page: 2, status: "synthetic", excerpt: small!.quizzes ? `Short in-class quizzes contribute ${small!.quizzes}% of the final grade.` : "There are no graded quizzes." },
-    { label: "Attendance", value: `${small!.attendance}%`, page: 2, status: "synthetic", excerpt: small!.attendance ? `Attendance is taken each session and counts for ${small!.attendance}% of the final grade.` : "Attendance is not graded." },
-  ],
-  };
+const category: Record<string, string> = {
+  "CSCI-544": "ai", "CSCI-546": "systems", "CSCI-561": "ai",
+  "CSCI-570": "algorithms", "CSCI-571": "web", "CSCI-572": "web",
+  "CSCI-585": "data",
 };
-const course = (id: string, title: string, requirement: string, prerequisites: string[], sections: ReturnType<typeof section>[], exams: number | null, projects: number | null, mode: string, color: string, cadence?: string) => ({
-  id, code: id.replace("-", " "), title, units: 4, requirement, prerequisites, sections,
-  syllabus: syllabus(id, exams, projects, mode, cadence),
-  color: ({ amber: "#9B641C", blue: "#315A8C", purple: "#75528D", green: "#3C755F", rose: "#A34D63", teal: "#2F7478", orange: "#B0683E" } as Record<string, string>)[color] ?? "#315A8C",
-  description: `Synthetic ${title.toLowerCase()} offering for demonstrating planning and assessment trade-offs. Not official USC course information.`,
-  sourceUrl: `/api/planner/sources/${id}`,
-});
-export const catalog: z.infer<typeof CatalogSchema> = CatalogSchema.parse({
-  term: "Spring 2027", major: "Computer Science · synthetic undergraduate demo",
-  catalogYear: "2026–2027 (illustrative rules)", sourceDate: "2026-11-14",
-  notice: "All offerings, instructors, degree rules, times, and syllabus excerpts are synthetic fixtures—not official USC information. Your STARS report is never included in demo data.",
-  completedOptions: ["CSCI-103", "CSCI-170", "CSCI-104", "CSCI-201", "CSCI-270", "MATH-125", "MATH-126", "WRIT-150"],
-  courses: [
-    course("CSCI-270", "Introduction to Algorithms", "algorithms", ["CSCI-170"],
-      [section("270-01", "Alex Morgan (demo)", [meeting(0, 660, 740), meeting(2, 660, 740), meeting(4, 660, 710, "Discussion")])],
-      70, 10, "individual", "amber"),
-    course("CSCI-271", "Applied Algorithm Design", "algorithms", ["CSCI-170"],
-      [section("271-01", "Jordan Lee (demo)", [meeting(1, 600, 680), meeting(3, 600, 680)]),
-       section("271-02", "Jordan Lee (demo)", [meeting(0, 780, 860), meeting(2, 780, 860)])],
-      25, 60, "individual", "amber", "Three milestone submissions"),
-    course("CSCI-201", "Principles of Software Development", "systems", ["CSCI-103"],
-      [section("201-01", "Sam Rivera (demo)", [meeting(0, 570, 650), meeting(2, 570, 650), meeting(1, 690, 740, "Lab")]),
-       section("201-02", "Sam Rivera (demo)", [meeting(1, 720, 800), meeting(3, 720, 800), meeting(2, 900, 950, "Lab")])],
-      20, 65, "group", "blue"),
-    course("CSCI-202", "Systems Programming Studio", "systems", ["CSCI-103"],
-      [section("202-01", "Casey Park (demo)", [meeting(0, 900, 980), meeting(2, 900, 980)]),
-       section("202-02", "Casey Park (demo)", [meeting(1, 540, 620), meeting(3, 540, 620)])],
-      30, 50, "individual", "blue"),
-    course("CSCI-310", "Software Engineering", "elective", ["CSCI-103"],
-      [section("310-01", "Taylor Chen (demo)", [meeting(0, 780, 860), meeting(2, 780, 860)]),
-       section("310-02", "Taylor Chen (demo)", [meeting(1, 840, 920), meeting(3, 840, 920)])],
-      15, 70, "group", "purple", "Four milestone submissions"),
-    course("CSCI-360", "Introduction to Artificial Intelligence", "elective", ["CSCI-170"],
-      [section("360-01", "Avery Brooks (demo)", [meeting(0, 1020, 1100), meeting(2, 1020, 1100)]),
-       section("360-02", "Avery Brooks (demo)", [meeting(1, 660, 710), meeting(3, 660, 710), meeting(4, 780, 830, "Discussion")])],
-      45, 40, "individual", "green"),
-    course("CSCI-350", "Introduction to Operating Systems", "elective", ["CSCI-201"],
-      [section("350-01", "Quinn Davis (demo)", [meeting(0, 600, 680), meeting(2, 600, 680)])],
-      55, 35, "mixed", "rose"),
-    course("CSCI-380", "Creative Computing", "elective", ["CSCI-103"],
-      [section("380-01", "Riley Kim (demo)", [meeting(1, 780, 830), meeting(3, 780, 830)])],
-      null, null, "unspecified", "teal"),
-    course("WRIT-340", "Advanced Writing", "writing", ["WRIT-150"],
-      [section("340-01", "Jamie Ellis (demo)", [meeting(0, 840, 890), meeting(2, 840, 890)]),
-       section("340-02", "Jamie Ellis (demo)", [meeting(1, 1020, 1070), meeting(3, 1020, 1070)])],
-      0, 70, "individual", "orange", "Four milestone submissions"),
-  ],
+
+// The snapshot contains USC offering facts only. Student progress and the planning
+// buckets below are illustrative; they are not USC degree requirements.
+export const catalog = CatalogSchema.parse({
+  term: snapshot.term,
+  major: "Graduate Computer Science · selected USC offerings",
+  catalogYear: "Spring 2027 snapshot; example goals",
+  sourceDate: snapshot.retrievedAt,
+  notice: `These seven graduate CSCI offerings and published sections are cached from USC's Spring 2027 Schedule of Classes (${snapshot.retrievedAt}). Planning goals are illustrative. Syllabus details come from clearly dated historical USC PDFs or labeled mock documents; none establishes the Spring 2027 grading policy. Confirm TBA times and registration eligibility with USC.`,
+  completedOptions: ["CSCI-530", "CSCI-544", "CSCI-546", "CSCI-561", "CSCI-567", "CSCI-570", "CSCI-571", "CSCI-572", "CSCI-585"],
+  courses: snapshot.courses.map((course) => {
+    const requirement = category[course.id];
+    if (!requirement) throw new Error(`Uncategorized USC course ${course.id}`);
+    const syllabus = syllabi[course.id];
+    if (!syllabus) throw new Error(`Missing syllabus for ${course.id}`);
+    return {
+      id: course.id, code: course.code, title: course.title, units: course.units,
+      requirement, description: course.description, prerequisiteGroups: course.prerequisiteGroups,
+      sections: course.sections.map((section) => ({
+        id: section.id, componentIds: section.componentIds, instructor: section.instructor,
+        meetings: section.meetings, unknownScheduleComponents: section.unknownScheduleComponents,
+        eligibility: section.eligibility, syllabusUrl: section.syllabusUrl,
+      })),
+      syllabus,
+      color: color[requirement], sourceUrl: course.sourceUrl,
+    };
+  }),
   requirements: [
-    { id: "algorithms", title: "Algorithms", description: "Choose one course from this illustrative requirement group.", needed: 1, courseIds: ["CSCI-270", "CSCI-271"] },
-    { id: "systems", title: "Software & systems", description: "Choose one course from this illustrative requirement group.", needed: 1, courseIds: ["CSCI-201", "CSCI-202"] },
-    { id: "elective", title: "Technical elective", description: "Choose one eligible elective.", needed: 1, courseIds: ["CSCI-310", "CSCI-360", "CSCI-350", "CSCI-380"] },
-    { id: "writing", title: "Advanced writing", description: "Optional illustrative writing requirement.", needed: 1, courseIds: ["WRIT-340"] },
+    { id: "algorithms", title: "Algorithms goal", description: "Illustrative graduate plan: include CSCI 570. This is not a degree audit rule.", needed: 1, courseIds: ["CSCI-570"] },
+    { id: "ai", title: "AI or NLP goal", description: "Illustrative goal: choose CSCI 544 or CSCI 561.", needed: 1, courseIds: ["CSCI-544", "CSCI-561"] },
+    { id: "web", title: "Web or search goal", description: "Illustrative goal: choose CSCI 571 or CSCI 572.", needed: 1, courseIds: ["CSCI-571", "CSCI-572"] },
+    { id: "systems", title: "Distributed systems goal", description: "Optional illustrative goal: include CSCI 546.", needed: 1, courseIds: ["CSCI-546"] },
+    { id: "data", title: "Database goal", description: "Optional illustrative goal: include CSCI 585.", needed: 1, courseIds: ["CSCI-585"] },
   ],
   defaultInput: {
-    completedCourses: ["CSCI-103", "CSCI-170", "MATH-125", "WRIT-150"],
-    requirementIds: ["algorithms", "systems", "elective"], minUnits: 12, maxUnits: 16,
+    completedCourses: [],
+    requirementIds: ["algorithms", "ai", "web"], minUnits: 12, maxUnits: 16,
     constraints: [
-      { id: "no-friday", label: "Keep Fridays free", kind: "no_day", hard: true, enabled: true, value: "", days: [4], start: 0, end: 0 },
-      { id: "work-hours", label: "Work Tue/Thu · 2–6 PM", kind: "blocked", hard: true, enabled: true, value: "", days: [1, 3], start: 840, end: 1080 },
+      { id: "no-friday", label: "Prefer Fridays free", kind: "no_day", hard: false, enabled: true, value: "", days: [4], start: 0, end: 0 },
+      { id: "work-hours", label: "Work Tue/Thu · 9 AM–1 PM", kind: "blocked", hard: true, enabled: true, value: "", days: [1, 3], start: 540, end: 780 },
       { id: "later-mornings", label: "Prefer starts after 10 AM", kind: "earliest", hard: false, enabled: true, value: "", days: [], start: 600, end: 0 },
-      { id: "projects", label: "Prefer project-based assessment", kind: "prefer_projects", hard: false, enabled: true, value: "", days: [], start: 0, end: 0 },
     ],
   },
 });

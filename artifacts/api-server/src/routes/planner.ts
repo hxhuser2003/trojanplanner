@@ -1,10 +1,11 @@
 import { Router, type IRouter } from "express";
 import { ChatCopilotBody, ChatCopilotResponse, ExplainPlannerBody, ExplainPlannerResponse, GetCatalogResponse, ParsePreferencesBody, ParsePreferencesResponse, ParseStarsBody, ParseStarsResponse, SolvePlannerBody } from "@workspace/api-zod";
 import { catalog } from "../planner/catalog";
+import { mockSyllabi, renderMockSyllabus } from "../planner/syllabi";
 import { solve, validateInput } from "../planner/service";
 import { catalogLookup, chat, parsePreferences, rephrase } from "../planner/ai";
 import { explainCompare, explainConflict, explainSection } from "../planner/explain";
-import { excludeIntent, lockIntent, progressIntent, selectIntent } from "../planner/intents";
+import { avoidIntent, excludeIntent, gradingIntent, lockIntent, progressIntent, selectIntent } from "../planner/intents";
 import { parseStarsText } from "../planner/stars";
 
 const router: IRouter = Router();
@@ -73,14 +74,14 @@ router.post("/planner/chat", async (req, res): Promise<void> => {
   const { message, history, current, selections = [], scheduleOptions = [], chosenScheduleId } = parsed.data;
   const error = validateInput(current);
   if (error) { res.status(400).json({ error }); return; }
-  // Progress, exclude, lock, and option-switch requests are answered from data, with or without AI.
-  const direct = progressIntent(message, current, selections) ?? excludeIntent(message, current) ?? lockIntent(message, current, selections) ?? selectIntent(message, scheduleOptions, chosenScheduleId);
+  // Degree progress is a counting problem, so code answers it directly. Everything else goes to the model first.
+  const direct = progressIntent(message, current, selections);
   if (direct) {
     res.json(ChatCopilotResponse.parse({ proposedConstraints: [], removeConstraintIds: [], updatedConstraints: [], options: [], citations: [], warnings: [],
       ...direct, provider: "Computed from catalog and solver facts" }));
     return;
   }
-  // "Why is CSCI 271 in my plan?" is answered from solver facts, not by the model.
+  // "Why is CSCI 570 in my plan?" is answered from solver facts, not by the model.
   const named = /\bwhy\b/i.test(message) ? catalog.courses.find(c => new RegExp(`\\b${c.id.replace("-", "[- ]?")}\\b`, "i").test(message)) : undefined;
   const asked = named && selections.some(s => s.courseId === named.id) ? named : undefined;
   if (named && !asked && /\b(plan|schedule|picked|chose|chosen)\b/i.test(message)) {
@@ -101,6 +102,14 @@ router.post("/planner/chat", async (req, res): Promise<void> => {
   try { res.json(ChatCopilotResponse.parse(await chat(message, history, current, selections, scheduleOptions, chosenScheduleId))); }
   catch (e) {
     const kind = e instanceof Error ? e.message : "";
+    // Without the model, the common requests still work from data: grading questions, excluding or avoiding, locking, switching options.
+    const backup = gradingIntent(message, selections) ?? excludeIntent(message, current) ?? avoidIntent(message, current)
+      ?? lockIntent(message, current, selections) ?? selectIntent(message, scheduleOptions, chosenScheduleId);
+    if (backup) {
+      res.json(ChatCopilotResponse.parse({ proposedConstraints: [], removeConstraintIds: [], updatedConstraints: [], options: [], citations: [], ...backup,
+        warnings: [...(backup.warnings ?? []), "AI is unavailable, so this was computed directly from the catalog."], provider: "Computed from catalog and solver facts" }));
+      return;
+    }
     const fallback = catalogLookup(message);
     if (fallback && kind !== "BUSY") { res.json(ChatCopilotResponse.parse(fallback)); return; }
     req.log.warn({ kind: kind.startsWith("INVALID_PROPOSAL") ? "invalid_proposal" : kind === "AI_UNCONFIGURED" ? "ai_unconfigured" : "chat_error" }, "Copilot chat unavailable");
@@ -117,7 +126,12 @@ router.post("/planner/stars", (req, res) => {
 router.get("/planner/sources/:id", (req, res) => {
   const course = catalog.courses.find(c => c.id === req.params.id);
   if (!course) { res.status(404).send("Source not found."); return; }
-  const escape = (s: string) => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-  res.type("html").send(`<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(course.code)} — Synthetic evidence</title><style>body{font:17px/1.7 system-ui;max-width:760px;margin:4rem auto;padding:1rem;background:#faf7f1;color:#29201c}header{border-left:5px solid #8d2436;padding:1rem;background:#f3e8d0}article{padding:1rem 0;border-bottom:1px solid #ddd}small{color:#665}</style><header><strong>SYNTHETIC DEMO SOURCE — NOT A USC SYLLABUS</strong><p>This fixture demonstrates traceability. All facts below were authored for this prototype. Do not use them for real course registration.</p></header><h1>${escape(course.code)} · ${escape(course.title)}</h1><p>Spring 2027 · Synthetic page 1 · Fixture version 2026-11-14</p>${course.syllabus.evidence.map(e => `<article><strong>${escape(e.label)}: ${escape(e.value)}</strong><blockquote>${escape(e.excerpt)}</blockquote><small>Page ${e.page} · ${e.status}</small></article>`).join("") || "<p>No syllabus evidence available. Unknown is not zero.</p>"}<h2>Illustrative section meetings</h2><pre>${escape(JSON.stringify(course.sections, null, 2))}</pre><p>These fixtures do not establish current USC offerings, equivalences, prerequisites, or degree eligibility.</p></html>`);
+  res.redirect(302, course.sourceUrl);
+});
+router.get("/planner/mock-syllabi/:id", (req, res) => {
+  const id = req.params.id;
+  if (!id || !Object.prototype.hasOwnProperty.call(mockSyllabi, id)) { res.status(404).send("Mock syllabus not found."); return; }
+  res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'");
+  res.type("html").send(renderMockSyllabus(id as keyof typeof mockSyllabi));
 });
 export default router;

@@ -20,6 +20,8 @@ export * from './evidenceStatus';
 export * from './explainInput';
 export * from './explainInputMode';
 export * from './explainResult';
+export * from './gradingItem';
+export * from './gradingItemKind';
 export * from './healthStatus';
 export * from './meeting';
 export * from './plannerInput';

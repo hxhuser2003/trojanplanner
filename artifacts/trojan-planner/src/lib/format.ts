@@ -36,6 +36,8 @@ export const KIND_META: Record<ConstraintKind, { label: string; hint: string; us
   prefer_less_frequent: { label: 'Less frequent meetings', hint: 'Favor 2x/week over 3x/week', uses: [] },
   prefer_no_quizzes: { label: 'Avoid graded quizzes', hint: 'Favor courses without graded quizzes', uses: [] },
   prefer_no_attendance: { label: 'Avoid graded attendance', hint: 'Favor courses that do not grade attendance', uses: [] },
+  prefer_no_midterm: { label: 'Avoid midterms', hint: 'Favor courses without a midterm exam', uses: [] },
+  prefer_no_final: { label: 'Avoid final exams', hint: 'Favor courses without a final exam', uses: [] },
 };
 
 export function describeConstraint(c: Constraint, catalog?: Catalog): string {
@@ -48,10 +50,64 @@ export function describeConstraint(c: Constraint, catalog?: Catalog): string {
     case 'require_course': case 'exclude_course': return courseCode(catalog, c.value) ?? c.value;
     case 'lock_section': {
       const f = findSection(catalog, c.value);
-      return f ? `${f.course.code} §${f.section.id}` : c.value;
+      return f ? `${f.course.code} · ${sectionWhen(f.section)}` : c.value;
     }
     default: return KIND_META[c.kind]?.hint ?? '';
   }
+}
+
+const shortTime = (min: number) => fmtTime(min).replace(':00', '');
+const DAY_OR_TIME = /\s(?:(?:Mon|Tue|Wed|Thu|Fri)(?:day|days|s)?\b|\d{1,2}(?::\d{2})?\s?(?:am|pm)\b)/i;
+
+/** The label a rule would get from its fields, so editing days or times keeps the name accurate.
+ *  For time blocks, the name in front ("Work", "Gym") is kept from the previous label. */
+export function autoLabel(c: Constraint, catalog: Catalog | undefined, previous: string): string {
+  const days = [...c.days].sort().map((d) => DAYS[d]).join('/');
+  switch (c.kind) {
+    case 'no_day': return `${c.hard ? 'Keep' : 'Prefer'} ${days || 'days'} free`;
+    case 'earliest': return c.hard ? `No classes before ${shortTime(c.start)}` : `Prefer starts after ${shortTime(c.start)}`;
+    case 'latest': return c.hard ? `Done by ${shortTime(c.end)}` : `Prefer done by ${shortTime(c.end)}`;
+    case 'blocked': {
+      const name = previous.split(DAY_OR_TIME)[0]!.replace(/[\s·,–-]+$/, '').trim();
+      return `${name && name !== KIND_META.blocked.label ? name : 'Busy'} ${days || 'no days'} · ${shortTime(c.start)}–${shortTime(c.end)}`;
+    }
+    case 'require_course': return c.value ? `Take ${courseCode(catalog, c.value) ?? c.value}` : KIND_META[c.kind].label;
+    case 'exclude_course': return c.value ? `Don't take ${courseCode(catalog, c.value) ?? c.value}` : KIND_META[c.kind].label;
+    case 'lock_section': {
+      const f = findSection(catalog, c.value);
+      return f ? `Keep ${f.course.code} · ${sectionWhen(f.section)}` : KIND_META[c.kind].label;
+    }
+    default: return KIND_META[c.kind].label;
+  }
+}
+
+export interface SectionPart { id: string; kind: string; times: string[]; tba: boolean }
+
+/** Splits a registration combination ("30071+30070+30034") into its USC section numbers, each with
+ *  its type and meeting times. Parts are listed lecture first, in the same order as their meetings;
+ *  a part without listed times is named in unknownScheduleComponents ("Quiz 30034 time TBA"). */
+export function sectionParts(section: Section): SectionPart[] {
+  const kinds = [...new Set(section.meetings.map((m) => m.kind))];
+  const used = new Set<string>();
+  return section.componentIds.map((id) => {
+    const note = section.unknownScheduleComponents.find((u) => u.split(' ').includes(id));
+    const kind = note?.split(' ')[0] ?? kinds.find((k) => !used.has(k)) ?? 'Section';
+    used.add(kind);
+    const meetings = section.meetings.filter((m) => m.kind === kind);
+    // Same time on several days reads as "Tue/Thu 2:00pm–3:50pm".
+    const byTime = new Map<string, number[]>();
+    meetings.forEach((m) => {
+      const t = `${fmtTime(m.start)}–${fmtTime(m.end)}`;
+      byTime.set(t, [...(byTime.get(t) ?? []), m.day]);
+    });
+    const times = [...byTime].map(([t, days]) => `${days.sort().map((d) => DAYS[d]).join('/')} ${t}`);
+    return { id, kind, times, tba: !meetings.length };
+  });
+}
+
+/** A short, readable name for a section: when its lecture starts ("Tue/Thu 2:00pm"). */
+export function sectionWhen(section: Section): string {
+  return sectionParts(section)[0]?.times[0]?.split('–')[0] ?? 'time TBA';
 }
 
 export function courseCode(catalog: Catalog | undefined, id: string): string | undefined {
@@ -86,29 +142,4 @@ export function errMessage(e: unknown): string {
   // Drop the transport prefix ("HTTP 503 Service Unavailable: ") so users see only the server's message.
   const msg = e instanceof Error ? e.message : String(e);
   return msg.replace(/^HTTP \d{3}[^:]*: /, '');
-}
-
-export interface ScheduleDiff {
-  added: { courseId: string; sectionId: string }[];
-  removed: { courseId: string; sectionId: string }[];
-  moved: { courseId: string; from: string; to: string }[];
-  stats: { label: string; before: string; after: string }[];
-  same: boolean;
-}
-
-/** Deterministic before/after comparison of two validated schedules. */
-export function diffSchedules(before: Schedule | null, after: Schedule | null): ScheduleDiff {
-  const a = new Map((before?.selections ?? []).map((s) => [s.courseId, s.sectionId]));
-  const b = new Map((after?.selections ?? []).map((s) => [s.courseId, s.sectionId]));
-  const added = [...b].filter(([c]) => !a.has(c)).map(([courseId, sectionId]) => ({ courseId, sectionId }));
-  const removed = [...a].filter(([c]) => !b.has(c)).map(([courseId, sectionId]) => ({ courseId, sectionId }));
-  const moved = [...b].filter(([c, s]) => a.has(c) && a.get(c) !== s).map(([courseId, to]) => ({ courseId, from: a.get(courseId)!, to }));
-  const stat = (label: string, f: (s: Schedule) => string) => ({ label, before: before ? f(before) : '—', after: after ? f(after) : '—' });
-  const stats = [
-    stat('Units', (s) => String(s.units)),
-    stat('Campus days', (s) => String(s.campusDays)),
-    stat('Class hours', (s) => s.classHours.toFixed(1)),
-    stat('First class', (s) => (s.selections.length ? fmtTime(s.earliestStart) : '—')),
-  ].filter((x) => x.before !== x.after);
-  return { added, removed, moved, stats, same: !added.length && !removed.length && !moved.length && !stats.length };
 }

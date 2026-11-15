@@ -16,7 +16,7 @@ export interface Course {
   description: string;
   color: string;
   sourceUrl: string;
-  prerequisites: string[];
+  prerequisiteGroups: string[][];
   sections: Section[];
   syllabus: Syllabus;
 }

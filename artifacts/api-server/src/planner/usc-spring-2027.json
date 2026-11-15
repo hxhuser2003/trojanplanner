@@ -1,0 +1,488 @@
+{
+  "term": "Spring 2027",
+  "termCode": "20271",
+  "retrievedAt": "2026-11-15T00:38:32+00:00",
+  "source": "USC Schedule of Classes public course API",
+  "courses": [
+    {
+      "id": "CSCI-544",
+      "code": "CSCI 544",
+      "title": "Applied Natural Language Processing",
+      "units": 4,
+      "description": "Introduction to key components of human language technologies, including: information extraction, sentiment analysis, question answering, machine translation.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30063",
+          "componentIds": [
+            "30063"
+          ],
+          "instructor": "Xuezhe Ma",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 900,
+              "end": 1010,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 900,
+              "end": 1010,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/544/30063"
+        },
+        {
+          "id": "30105",
+          "componentIds": [
+            "30105"
+          ],
+          "instructor": "Xuezhe Ma",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 900,
+              "end": 1010,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 900,
+              "end": 1010,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/544/30105"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI544"
+    },
+    {
+      "id": "CSCI-546",
+      "code": "CSCI 546",
+      "title": "Distributed Systems",
+      "units": 4,
+      "description": "The theory and practice of distributed systems. Topics include: distributed storage systems, fault tolerance, consensus, consistency, transactions, distributed data processing and efficient cloud computing.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30132",
+          "componentIds": [
+            "30132"
+          ],
+          "instructor": "Seo Jin Park",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 840,
+              "end": 950,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 840,
+              "end": 950,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/546/30132"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI546"
+    },
+    {
+      "id": "CSCI-561",
+      "code": "CSCI 561",
+      "title": "Foundations of Artificial Intelligence",
+      "units": 4,
+      "description": "Foundations of symbolic intelligent systems, search, logic, knowledge representation, planning, learning.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30071+30070+30034",
+          "componentIds": [
+            "30071",
+            "30070",
+            "30034"
+          ],
+          "instructor": "Wei-Min Shen",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 1080,
+              "end": 1220,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 0,
+              "start": 1230,
+              "end": 1280,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 30034 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/561/30071"
+        },
+        {
+          "id": "29936+30030+30035",
+          "componentIds": [
+            "29936",
+            "30030",
+            "30035"
+          ],
+          "instructor": "Wei-Min Shen",
+          "meetings": [
+            {
+              "day": 0,
+              "start": 1080,
+              "end": 1220,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 0,
+              "start": 1230,
+              "end": 1280,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [
+            "Quiz 30035 time TBA"
+          ],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required; some meeting times are TBA",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/561/29936"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI561"
+    },
+    {
+      "id": "CSCI-570",
+      "code": "CSCI 570",
+      "title": "Analysis of Algorithms",
+      "units": 4,
+      "description": "Explores fundamental techniques such as recursion, Fourier transform ordering, dynamic programming for efficient algorithm construction. Examples include arithmetic, algebraic, graph, pattern matching, sorting, searching algorithms.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30395+30089+30227",
+          "componentIds": [
+            "30395",
+            "30089",
+            "30227"
+          ],
+          "instructor": "Shahriar Shamsian",
+          "meetings": [
+            {
+              "day": 2,
+              "start": 1020,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 2,
+              "start": 1170,
+              "end": 1220,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 1080,
+              "end": 1190,
+              "kind": "Quiz",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/570/30395"
+        },
+        {
+          "id": "30198+30290+30291",
+          "componentIds": [
+            "30198",
+            "30290",
+            "30291"
+          ],
+          "instructor": "Shahriar Shamsian",
+          "meetings": [
+            {
+              "day": 4,
+              "start": 840,
+              "end": 980,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 990,
+              "end": 1040,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 1080,
+              "end": 1190,
+              "kind": "Quiz",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/570/30198"
+        },
+        {
+          "id": "30099+29952+29953",
+          "componentIds": [
+            "30099",
+            "29952",
+            "29953"
+          ],
+          "instructor": "Shahriar Shamsian",
+          "meetings": [
+            {
+              "day": 4,
+              "start": 840,
+              "end": 980,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 990,
+              "end": 1040,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 1080,
+              "end": 1190,
+              "kind": "Quiz",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/570/30099"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI570"
+    },
+    {
+      "id": "CSCI-571",
+      "code": "CSCI 571",
+      "title": "Web Technologies",
+      "units": 4,
+      "description": "Study of client-side and server-side Web programming languages, including HTML, CSS, JavaScript, Python, Java, Kotlin. Vibe coding with IDEs, AI Assistants and LLMs.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30378",
+          "componentIds": [
+            "30378"
+          ],
+          "instructor": "Marco Papa",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 1050,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 1050,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/571/30378"
+        },
+        {
+          "id": "30016",
+          "componentIds": [
+            "30016"
+          ],
+          "instructor": "Marco Papa",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 1050,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 1050,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/571/30016"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI571"
+    },
+    {
+      "id": "CSCI-572",
+      "code": "CSCI 572",
+      "title": "Information Retrieval and Web Search Engines",
+      "units": 4,
+      "description": "Examines key aspects of information retrieval as they apply to search engines; web crawling, indexing, querying and quality of results are studied.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30370",
+          "componentIds": [
+            "30370"
+          ],
+          "instructor": "Sathyanaraya Raghavachary",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 1020,
+              "end": 1220,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/572/30370"
+        },
+        {
+          "id": "30210",
+          "componentIds": [
+            "30210"
+          ],
+          "instructor": "Sathyanaraya Raghavachary",
+          "meetings": [
+            {
+              "day": 1,
+              "start": 1020,
+              "end": 1220,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/572/30210"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI572"
+    },
+    {
+      "id": "CSCI-585",
+      "code": "CSCI 585",
+      "title": "Database Systems",
+      "units": 4,
+      "description": "Database system architecture; conceptual database models; semantic, object-oriented, logic-based, and relational databases; user and program interfaces; database system implementation; integrity, security, concurrency and recovery. Recommended Preparation: Knowledge of relational databases, SQL, relational algebra and physical database design is required. Open only to graduate students.",
+      "prerequisiteGroups": [],
+      "sections": [
+        {
+          "id": "30150+30288+30371",
+          "componentIds": [
+            "30150",
+            "30288",
+            "30371"
+          ],
+          "instructor": "Sathyanaraya Raghavachary",
+          "meetings": [
+            {
+              "day": 3,
+              "start": 1020,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 1170,
+              "end": 1220,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 900,
+              "end": 1010,
+              "kind": "Quiz",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/585/30150"
+        },
+        {
+          "id": "30149+30146+30157",
+          "componentIds": [
+            "30149",
+            "30146",
+            "30157"
+          ],
+          "instructor": "Sathyanaraya Raghavachary",
+          "meetings": [
+            {
+              "day": 3,
+              "start": 1020,
+              "end": 1160,
+              "kind": "Lecture",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 3,
+              "start": 1170,
+              "end": 1220,
+              "kind": "Discussion",
+              "location": "See USC Schedule of Classes"
+            },
+            {
+              "day": 4,
+              "start": 900,
+              "end": 1010,
+              "kind": "Quiz",
+              "location": "See USC Schedule of Classes"
+            }
+          ],
+          "unknownScheduleComponents": [],
+          "eligibility": "Confirm seats, restrictions, and registration eligibility in USC Web Registration; D-clearance required",
+          "syllabusUrl": "https://usc.simplesyllabus.com/en-US/syllabus/Spring 2027/CSCI/585/30149"
+        }
+      ],
+      "sourceUrl": "https://classes.usc.edu/term/20271/catalogue/course/CSCI585"
+    }
+  ]
+}

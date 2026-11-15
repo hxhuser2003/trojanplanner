@@ -45,6 +45,28 @@ export interface Evidence {
   status: EvidenceStatus;
 }
 
+export type GradingItemKind = typeof GradingItemKind[keyof typeof GradingItemKind];
+
+
+export const GradingItemKind = {
+  attendance: 'attendance',
+  participation: 'participation',
+  quiz: 'quiz',
+  homework: 'homework',
+  project: 'project',
+  midterm: 'midterm',
+  final: 'final',
+  exam: 'exam',
+  other: 'other',
+} as const;
+
+export interface GradingItem {
+  item: string;
+  kind: GradingItemKind;
+  percent: number;
+  when?: string;
+}
+
 export type SyllabusStatus = typeof SyllabusStatus[keyof typeof SyllabusStatus];
 
 
@@ -77,6 +99,7 @@ export interface Syllabus {
   quizPercent?: number | null;
   /** @nullable */
   attendancePercent?: number | null;
+  grading: GradingItem[];
   projectMode: SyllabusProjectMode;
   cadence: string;
   attendance: string;
@@ -86,8 +109,11 @@ export interface Syllabus {
 
 export interface Section {
   id: string;
+  componentIds: string[];
   instructor: string;
   eligibility: string;
+  syllabusUrl: string;
+  unknownScheduleComponents: string[];
   meetings: Meeting[];
 }
 
@@ -100,7 +126,7 @@ export interface Course {
   description: string;
   color: string;
   sourceUrl: string;
-  prerequisites: string[];
+  prerequisiteGroups: string[][];
   sections: Section[];
   syllabus: Syllabus;
 }
@@ -131,6 +157,8 @@ export const ConstraintKind = {
   prefer_less_frequent: 'prefer_less_frequent',
   prefer_no_quizzes: 'prefer_no_quizzes',
   prefer_no_attendance: 'prefer_no_attendance',
+  prefer_no_midterm: 'prefer_no_midterm',
+  prefer_no_final: 'prefer_no_final',
 } as const;
 
 export interface Constraint {

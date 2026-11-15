@@ -62,7 +62,7 @@ function validateSolution(raw: RawSolution, input: PlannerInput): [Course, Secti
     }
   }
   for (const [c, s] of selected) {
-    if (completed.has(c.id) || c.prerequisites.some(p => !completed.has(p))) throw new Error("Completed course or prerequisite violation.");
+    if (completed.has(c.id) || !c.prerequisiteGroups.every(group => group.some(option => completed.has(option)))) throw new Error("Completed course or prerequisite violation.");
     for (const rule of input.constraints.filter(x => x.enabled && x.hard)) {
       if (!satisfies(s, rule)) throw new Error("Hard time constraint violated.");
     }
@@ -87,12 +87,15 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     const list = meetings.filter(m => m.day === day).sort((a, b) => a.start - b.start);
     for (let i = 1; i < list.length; i++) gapMinutes += list[i]!.start - list[i - 1]!.end;
   }
-  const known = selected.filter(([c]) => c.syllabus.status === "synthetic");
+  // Historical USC syllabi and labeled mock syllabi both count as known; only "unknown" is excluded.
+  const known = selected.filter(([c]) => c.syllabus.status !== "unknown");
   const individual = known.filter(([c]) => c.syllabus.projectMode === "individual").length;
   const projectHeavy = known.filter(([c]) => (c.syllabus.projectPercent ?? -1) >= 50).length;
   const examHeavy = known.filter(([c]) => (c.syllabus.examPercent ?? -1) >= 50).length;
   const quizCourses = known.filter(([c]) => (c.syllabus.quizPercent ?? 0) > 0).length;
   const attendanceCourses = known.filter(([c]) => (c.syllabus.attendancePercent ?? 0) > 0).length;
+  const midtermCourses = known.filter(([c]) => c.syllabus.grading.some(i => i.kind === "midterm")).length;
+  const finalCourses = known.filter(([c]) => c.syllabus.grading.some(i => i.kind === "final")).length;
   const days = new Set(meetings.map(m => m.day)).size;
   const earliest = meetings.length ? Math.min(...meetings.map(m => m.start)) : 0;
   return {
@@ -100,24 +103,29 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     title: index === 0 ? "Best preference fit" : `Alternative ${index}`,
     selections: selected.map(([c, s]) => ({
       courseId: c.id, sectionId: s.id,
-      reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. All linked meetings included. ${c.syllabus.status === "unknown" ? "Assessment information not specified." : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (synthetic).`}`,
+      reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. Published linked meeting times checked. ${c.syllabus.status === "unknown" ? "Assessment information not specified." : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (${c.syllabus.status === "synthetic" ? "illustrative mock" : `historical ${c.syllabus.term}`}; verify current policy).`}`,
     })),
     units: selected.reduce((sum, [c]) => sum + c.units, 0), campusDays: days,
     classHours: Math.round(meetings.reduce((sum, m) => sum + m.end - m.start, 0) / 6) / 10,
     gapMinutes, earliestStart: earliest, score: raw.score,
-    projectHeavy, examHeavy, individual, quizCourses, attendanceCourses,
-    checks: ["No overlapping meetings in the loaded data", "All enabled hard constraints respected", "Unit bounds and selected illustrative requirements checked", "Linked meetings and known prerequisites checked"],
-    warnings: ["Synthetic data only—not an official degree audit.", "Seat availability, restrictions, real prerequisites, and current USC degree eligibility remain unverified.",
+    projectHeavy, examHeavy, individual, quizCourses, attendanceCourses, midtermCourses, finalCourses,
+    checks: ["No overlapping published meetings in the loaded data", "All enabled hard constraints respected for published times", "Unit bounds and selected illustrative goals checked", "Published linked meetings and listed prerequisite groups checked against entered completions"],
+    warnings: ["USC offerings are a cached snapshot; recheck the Schedule of Classes before registration.", "Planning goals and completed courses are illustrative, not an official degree audit. Seat availability, restrictions, and actual prerequisite clearance remain unverified.",
+      ...selected.filter(([, s]) => s.unknownScheduleComponents.length > 0).map(([c, s]) => `${c.code}: ${s.unknownScheduleComponents.map(u => u.replace(/ \d{5}\b/, "")).join(", ")}; full conflict check is not possible.`),
+      ...(selected.some(([c]) => c.syllabus.status === "historical") ? ["Grading for some courses comes from a past term's USC syllabus; Spring 2027 grading may differ, so confirm with the instructor."] : []),
+      ...(selected.some(([c]) => c.syllabus.status === "synthetic") ? ["Some grading tables are illustrative mocks, not published by USC."] : []),
       ...(known.length < selected.length ? ["Some syllabi are missing; absence of evidence does not mean fewer exams or projects."] : [])],
-    assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses; ${quizCourses} with graded quizzes; ${attendanceCourses} with graded attendance. Evidence coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
+    assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses; ${quizCourses} with graded quizzes; ${attendanceCourses} with graded attendance or participation; ${midtermCourses} with a midterm; ${finalCourses} with a final exam. Syllabus coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
   };
 }
 let activeSolves = 0;
 async function worker(input: PlannerInput): Promise<WorkerResult> {
   const local = path.resolve("src/planner/solver.py");
   const script = existsSync(local) ? local : path.resolve("artifacts/api-server/src/planner/solver.py");
+  const venvPython = [path.resolve(".venv/Scripts/python.exe"), path.resolve("../../.venv/Scripts/python.exe")].find(existsSync);
+  const python = process.env.PYTHON_BIN || venvPython || "python";
   return new Promise((resolve, reject) => {
-    const process = spawn("python", [script], { stdio: ["pipe", "pipe", "pipe"] });
+    const process = spawn(python, [script], { stdio: ["pipe", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     const timeout = setTimeout(() => { process.kill("SIGKILL"); reject(new Error("SOLVER_TIMEOUT")); }, 15000);
@@ -151,6 +159,8 @@ function alternativeTitle(best: Summary, alt: Summary, used: Set<string>): strin
   if (alt.earliestStart > best.earliestStart) wins.push([(alt.earliestStart - best.earliestStart) / 3, `No class before ${clock(alt.earliestStart)}`]);
   if (alt.quizCourses < best.quizCourses) wins.push([(best.quizCourses - alt.quizCourses) * 18, alt.quizCourses ? "Fewer quizzes" : "No quizzes"]);
   if (alt.attendanceCourses < best.attendanceCourses) wins.push([(best.attendanceCourses - alt.attendanceCourses) * 18, alt.attendanceCourses ? "Less graded attendance" : "No graded attendance"]);
+  if (alt.midtermCourses < best.midtermCourses) wins.push([(best.midtermCourses - alt.midtermCourses) * 20, alt.midtermCourses ? "Fewer midterms" : "No midterms"]);
+  if (alt.finalCourses < best.finalCourses) wins.push([(best.finalCourses - alt.finalCourses) * 20, alt.finalCourses ? "Fewer final exams" : "No final exams"]);
   if (alt.gapMinutes < best.gapMinutes) wins.push([(best.gapMinutes - alt.gapMinutes) / 6, alt.gapMinutes ? "Fewer gaps between classes" : "Back-to-back classes, no gaps"]);
   if (alt.classHours < best.classHours) wins.push([(best.classHours - alt.classHours) * 8, "Less time in class"]);
   if (alt.projectHeavy > best.projectHeavy) wins.push([(alt.projectHeavy - best.projectHeavy) * 15, "More project-based"]);
@@ -188,7 +198,7 @@ export async function solve(input: PlannerInput) {
       status: result.status, engine: "Google OR-Tools CP-SAT + independent validator",
       elapsedMs: result.elapsedMs, schedules, repairs, conflicts: result.conflicts,
       message: result.status === "infeasible"
-        ? "No schedule satisfies all confirmed constraints in this synthetic dataset. This is a sufficient conflict explanation, not a guaranteed smallest conflict."
+        ? "No schedule satisfies all confirmed constraints in the cached USC subset. This is a sufficient conflict explanation, not a guaranteed smallest conflict."
         : result.status === "unknown" ? "Search ended without establishing a solution or impossibility. Your constraints were not changed."
         : result.status === "invalid" ? "The solver rejected the model. No schedule has been accepted."
         : `${schedules.length} distinct schedule${schedules.length === 1 ? "" : "s"} validated against the loaded data. ${result.status === "optimal" ? "First result is optimal for the modeled preference score." : "A feasible result was found; optimality was not proven."}`,

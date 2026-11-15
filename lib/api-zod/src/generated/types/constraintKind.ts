@@ -23,4 +23,6 @@ export const ConstraintKind = {
   prefer_less_frequent: 'prefer_less_frequent',
   prefer_no_quizzes: 'prefer_no_quizzes',
   prefer_no_attendance: 'prefer_no_attendance',
+  prefer_no_midterm: 'prefer_no_midterm',
+  prefer_no_final: 'prefer_no_final',
 } as const;
