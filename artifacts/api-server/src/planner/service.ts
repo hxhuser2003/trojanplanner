@@ -173,16 +173,37 @@ const clock = (min: number) => {
   return `${h % 12 === 0 ? 12 : h % 12}${m ? `:${String(m).padStart(2, "0")}` : ""}${h >= 12 ? "pm" : "am"}`;
 };
 /** Names an alternative by its single biggest advantage over the best schedule, e.g. "Only 2 campus days" or "No quizzes". */
+type GradeKind = Course["syllabus"]["grading"][number]["kind"];
+const ASSESSMENT_LABELS: [{ has: GradeKind[]; maybe: GradeKind[] }, number, string, string][] = [
+  [{ has: ["quiz"], maybe: [] }, 18, "No quizzes", "Fewer quizzes"],
+  [{ has: ["attendance", "participation"], maybe: [] }, 18, "No graded attendance", "Less graded attendance"],
+  [{ has: ["midterm"], maybe: ["exam"] }, 20, "No midterms", "Fewer midterms"],
+  [{ has: ["final"], maybe: ["exam"] }, 20, "No final exams", "Fewer final exams"],
+];
+/** Courses in a plan that certainly have this kind of assessment, and ones that might (unlabeled exams, no grading table). */
+function assessmentCount(plan: Summary, kinds: { has: GradeKind[]; maybe: GradeKind[] }) {
+  let yes = 0, maybe = 0;
+  for (const sel of plan.selections) {
+    const grading = catalog.courses.find(c => c.id === sel.courseId)?.syllabus.grading ?? [];
+    if (grading.some(g => kinds.has.includes(g.kind))) yes++;
+    else if (!grading.length || grading.some(g => kinds.maybe.includes(g.kind))) maybe++;
+  }
+  return { yes, maybe };
+}
+
 function alternativeTitle(best: Summary, alt: Summary, used: Set<string>): string {
   const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
   // Each candidate is [rough size of the win, label]. Sizes put different units on one scale.
   const wins: [number, string][] = [];
   if (alt.campusDays < best.campusDays) wins.push([(best.campusDays - alt.campusDays) * 30, `Only ${plural(alt.campusDays, "campus day")}`]);
   if (alt.earliestStart > best.earliestStart) wins.push([(alt.earliestStart - best.earliestStart) / 3, `No class before ${clock(alt.earliestStart)}`]);
-  if (alt.quizCourses < best.quizCourses) wins.push([(best.quizCourses - alt.quizCourses) * 18, alt.quizCourses ? "Fewer quizzes" : "No quizzes"]);
-  if (alt.attendanceCourses < best.attendanceCourses) wins.push([(best.attendanceCourses - alt.attendanceCourses) * 18, alt.attendanceCourses ? "Less graded attendance" : "No graded attendance"]);
-  if (alt.midtermCourses < best.midtermCourses) wins.push([(best.midtermCourses - alt.midtermCourses) * 20, alt.midtermCourses ? "Fewer midterms" : "No midterms"]);
-  if (alt.finalCourses < best.finalCourses) wins.push([(best.finalCourses - alt.finalCourses) * 20, alt.finalCourses ? "Fewer final exams" : "No final exams"]);
+  // Assessment labels are promises, so they come from every course's grading table and are only used when
+  // certainly true: an unlabeled "Exam 1" might be a midterm, and a course with no table might have anything.
+  for (const [kinds, weight, none, fewer] of ASSESSMENT_LABELS) {
+    const a = assessmentCount(alt, kinds), b = assessmentCount(best, kinds);
+    if (a.yes + a.maybe === 0) { if (b.yes + b.maybe > 0) wins.push([b.yes * weight + 5, none]); }
+    else if (a.yes + a.maybe < b.yes) wins.push([(b.yes - a.yes - a.maybe) * weight, fewer]);
+  }
   if (alt.gapMinutes < best.gapMinutes) wins.push([(best.gapMinutes - alt.gapMinutes) / 6, alt.gapMinutes ? "Fewer gaps between classes" : "Back-to-back classes, no gaps"]);
   if (alt.classHours < best.classHours) wins.push([(best.classHours - alt.classHours) * 8, "Less time in class"]);
   if (alt.projectHeavy > best.projectHeavy) wins.push([(alt.projectHeavy - best.projectHeavy) * 15, "More project-based"]);

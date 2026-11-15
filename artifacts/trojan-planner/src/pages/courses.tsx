@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useLocation, useSearch } from 'wouter';
-import { Search, ExternalLink, Plus, FileText, Check, Ban } from 'lucide-react';
+import { Search, ExternalLink, Plus, FileText, Check, Ban, CalendarDays, Repeat, Users, UserCheck } from 'lucide-react';
 import type { Catalog, Course, Constraint } from '@workspace/api-client-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,48 @@ function projectLabel(c: Course) {
   const p = c.syllabus.projectPercent;
   if (p == null) return 'project weight unknown';
   return `${p}% projects · ${c.syllabus.status === 'synthetic' ? 'mock' : 'historical'}`;
+}
+
+const TEAM: Record<string, string> = {
+  individual: 'Solo work', group: 'Team projects', mixed: 'Mix of solo and team work', unspecified: 'Not stated in the syllabus',
+};
+
+/** What a student wants to know before picking a course, from the syllabus: dates, workload, teamwork, attendance, and where it came from. */
+function AtAGlance({ course }: { course: Course }) {
+  const s = course.syllabus;
+  // `when` sometimes holds a description ("Five quizzes"); only real timing ("Week 8", "Finals week") counts as a date.
+  const dated = s.grading.filter((g) => g.when && /\b(weeks?|finals|exam (week|period))\b|\b(jan|feb|mar|apr|may|aug|sep|oct|nov|dec)[a-z]*\.? \d/i.test(g.when) && !/^weekly$/i.test(g.when));
+  const team = s.evidence.find((e) => e.label === 'Project format')?.value;
+  const page = s.evidence.find((e) => e.label === 'Grading table')?.page;
+  const rows: { icon: typeof CalendarDays; label: string; body: ReactNode }[] = [
+    { icon: CalendarDays, label: 'Key dates', body: dated.length
+      ? <ul className="space-y-0.5">{dated.map((g) => <li key={g.item}><span className="font-medium">{g.item}</span> <span className="text-muted-foreground">· {g.when}</span></li>)}</ul>
+      : <span className="text-muted-foreground">No dates listed in the syllabus.</span> },
+    { icon: Repeat, label: 'Workload', body: s.cadence || <span className="text-muted-foreground">Not stated.</span> },
+    { icon: Users, label: 'Solo or team', body: team && s.projectMode !== 'individual' ? `${TEAM[s.projectMode] ?? s.projectMode} (${team.toLowerCase()})` : TEAM[s.projectMode] ?? s.projectMode },
+    { icon: UserCheck, label: 'Attendance', body: s.attendance || <span className="text-muted-foreground">Not stated.</span> },
+  ];
+  return (
+    <div data-testid="card-at-a-glance">
+      <h3 className="text-base font-semibold mb-3">Course at a glance</h3>
+      {s.status === 'unknown' ? <p className="text-sm italic text-muted-foreground">No syllabus on file, so these details are unknown.</p> : (
+        <dl className="divide-y rounded-lg border">
+          {rows.map(({ icon: Icon, label, body }) => (
+            <div key={label} className="flex gap-3 p-3 text-sm">
+              <Icon className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+              <div className="min-w-0"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-0.5">{body}</dd></div>
+            </div>
+          ))}
+        </dl>
+      )}
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+        <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline" data-testid="link-syllabus-source">
+          <FileText className="size-3.5" />{s.status === 'synthetic' ? 'Mock syllabus (made for this demo)' : `${s.term} USC syllabus${page ? `, p. ${page}` : ''}`}<ExternalLink className="size-3" />
+        </a>
+        <a href={course.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-muted-foreground hover:underline" data-testid="link-course-source">USC course listing<ExternalLink className="size-3" /></a>
+      </div>
+    </div>
+  );
 }
 
 const GROUP = {
@@ -165,8 +207,8 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
 
       <div className="mt-6 grid md:grid-cols-[1fr_1.4fr] gap-6">
         <div>
-          <h3 className="text-base font-semibold mb-1">Assessment fit</h3>
-          <p className="text-xs text-muted-foreground mb-3">{s.status === 'synthetic' ? 'Mock syllabus created for this demo' : s.status === 'historical' ? `Real USC syllabus from ${s.term}` : 'No syllabus on file; unknown is not zero'}. These weights are not verified for Spring 2027.</p>
+          <h3 className="text-base font-semibold mb-1">Grading</h3>
+          <p className="text-xs text-muted-foreground mb-3">{s.status === 'synthetic' ? 'Mock syllabus made for this demo.' : s.status === 'historical' ? `From the ${s.term} USC syllabus; Spring 2027 may differ.` : 'No syllabus on file; unknown is not zero.'}</p>
           {s.grading.length > 0 ? (
             <div data-testid="table-grading">
               <div className="flex h-2.5 rounded-full overflow-hidden bg-muted gap-px" aria-hidden>
@@ -197,34 +239,8 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
               <Bar label="Other" v={s.otherPercent} cls="bg-chart-3" />
             </div>
           )}
-          <div className="mt-4 rounded-lg bg-secondary/60 p-3 text-xs space-y-1">
-            <p><span className="font-semibold">Label:</span> {projectLabel(course)} <span className="text-muted-foreground">(threshold: projects at or above 50%)</span></p>
-            <p><span className="font-semibold">Project mode:</span> {s.projectMode}</p>
-            <p><span className="font-semibold">Cadence:</span> {s.cadence || 'Unknown'}</p>
-            <p><span className="font-semibold">Attendance:</span> {s.attendance || 'Unknown'}</p>
-          </div>
-          <div className="mt-3 flex flex-col gap-1.5 text-xs">
-            <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary font-semibold hover:underline" data-testid="link-syllabus-source"><FileText className="size-3.5" />{s.status === 'synthetic' ? 'Open clearly labeled mock syllabus' : `Open USC ${s.term} syllabus source`}<ExternalLink className="size-3" /></a>
-            <a href={course.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-muted-foreground hover:underline" data-testid="link-course-source">Course listing provenance<ExternalLink className="size-3" /></a>
-          </div>
         </div>
-        <div>
-          <h3 className="text-base font-semibold mb-2">Evidence</h3>
-          {s.evidence.length === 0 ? <p className="text-sm italic text-muted-foreground">No syllabus evidence on file. Treat all assessment details as unknown.</p> : (
-            <ul className="space-y-2">
-              {s.evidence.map((e, i) => (
-                <li key={i} className="rounded-lg border p-3" data-testid={`evidence-${i}`}>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm"><span className="font-semibold">{e.label}:</span> {e.value}</p>
-                    <span className={cn('text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border font-semibold shrink-0', e.status === 'unknown' ? 'border-destructive/40 text-destructive' : e.status === 'historical' ? 'border-amber-600/40 text-amber-700' : 'border-primary/30 text-primary')}>{e.status}</span>
-                  </div>
-                  {e.excerpt && <p className="mt-2 border-l-2 border-accent pl-3 text-xs text-muted-foreground">{e.excerpt}</p>}
-                  <p className="text-[10px] font-mono text-muted-foreground mt-1">p. {e.page}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <AtAGlance course={course} />
       </div>
     </article>
   );
