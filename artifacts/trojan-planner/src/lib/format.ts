@@ -17,6 +17,31 @@ export function fmtHours(h: number): string {
   return `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}`;
 }
 
+export function fmtRange(start: number, end: number): string {
+  const from = fmtTime(start);
+  const to = fmtTime(end);
+  const samePeriod = from.slice(-2) === to.slice(-2);
+  return `${samePeriod ? from.slice(0, -2) : from}–${to}`;
+}
+
+export function formatSectionTimes(catalog: Catalog, courseId: string, sectionId: string): string {
+  const course = catalog.courses.find((item) => item.id === courseId);
+  const section = course?.sections.find((item) => item.id === sectionId);
+  if (!section) return 'class time unavailable';
+
+  const groups = new Map<string, { start: number; end: number; days: number[] }>();
+  for (const meeting of section.meetings) {
+    const key = `${meeting.start}-${meeting.end}`;
+    const group = groups.get(key) ?? { start: meeting.start, end: meeting.end, days: [] };
+    group.days.push(meeting.day);
+    groups.set(key, group);
+  }
+  const times = [...groups.values()]
+    .map(({ start, end, days }) => `${days.map((day) => DAYS[day] ?? `Day ${day}`).join('/') } ${fmtRange(start, end)}`);
+  if (section.unknownScheduleComponents.length) times.push(`TBA: ${section.unknownScheduleComponents.join(', ')}`);
+  return times.join('; ') || 'class time unavailable';
+}
+
 export function toHHMM(min: number): string {
   const c = Math.min(Math.max(min, 0), 1439);
   return `${String(Math.floor(c / 60)).padStart(2, '0')}:${String(c % 60).padStart(2, '0')}`;

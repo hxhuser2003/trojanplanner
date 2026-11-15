@@ -4,7 +4,7 @@ import type { Catalog, Constraint, PlannerInput, Schedule } from '@workspace/api
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ExplainButton } from '@/components/explain';
-import { DAYS, fmtTime } from '@/lib/format';
+import { DAYS, fmtRange, fmtTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const START = 8 * 60;
@@ -82,7 +82,7 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
                         <span className="text-xs font-semibold">{course.code}</span>
                         {locked ? <Lock className="size-3" /> : <LockOpen className="size-3 opacity-0 group-hover:opacity-80 transition-opacity" />}
                       </div>
-                      <div className="text-[11px] text-muted-foreground leading-tight">{m.kind} · {fmtTime(m.start)}</div>
+                      <div className="text-[10px] text-muted-foreground leading-tight">{m.kind} · {fmtRange(m.start, m.end)}</div>
                     </button>
                   );
                   if (!input || !schedule) return block;

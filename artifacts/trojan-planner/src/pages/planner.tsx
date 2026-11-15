@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info, X } from 'lucide-react';
 import type { Catalog, Constraint, PlannerInput, Repair } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,7 +13,7 @@ import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
 import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
-import { fmtHours, fmtTime, sectionWhen } from '@/lib/format';
+import { fmtHours, fmtTime, sectionWhen, formatSectionTimes, type ScheduleDiff } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -228,6 +228,35 @@ function SolveStatus() {
   );
 }
 
+function WhatChanged({ diff, catalog, onDismiss }: { diff: ScheduleDiff; catalog: Catalog; onDismiss: () => void }) {
+  const code = (id: string) => catalog.courses.find((c) => c.id === id)?.code ?? id;
+  const changes = [
+    ...diff.added.map((x) => `${code(x.courseId)} — added: ${formatSectionTimes(catalog, x.courseId, x.sectionId)}`),
+    ...diff.removed.map((x) => `${code(x.courseId)} — removed: ${formatSectionTimes(catalog, x.courseId, x.sectionId)}`),
+    ...diff.moved.map((x) => {
+      const before = formatSectionTimes(catalog, x.courseId, x.from);
+      const after = formatSectionTimes(catalog, x.courseId, x.to);
+      return before === after
+        ? `${code(x.courseId)} — section changed; meeting times unchanged: ${after}`
+        : `${code(x.courseId)} — meeting time changed: ${before} → ${after}`;
+    }),
+    ...diff.stats.map((x) => `${x.label}: ${x.before} → ${x.after}`),
+  ];
+  return (
+    <div className="rounded-lg border bg-secondary/60 px-3 py-2 text-sm flex items-start gap-2 rise" data-testid="status-what-changed">
+      <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
+      <div className="flex-1">
+        <p className="font-medium">{diff.same ? 'Your schedule stayed the same.' : 'What changed:'}</p>
+        {!diff.same && (
+          <ul className="mt-1 space-y-0.5">
+            {changes.map((change, index) => <li key={`${index}-${change}`}>{change}</li>)}
+          </ul>
+        )}
+      </div>
+      <button onClick={onDismiss} className="p-0.5 rounded hover:bg-background" aria-label="Dismiss"><X className="size-3.5" /></button>
+    </div>
+  );
+}
 
 function Conflicts({ result, catalog, input, solvedInput, onApprove, solving, stale }: { result: NonNullable<ReturnType<typeof usePlanner>['result']>; catalog: Catalog; input: PlannerInput; solvedInput: PlannerInput | null; onApprove: (r: Repair) => void; solving: boolean; stale: boolean }) {
   return (
