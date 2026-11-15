@@ -6,6 +6,7 @@ import { SolvePlannerBody, SolvePlannerResponse } from "@workspace/api-zod";
 import type { z } from "zod";
 import { catalog } from "./catalog";
 import { classMinutes, goalsFit } from "./explain";
+import { unmetPrerequisiteGroups } from "./prerequisites";
 
 export type PlannerInput = z.infer<typeof SolvePlannerBody>;
 export type Constraint = PlannerInput["constraints"][number];
@@ -77,7 +78,7 @@ function validateSolution(raw: RawSolution, input: PlannerInput): [Course, Secti
     }
   }
   for (const [c, s] of selected) {
-    if (completed.has(c.id) || !c.prerequisiteGroups.every(group => group.some(option => completed.has(option)))) throw new Error("Completed course or prerequisite violation.");
+    if (completed.has(c.id) || unmetPrerequisiteGroups(c.prerequisiteGroups, completed).length > 0) throw new Error("Completed course or prerequisite violation.");
     for (const rule of input.constraints.filter(x => x.enabled && x.hard)) {
       if (!satisfies(s, rule)) throw new Error("Hard time constraint violated.");
     }
