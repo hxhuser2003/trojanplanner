@@ -199,6 +199,15 @@ export interface ScheduleDiff {
   same: boolean;
 }
 
+export function emptyScheduleStat(label: string): string {
+  switch (label) {
+    case 'Units': return '0 units';
+    case 'Campus days': return '0 days';
+    case 'Class hours': return '0 hours';
+    default: return 'No classes';
+  }
+}
+
 /** Deterministic before/after comparison of two validated schedules. */
 export function diffSchedules(before: Schedule | null, after: Schedule | null, catalog?: Catalog): ScheduleDiff {
   const a = new Map((before?.selections ?? []).map((s) => [s.courseId, s.sectionId]));
@@ -206,15 +215,15 @@ export function diffSchedules(before: Schedule | null, after: Schedule | null, c
   const added = [...b].filter(([c]) => !a.has(c)).map(([courseId, sectionId]) => ({ courseId, sectionId }));
   const removed = [...a].filter(([c]) => !b.has(c)).map(([courseId, sectionId]) => ({ courseId, sectionId }));
   const moved = [...b].filter(([c, s]) => a.has(c) && a.get(c) !== s).map(([courseId, to]) => ({ courseId, from: a.get(courseId)!, to }));
-  const stat = (label: string, f: (s: Schedule) => string) => ({ label, before: before ? f(before) : '—', after: after ? f(after) : '—' });
+  const stat = (label: string, f: (s: Schedule) => string) => ({ label, before: before ? f(before) : emptyScheduleStat(label), after: after ? f(after) : emptyScheduleStat(label) });
   const stats = [
     stat('Units', (s) => `${s.units} units`),
     stat('Campus days', (s) => `${s.campusDays} days`),
     stat('Class hours', (s) => `${s.classHours.toFixed(1)} hours`),
-    stat('First class', (s) => (s.selections.length ? fmtTime(s.earliestStart) : '—')),
+    stat('First class', (s) => (s.selections.length ? fmtTime(s.earliestStart) : 'No classes')),
     ...(catalog ? [stat('Latest scheduled end', (s) => {
       const end = latestEndTime(catalog, s);
-      return end === null ? '—' : fmtTime(end);
+      return end === null ? (s.selections.length ? 'Time unavailable' : 'No classes') : fmtTime(end);
     })] : []),
   ].filter((x) => x.before !== x.after);
   return { added, removed, moved, stats, same: !added.length && !removed.length && !moved.length && !stats.length };

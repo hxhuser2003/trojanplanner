@@ -13,7 +13,7 @@ import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
 import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
-import { fmtHours, fmtTime, sectionWhen, formatSectionMeetings, latestEndTime, type ScheduleDiff } from '@/lib/format';
+import { fmtHours, fmtTime, sectionWhen, formatSectionMeetings, latestEndTime, emptyScheduleStat, type ScheduleDiff } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -278,7 +278,7 @@ function WhatChanged({ diff, catalog, onDismiss }: { diff: ScheduleDiff; catalog
                 </ul>
               </li>
             ))}
-            {diff.stats.map((change) => <li key={change.label}>{change.label}: {change.before} → {change.after}</li>)}
+            {diff.stats.map((change) => <li key={change.label}>{change.label}: {change.before === '—' ? emptyScheduleStat(change.label) : change.before} → {change.after === '—' ? emptyScheduleStat(change.label) : change.after}</li>)}
           </ul>
         )}
       </div>

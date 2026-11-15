@@ -53,6 +53,17 @@ test("latest scheduled end time is derived from selected section meetings", () =
   assert.equal(latestEndTime(catalog, null), null);
 });
 
+test("an absent previous plan starts numeric stats at zero and times at no classes", () => {
+  const diff = diffSchedules(null, schedule("lecture-discussion-quiz", { units: 8, campusDays: 2, classHours: 6.5, earliestStart: 1020 }), catalog);
+  assert.deepEqual(diff.stats, [
+    { label: "Units", before: "0 units", after: "8 units" },
+    { label: "Campus days", before: "0 days", after: "2 days" },
+    { label: "Class hours", before: "0 hours", after: "6.5 hours" },
+    { label: "First class", before: "No classes", after: "5:00pm" },
+    { label: "Latest scheduled end", before: "No classes", after: "9:20pm" },
+  ]);
+});
+
 test("schedule stat changes include units, days, class hours, and latest end labels", () => {
   const before = schedule("lecture-discussion-quiz", { units: 11, campusDays: 3, classHours: 10, earliestStart: 600 });
   const after = schedule("new-section", { units: 12, campusDays: 5, classHours: 12, earliestStart: 630 });
