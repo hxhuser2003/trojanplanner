@@ -91,7 +91,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
           </div>
 
           <div className="rounded-xl border bg-card p-5">
-            <h2 className="text-base font-semibold">Completed courses</h2>
+            <h2 className="text-base font-semibold">Completed/In Progress Courses</h2>
             <p className="text-xs text-muted-foreground mb-3">Used for prerequisites. Courses already in progress also count so the planner will not ask you to register for them again.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {catalog.completedOptions.map((id) => (
