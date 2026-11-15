@@ -50,7 +50,7 @@ export function describeConstraint(c: Constraint, catalog?: Catalog): string {
     case 'require_course': case 'exclude_course': return courseCode(catalog, c.value) ?? c.value;
     case 'lock_section': {
       const f = findSection(catalog, c.value);
-      return f ? `${f.course.code} §${f.section.id}` : c.value;
+      return f ? `${f.course.code} · ${sectionWhen(f.section)}` : c.value;
     }
     default: return KIND_META[c.kind]?.hint ?? '';
   }
@@ -75,7 +75,7 @@ export function autoLabel(c: Constraint, catalog: Catalog | undefined, previous:
     case 'exclude_course': return c.value ? `Don't take ${courseCode(catalog, c.value) ?? c.value}` : KIND_META[c.kind].label;
     case 'lock_section': {
       const f = findSection(catalog, c.value);
-      return f ? `Keep ${f.course.code} §${f.section.id}` : KIND_META[c.kind].label;
+      return f ? `Keep ${f.course.code} · ${sectionWhen(f.section)}` : KIND_META[c.kind].label;
     }
     default: return KIND_META[c.kind].label;
   }
@@ -103,6 +103,11 @@ export function sectionParts(section: Section): SectionPart[] {
     const times = [...byTime].map(([t, days]) => `${days.sort().map((d) => DAYS[d]).join('/')} ${t}`);
     return { id, kind, times, tba: !meetings.length };
   });
+}
+
+/** A short, readable name for a section: when its lecture starts ("Tue/Thu 2:00pm"). */
+export function sectionWhen(section: Section): string {
+  return sectionParts(section)[0]?.times[0]?.split('–')[0] ?? 'time TBA';
 }
 
 export function courseCode(catalog: Catalog | undefined, id: string): string | undefined {

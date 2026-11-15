@@ -111,7 +111,7 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     projectHeavy, examHeavy, individual, quizCourses, attendanceCourses, midtermCourses, finalCourses,
     checks: ["No overlapping published meetings in the loaded data", "All enabled hard constraints respected for published times", "Unit bounds and selected illustrative goals checked", "Published linked meetings and listed prerequisite groups checked against entered completions"],
     warnings: ["USC offerings are a cached snapshot; recheck the Schedule of Classes before registration.", "Planning goals and completed courses are illustrative, not an official degree audit. Seat availability, restrictions, and actual prerequisite clearance remain unverified.",
-      ...selected.filter(([, s]) => s.unknownScheduleComponents.length > 0).map(([c, s]) => `${c.code} §${s.id}: ${s.unknownScheduleComponents.join(", ")}; full conflict check is not possible.`),
+      ...selected.filter(([, s]) => s.unknownScheduleComponents.length > 0).map(([c, s]) => `${c.code}: ${s.unknownScheduleComponents.map(u => u.replace(/ \d{5}\b/, "")).join(", ")}; full conflict check is not possible.`),
       ...(selected.some(([c]) => c.syllabus.status === "historical") ? ["Grading for some courses comes from a past term's USC syllabus; Spring 2027 grading may differ, so confirm with the instructor."] : []),
       ...(selected.some(([c]) => c.syllabus.status === "synthetic") ? ["Some grading tables are illustrative mocks, not published by USC."] : []),
       ...(known.length < selected.length ? ["Some syllabi are missing; absence of evidence does not mean fewer exams or projects."] : [])],

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DAYS, KIND_META, autoLabel, describeConstraint, fromHHMM, newConstraint, toHHMM } from '@/lib/format';
+import { DAYS, KIND_META, autoLabel, describeConstraint, fromHHMM, newConstraint, sectionParts, toHHMM } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const isPreference = (k: ConstraintKind) => k.startsWith('prefer_');
@@ -153,7 +153,7 @@ export function ConstraintEditor({ catalog, constraints, onChange }: Props) {
                   <div className="space-y-1.5"><Label>Section</Label>
                     <Select value={editing.value} onValueChange={(v) => update({ value: v })}>
                       <SelectTrigger data-testid="select-constraint-section"><SelectValue placeholder="Choose a section" /></SelectTrigger>
-                      <SelectContent>{sectionOptions.map(({ c, s }) => <SelectItem key={s.id} value={s.id}>{c.code} §{s.id} · {s.instructor}</SelectItem>)}</SelectContent>
+                      <SelectContent>{sectionOptions.map(({ c, s }) => <SelectItem key={s.id} value={s.id}>{c.code} · {sectionParts(s).map((p) => `${p.kind} ${p.tba ? 'TBA' : p.times.join(', ')}`).join(' · ')}</SelectItem>)}</SelectContent>
                     </Select></div>
                 )}
               </div>

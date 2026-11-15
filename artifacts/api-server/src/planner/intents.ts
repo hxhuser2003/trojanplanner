@@ -2,7 +2,7 @@
 // degree progress, locking a section in the current plan, and switching schedule options.
 // Each returns null when the message is not that kind of request.
 import { catalog } from "./catalog";
-import { fmt } from "./explain";
+import { fmt, meetingText } from "./explain";
 import type { Constraint, PlannerInput } from "./service";
 
 type Ref = { courseId: string; sectionId: string };
@@ -13,6 +13,16 @@ type Reply = { kind: "answer" | "rules" | "select"; message: string; proposedCon
 const mentions = (message: string, courseId: string) => new RegExp(`\\b${courseId.replace("-", "[- ]?")}\\b`, "i").test(message);
 const isDone = (input: PlannerInput, id: string) => input.completedCourses.includes(id);
 const code = (id: string) => catalog.courses.find(c => c.id === id)?.code ?? id;
+// Section numbers mean little to students, so sections are named by when they meet.
+const sectionText = (t: Ref) => {
+  const s = catalog.courses.find(c => c.id === t.courseId)?.sections.find(x => x.id === t.sectionId);
+  return s ? `${code(t.courseId)} (${meetingText(s)})` : code(t.courseId);
+};
+const lectureStart = (t: Ref) => {
+  const s = catalog.courses.find(c => c.id === t.courseId)?.sections.find(x => x.id === t.sectionId);
+  const m = s?.meetings.find(x => x.kind === "Lecture") ?? s?.meetings[0];
+  return m ? ` · ${["Mon", "Tue", "Wed", "Thu", "Fri"][m.day]} ${fmt(m.start)}` : "";
+};
 
 export function progressIntent(message: string, input: PlannerInput, selections: Ref[]): Reply | null {
   if (!/\b(still need|what.{0,20}\bneed\b|left to (take|do|complete)|remaining (requirements|courses)|requirements? (left|remaining)|degree progress|my progress|on track)\b/i.test(message)) return null;
@@ -21,7 +31,7 @@ export function progressIntent(message: string, input: PlannerInput, selections:
     const done = req.courseIds.filter(id => input.completedCourses.includes(id));
     const inPlan = req.courseIds.filter(id => planned.has(id));
     if (done.length >= req.needed) return `✓ ${req.title}: done (${done.map(code).join(", ")} completed)`;
-    if (done.length + inPlan.length >= req.needed) return `◐ ${req.title}: in this plan (${inPlan.map(id => `${code(id)} §${planned.get(id)}`).join(", ")})`;
+    if (done.length + inPlan.length >= req.needed) return `◐ ${req.title}: in this plan (${inPlan.map(code).join(", ")})`;
     const options = req.courseIds.filter(id => !input.completedCourses.includes(id)).map(code);
     const targeted = input.requirementIds.includes(req.id);
     return `✗ ${req.title}: still needed${targeted ? "" : " (not a goal this semester)"}. Options: ${options.join(", ") || "none in the loaded catalog"}`;
@@ -40,12 +50,12 @@ export function lockIntent(message: string, current: PlannerInput, selections: R
   if (!targets.length) return null;
   const locked = new Set(current.constraints.filter(c => c.kind === "lock_section" && c.enabled).map(c => c.value));
   const fresh = targets.filter(t => !locked.has(t.sectionId));
-  if (!fresh.length) return { kind: "answer", message: `${targets.map(t => `${code(t.courseId)} §${t.sectionId}`).join(" and ")} ${targets.length > 1 ? "are" : "is"} already locked.` };
+  if (!fresh.length) return { kind: "answer", message: `${targets.map(sectionText).join(" and ")} ${targets.length > 1 ? "are" : "is"} already locked.` };
   return {
     kind: "rules",
-    message: `I can lock ${fresh.map(t => `${code(t.courseId)} §${t.sectionId}`).join(" and ")} so the solver keeps ${fresh.length > 1 ? "them" : "it"} when you change other rules.`,
+    message: `I can lock ${fresh.map(sectionText).join(" and ")} so the solver keeps ${fresh.length > 1 ? "them" : "it"} when you change other rules.`,
     proposedConstraints: fresh.map(t => ({
-      id: `lock-${t.sectionId}-${Date.now().toString(36)}`, label: `Keep ${code(t.courseId)} §${t.sectionId}`, kind: "lock_section" as const,
+      id: `lock-${t.sectionId}-${Date.now().toString(36)}`, label: `Keep ${code(t.courseId)}${lectureStart(t)}`, kind: "lock_section" as const,
       hard: true, enabled: true, value: t.sectionId, days: [], start: 0, end: 0,
     })),
   };

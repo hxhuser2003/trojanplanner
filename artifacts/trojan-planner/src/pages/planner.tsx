@@ -13,7 +13,7 @@ import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
 import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
-import { fmtTime } from '@/lib/format';
+import { fmtTime, sectionWhen } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,14 +30,16 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
   const toggleLock = (courseId: string, sectionId: string) => {
     const course = catalog.courses.find((c) => c.id === courseId);
+    const section = course?.sections.find((s) => s.id === sectionId);
+    const when = section ? ` · ${sectionWhen(section)}` : '';
     if (locked.has(sectionId)) {
       p.updateConstraints((cs) => cs.filter((c) => !(c.kind === 'lock_section' && (c.value === sectionId || c.value.endsWith(`:${sectionId}`)))));
-      toast({ title: `Unlocked ${course?.code} §${sectionId}`, description: 'Re-solve to let the planner move it.' });
+      toast({ title: `Unlocked ${course?.code}${when}`, description: 'Re-solve to let the planner move it.' });
     } else {
       if (input.constraints.length >= 20) { toast({ title: 'Rule limit reached', description: 'Remove a rule before locking another section.', variant: 'destructive' }); return; }
-      const c: Constraint = { id: `lock-${sectionId}`, label: `Keep ${course?.code ?? courseId} §${sectionId}`, kind: 'lock_section', hard: true, enabled: true, value: sectionId, days: [], start: 0, end: 0 };
+      const c: Constraint = { id: `lock-${sectionId}`, label: `Keep ${course?.code ?? courseId}${when}`, kind: 'lock_section', hard: true, enabled: true, value: sectionId, days: [], start: 0, end: 0 };
       p.updateConstraints((cs) => [...cs.filter((x) => x.id !== c.id), c]);
-      toast({ title: `Locked ${course?.code} §${sectionId}`, description: 'Saved as an explicit hard rule.' });
+      toast({ title: `Locked ${course?.code}${when}`, description: 'Saved as an explicit hard rule.' });
     }
   };
 
@@ -166,7 +168,7 @@ function Planner({ catalog }: { catalog: Catalog }) {
                     return (
                       <li key={s.sectionId} className="flex gap-2 text-sm" data-testid={`text-selection-${s.courseId}`}>
                         <span className="mt-1.5 size-2 rounded-full shrink-0" style={{ background: c?.color }} />
-                        <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId} §{s.sectionId}</Link> <span className="text-muted-foreground">{s.reason}</span></span>
+                        <span><Link href={`/courses?c=${s.courseId}`} className="font-medium hover:underline">{c?.code ?? s.courseId}</Link> <span className="text-muted-foreground">{s.reason}</span></span>
                       </li>
                     );
                   })}

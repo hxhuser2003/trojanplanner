@@ -56,7 +56,8 @@ function lockedSection(course: Course, input: PlannerInput): string | null {
 function sectionBlockers(course: Course, section: Section, input: PlannerInput): string[] {
   const reasons = breaks(section, hardTime(input)).map(l => `breaks “${l}”`);
   const lock = lockedSection(course, input);
-  if (lock && lock !== section.id) reasons.push(`you locked §${lock}`);
+  const locked = lock && lock !== section.id ? course.sections.find(s => s.id === lock) : undefined;
+  if (locked) reasons.push(`you locked the section meeting ${meetingText(locked)}`);
   return reasons;
 }
 /** Each prerequisite group is "any one of"; returns the unmet groups as readable text. */
@@ -114,12 +115,12 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
   else facts.push(`${course.code} adds ${course.units} units toward your ${input.minUnits}–${input.maxUnits} unit range.`);
   const unwanted = enabled(input).find(c => !c.hard && c.kind === "exclude_course" && c.value === course.id);
   if (unwanted) facts.push(`You asked to avoid ${course.code} (“${unwanted.label}”), but no plan without it met your other rules and requirements.`);
-  if (lockedSection(course, input) === section.id) facts.push(`You locked §${section.id}, so the solver had to keep it.`);
+  if (lockedSection(course, input) === section.id) facts.push(`You locked this section, so the solver had to keep it.`);
   // Selections come from the client, so overlap and prerequisite claims are re-checked here.
   const clashes = othersByCourse.flatMap(([oc, os]) => { const d = overlapDay(section, os); return d ? [`${oc.code} on ${d}`] : []; });
   facts.push(clashes.length
-    ? `§${section.id} meets ${meetingText(section)} and overlaps ${list(clashes)}.`
-    : `§${section.id} meets ${meetingText(section)}, with no overlap against the other ${plural(others.length, "course")} in this plan.`);
+    ? `This section meets ${meetingText(section)} and overlaps ${list(clashes)}.`
+    : `This section meets ${meetingText(section)}, with no overlap against the other ${plural(others.length, "course")} in this plan.`);
   const missing = unmetPrereqs(course, input);
   if (missing.length) facts.push(`Prerequisite${missing.length > 1 ? "s" : ""} ${list(missing)} ${missing.length > 1 ? "are" : "is"} not in your completed courses.`);
   else if (course.prerequisiteGroups.length) facts.push(`Published prerequisites (${course.prerequisiteGroups.map(gr => gr.join(" or ")).join("; ")}) are met by your completed courses.`);
@@ -133,21 +134,25 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
 
   const chosenSoft = breaks(section, softTime(input)).length;
   const chosenDays = daysOf([...others, section]).size;
+  // Sections with the same meeting times as the chosen one (or each other) read as duplicates, so each time pattern is listed once.
+  const seen = new Set([meetingText(section)]);
   for (const alt of course.sections.filter(s => s.id !== section.id)) {
+    if (seen.has(meetingText(alt))) continue;
+    seen.add(meetingText(alt));
     const reasons = sectionBlockers(course, alt, input);
     for (const [oc, os] of othersByCourse) {
       const d = overlapDay(alt, os);
       if (d) reasons.push(`overlaps ${oc.code} on ${d}`);
     }
-    if (reasons.length) { facts.push(`§${alt.id} (${meetingText(alt)}) was ruled out: ${reasons.join("; ")}.`); continue; }
+    if (reasons.length) { facts.push(`The section meeting ${meetingText(alt)} was ruled out: ${reasons.join("; ")}.`); continue; }
     const diffs: string[] = [];
     const altSoft = breaks(alt, softTime(input));
     if (altSoft.length > chosenSoft) diffs.push(`it breaks ${list(altSoft.map(l => `“${l}”`))}`);
     const altDays = daysOf([...others, alt]).size;
     if (altDays > chosenDays) diffs.push(`it needs ${altDays} campus days instead of ${chosenDays}`);
     facts.push(diffs.length
-      ? `§${alt.id} (${meetingText(alt)}) also fits your hard rules, but ${list(diffs)}.`
-      : `§${alt.id} (${meetingText(alt)}) also fits your hard rules and scores about the same; it is a valid swap.`);
+      ? `The section meeting ${meetingText(alt)} also fits your hard rules, but ${list(diffs)}.`
+      : `The section meeting ${meetingText(alt)} also fits your hard rules and scores about the same; it is a valid swap.`);
   }
 
   if (req && input.requirementIds.includes(req.id)) {
@@ -162,7 +167,7 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
           const r = sectionBlockers(oc, s, input);
           const clash = othersByCourse.find(([, os]) => overlapDay(s, os));
           if (clash) r.push(`overlaps ${clash[0].code}`);
-          return `§${s.id} ${r.join(", ")}`;
+          return `the section meeting ${meetingText(s)} ${r.join(", ")}`;
         });
         facts.push(`${oc.code} could also cover “${req.title}”, but no section fits: ${why.join("; ")}.`);
       } else {
@@ -205,7 +210,7 @@ export function explainCompare(input: PlannerInput, refsA: Ref[], refsB: Ref[]):
   if (onlyA.length || onlyB.length) facts.push(`This option takes ${list(onlyA) || "no different course"}; the other takes ${list(onlyB) || "no different course"} instead.`);
   for (const [id, s] of secA) {
     const t = secB.get(id);
-    if (t && t.id !== s.id) facts.push(`${code(id)}: this option uses §${s.id} (${meetingText(s)}); the other uses §${t.id} (${meetingText(t)}).`);
+    if (t && t.id !== s.id) facts.push(`${code(id)}: this option meets ${meetingText(s)}; the other meets ${meetingText(t)}.`);
   }
   const ma = metrics(a, input), mb = metrics(b, input);
   const cmp = (label: string, x: string, y: string) => { if (x !== y) facts.push(`${label}: ${x} here vs ${y} in the other option.`); };
@@ -230,7 +235,7 @@ export function explainConflict(input: PlannerInput): string[] {
     const blocker = courseBlocker(course, input);
     if (blocker) return { ok: false, why: blocker };
     const per = course.sections.map(s => ({ s, r: sectionBlockers(course, s, input) }));
-    if (per.every(x => x.r.length)) return { ok: false, why: `every ${course.code} section is blocked (${per.map(x => `§${x.s.id} ${x.r.join(", ")}`).join("; ")})` };
+    if (per.every(x => x.r.length)) return { ok: false, why: `every ${course.code} section is blocked (${per.map(x => `${meetingText(x.s)} ${x.r.join(", ")}`).join("; ")})` };
     usableCourses.push(course);
     return { ok: true, why: "" };
   };
@@ -249,7 +254,7 @@ export function explainConflict(input: PlannerInput): string[] {
     const a = groups[i]!, b = groups[j]!;
     if (!a.options.length || !b.options.length) continue;
     if (a.options.every(([, x]) => b.options.every(([, y]) => overlapDay(x, y)))) {
-      const name = (o: Picked[]) => list(o.map(([c, s]) => `${c.code} §${s.id} (${meetingText(s)})`));
+      const name = (o: Picked[]) => list(o.map(([c, s]) => `${c.code} (${meetingText(s)})`));
       facts.push(`Every remaining “${a.title}” option (${name(a.options)}) overlaps every remaining “${b.title}” option (${name(b.options)}).`);
     }
   }
@@ -262,7 +267,7 @@ export function explainConflict(input: PlannerInput): string[] {
   const reachable = [...new Set(usableCourses)].reduce((n, c) => n + c.units, 0);
   if (reachable < input.minUnits) facts.push(`Only ${reachable} units have a usable section under your hard rules, below your ${input.minUnits}-unit minimum.`);
   for (const rule of hardTime(input)) {
-    const hit = catalog.courses.flatMap(c => c.sections.filter(s => !satisfies(s, rule)).map(s => `${c.code} §${s.id}`));
+    const hit = catalog.courses.flatMap(c => c.sections.filter(s => !satisfies(s, rule)).map(s => `${c.code} (${meetingText(s)})`));
     if (hit.length) facts.push(`“${rule.label}” rules out ${plural(hit.length, "section")}: ${list(hit)}.`);
   }
   if (!facts.some(f => f.includes("cannot be met") || f.startsWith("Only") || f.startsWith("Every remaining"))) {

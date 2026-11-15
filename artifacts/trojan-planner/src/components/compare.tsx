@@ -11,7 +11,7 @@ const refs = (s: Schedule) => s.selections.map((x) => ({ courseId: x.courseId, s
 /** Side-by-side numbers for 2+ validated schedules. Cells that differ from the first column are emphasized. */
 export function StatTable({ catalog, columns }: { catalog: Catalog; columns: { title: string; schedule: Schedule | null }[] }) {
   const rows: [string, (s: Schedule) => string][] = [
-    ['Courses', (s) => s.selections.map((x) => `${catalog.courses.find((c) => c.id === x.courseId)?.code ?? x.courseId} §${x.sectionId}`).join(', ')],
+    ['Courses', (s) => s.selections.map((x) => catalog.courses.find((c) => c.id === x.courseId)?.code ?? x.courseId).join(', ')],
     ['Units', (s) => String(s.units)],
     ['Campus days', (s) => String(s.campusDays)],
     ['Class hours', (s) => s.classHours.toFixed(1)],

@@ -30,7 +30,7 @@ function buildItems(catalog: Catalog, sched: Schedule) {
     if (s.projectMode === 'unspecified') unknowns.push(`${course.code}: individual vs group work not specified`);
     if (!s.cadence) unknowns.push(`${course.code}: assignment cadence unknown`);
     s.evidence.filter((e) => e.status === 'unknown').forEach((e) => unknowns.push(`${course.code}: ${e.label} unknown`));
-    if (section?.eligibility) unknowns.push(`${course.code} §${section.id}: ${section.eligibility}`);
+    if (section?.eligibility) unknowns.push(`${course.code}: ${section.eligibility}`);
     section?.unknownScheduleComponents.forEach((item) => unknowns.push(`${course.code}: ${item}; time conflicts cannot be fully checked`));
   });
   sched.warnings.forEach((w) => unknowns.push(w));
