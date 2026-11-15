@@ -212,10 +212,9 @@ function SolveStatus() {
     result ? result.status.charAt(0).toUpperCase() + result.status.slice(1) : 'Not solved yet';
   const bad = solveState === 'error' || solveState === 'timeout' || result?.status === 'infeasible' || result?.status === 'invalid';
   return (
-    <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground" data-testid="status-solve" aria-live="polite"
-      title={result ? `${result.engine} · ${result.elapsedMs} ms` : undefined}>
+    <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground" data-testid="status-solve" aria-live="polite">
       <span className={cn('size-1.5 rounded-full', bad ? 'bg-destructive' : solveState === 'solving' ? 'bg-muted-foreground animate-pulse' : 'bg-emerald-500')} />
-      {label}{result && solveState !== 'solving' && ` · ${result.elapsedMs} ms`}
+      {label}
     </p>
   );
 }

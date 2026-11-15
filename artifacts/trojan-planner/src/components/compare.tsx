@@ -8,40 +8,48 @@ import { cn } from '@/lib/utils';
 
 const refs = (s: Schedule) => s.selections.map((x) => ({ courseId: x.courseId, sectionId: x.sectionId }));
 
-/** Side-by-side numbers for 2+ validated schedules. Cells that differ from the first column are emphasized. */
-export function StatTable({ catalog, columns }: { catalog: Catalog; columns: { title: string; schedule: Schedule | null }[] }) {
+/** Compact summaries for validated schedules. Values that differ from the shown plan are emphasized. */
+function OptionCards({ catalog, columns }: { catalog: Catalog; columns: { title: string; schedule: Schedule }[] }) {
   const rows: [string, (s: Schedule) => string][] = [
-    ['Courses', (s) => s.selections.map((x) => catalog.courses.find((c) => c.id === x.courseId)?.code ?? x.courseId).join(', ')],
     ['Units', (s) => String(s.units)],
     ['Campus days', (s) => String(s.campusDays)],
     ['Class time / week', (s) => fmtHours(s.classHours)],
     ['First class', (s) => fmtTime(s.earliestStart)],
     ['Gaps', (s) => `${s.gapMinutes} min`],
   ];
+  const courseCodes = (s: Schedule) => s.selections.map((x) => catalog.courses.find((c) => c.id === x.courseId)?.code ?? x.courseId);
+  const shown = columns[0].schedule;
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm" data-testid="table-compare">
-        <thead>
-          <tr className="text-xs text-muted-foreground text-left">
-            <th className="font-normal py-1.5 pr-3" />
-            {columns.map((c) => <th key={c.title} className="font-medium py-1.5 px-2">{c.title}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(([label, f]) => {
-            const base = columns[0]?.schedule ? f(columns[0].schedule) : '';
-            return (
-              <tr key={label} className="border-t align-top">
-                <td className="py-1.5 pr-3 text-xs text-muted-foreground whitespace-nowrap">{label}</td>
-                {columns.map((c, i) => {
-                  const v = c.schedule ? f(c.schedule) : 'No plan';
-                  return <td key={c.title} className={cn('py-1.5 px-2 tabular-nums', label === 'Courses' && 'text-xs', i > 0 && v !== base && 'font-semibold text-primary')}>{v}</td>;
-                })}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+    <div className="space-y-3" data-testid="compare-options">
+      {columns.map(({ title, schedule }, index) => {
+        const codes = courseCodes(schedule);
+        const coursesDiffer = index > 0 && codes.join(', ') !== courseCodes(shown).join(', ');
+        return (
+          <div key={schedule.id} className="rounded-md border bg-background p-3">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="min-w-0 text-sm font-medium leading-snug">{title}</h3>
+              {index === 0 && <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[11px] text-muted-foreground">Shown</span>}
+            </div>
+            <dl className="mt-2 divide-y text-sm">
+              <div className="grid grid-cols-2 gap-3 py-1.5">
+                <dt className="text-muted-foreground">Courses</dt>
+                <dd className={cn('min-w-0 text-right text-xs', coursesDiffer && 'font-semibold text-primary')}>
+                  {codes.map((code, i) => <span key={`${code}-${i}`} className="inline-block whitespace-nowrap ml-1">{code}{i < codes.length - 1 ? ',' : ''}</span>)}
+                </dd>
+              </div>
+              {rows.map(([label, value]) => {
+                const text = value(schedule);
+                return (
+                  <div key={label} className="grid grid-cols-2 gap-3 py-1.5">
+                    <dt className="text-muted-foreground">{label}</dt>
+                    <dd className={cn('text-right tabular-nums', index > 0 && text !== value(shown) && 'font-semibold text-primary')}>{text}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -58,7 +66,7 @@ export function OptionCompare({ catalog, schedules, chosen, input }: { catalog: 
         <ChevronDown className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
       </CollapsibleTrigger>
       <CollapsibleContent className="px-4 pb-4 space-y-4">
-        <StatTable catalog={catalog} columns={[chosen, ...others].map((s) => ({ title: s.id === chosen.id ? `${s.title} (shown)` : s.title, schedule: s }))} />
+        <OptionCards catalog={catalog} columns={[chosen, ...others].map((s) => ({ title: s.title, schedule: s }))} />
         <div className="space-y-2 border-t pt-3">
           {others.length > 1 && (
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
