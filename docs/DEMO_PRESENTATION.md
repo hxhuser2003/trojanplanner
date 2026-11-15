@@ -18,7 +18,7 @@ Three moments carry the video:
 
 ## The student
 
-**Maya, a second-semester USC MS in Computer Science (General) student.** In her first semester (Fall 2026) she took CSCI 561 and CSCI 567. For Spring 2027 she wants 8 units, is interested in **CSCI 566 Deep Learning**, and wants a Web/search course. She works Monday and Wednesday 3–6 PM, would like Fridays free, and prefers projects.
+**Maya, a second-semester USC MS in Computer Science (General) student.** In her first semester (Fall 2026) she took CSCI 561 and CSCI 567. For Spring 2027 she wants 8 units, is interested in **CSCI 566 Deep Learning**, and wants a Web/search course. She works Monday and Wednesday 3–6 PM, would like Thursdays free, and prefers projects.
 
 Maya is a made-up student. Courses, sections and times are real USC Spring 2027 data. Grading comes from dated past-term USC syllabi, except CSCI 572, whose grading table is a labeled mock (the app says so everywhere it appears).
 
@@ -26,7 +26,7 @@ Maya is a made-up student. Courses, sections and times are real USC Spring 2027 
 
 - [ ] Merge the branch into `main`; Replit runs the latest `main` with `ANTHROPIC_API_KEY` in Secrets.
 - [ ] Press **Reset** (top-right), confirm **Reset**, and leave the three-question setup open. Do not choose **Keep demo rules**.
-- [ ] Have these setup answers ready: **Yes** → **Work**, **Mon/Wed**, **3:00–6:00 PM**; **Fri** → **Nice to have**; **More projects**, with no avoidance chips selected → **Build my plan**. The work block is hard; the other two are soft.
+- [ ] Have these setup answers ready: **Yes** → **Work**, **Mon/Wed**, **3:00–6:00 PM**; **Thu** → **Nice to have**; **More projects**, with no avoidance chips selected → **Build my plan**. The work block is hard; the other two are soft.
 - [ ] Copy this fake STARS text (never use a real transcript):
 
 ```
@@ -42,7 +42,7 @@ Maya is a made-up student. Courses, sections and times are real USC Spring 2027 
 
 | Time | Screen | Say |
 |---|---|---|
-| **0:00–0:30** | Reset planner with the first setup question open. **Yes** → Work **Mon/Wed, 3:00–6:00 PM** → **Next**; choose **Fri**, **Nice to have** → **Next**; choose **More projects**, leave avoid chips clear → **Next**. Show **Here are your rules** → **Build my plan**. | "Maya starts with three questions: when she's busy, which day she'd like free, and how she prefers to be graded. Her answers become rules she can inspect and change. The planner builds an eight-unit week around them." |
+| **0:00–0:30** | Reset planner with the first setup question open. **Yes** → Work **Mon/Wed, 3:00–6:00 PM** → **Next**; choose **Thu**, **Nice to have** → **Next**; choose **More projects**, leave avoid chips clear → **Next**. Show **Here are your rules** → **Build my plan**. | "Maya starts with three questions: when she's busy, which day she'd like free, and how she prefers to be graded. Her answers become rules she can inspect and change. The planner builds an eight-unit week around them." |
 | **0:30–0:45** | **Degree**: paste the STARS rows → **Find course candidates** → **Add 2 to planning history**. **Units** stays at 8. | "She's starting her second semester. She pastes last semester's courses from STARS and confirms each one." |
 | **0:45–1:05** | **Courses** → open **CSCI 566** (point at its on-campus and DEN@Viterbi sections, then "From the Fall 2026 USC syllabus") → **Add as required**. Return to the planner if needed. | "Maya can see which section is on campus and which is DEN, even though they meet at the same time. She's interested in 566, so she tries adding it to her plan." |
 | **1:05–1:35** | **No plan fits every rule** → point at the solver-tested **Allow change: Take CSCI 566** repair and its preview of **CSCI 570 + CSCI 572**. Approve that repair. | "Every 566 section meets Monday from five to eight-twenty, during Maya's work hours. The planner keeps that commitment and shows a tested course alternative: 570 with 572. Maya chooses the classes that fit without changing her work hours." |
@@ -60,7 +60,7 @@ Ask `tell me about CSCI 544` instead. The catalog lookup shows its course and se
 
 | Step | Expected |
 |---|---|
-| After the three setup answers and STARS import | *Best preference fit*: CSCI 570 + CSCI 572. The Mon/Wed work block is hard; Friday free and more projects are soft. |
+| After the three setup answers and STARS import | *Best preference fit*: CSCI 570 + CSCI 572. The Mon/Wed work block is hard; Thursday free and more projects are soft. |
 | After 566 is required | Infeasible. Every CSCI 566 section meets Mon 5:00pm–8:20pm and overlaps the work block. *Allow change: Take CSCI 566* previews CSCI 570 + CSCI 572 while preserving the work rule. |
 | After approving the course-rule repair | *Best preference fit*: CSCI 570 + CSCI 572. The work rule remains enabled. |
 | NLP course-interest question | With AI configured, expect a recommendation grounded in course descriptions; CSCI 544 covers human language technologies. It should not change the plan. Without AI, `tell me about CSCI 544` returns a direct catalog lookup. |
