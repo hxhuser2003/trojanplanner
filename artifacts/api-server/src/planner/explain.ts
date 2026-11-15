@@ -25,6 +25,16 @@ export function resolveRefs(refs: Ref[]): Picked[] {
   });
 }
 
+/** Mirrors solver.goals_fit: goals are hard only when the unit target leaves room for all of them. */
+export function goalsFit(input: PlannerInput): boolean {
+  const total = catalog.requirements.filter(r => input.requirementIds.includes(r.id)).reduce((n, r) => {
+    const needed = Math.max(0, r.needed - r.courseIds.filter(id => input.completedCourses.includes(id)).length);
+    const sizes = catalog.courses.filter(c => r.courseIds.includes(c.id) && !input.completedCourses.includes(c.id)).map(c => c.units);
+    return n + (needed && sizes.length ? needed * Math.min(...sizes) : 0);
+  }, 0);
+  return total <= input.maxUnits;
+}
+
 export function meetingText(section: Section) {
   const groups = new Map<string, number[]>();
   for (const m of section.meetings) {
@@ -78,7 +88,12 @@ function assessmentFacts(course: Course, input: PlannerInput): string[] {
   const prefs = enabled(input).filter(c => c.kind === "prefer_projects" || c.kind === "prefer_exams" || c.kind === "prefer_individual" || c.kind === "prefer_less_frequent" || c.kind === "prefer_no_quizzes" || c.kind === "prefer_no_attendance" || c.kind === "prefer_no_midterm" || c.kind === "prefer_no_final");
   if (!prefs.length) return [];
   const s = course.syllabus;
-  if (s.status === "unknown") return [`No syllabus evidence for ${course.code}, so ${list(prefs.map(p => `“${p.label}”`))} could not be credited. Unknown is not zero.`];
+  if (s.status === "unknown" || s.grading.length === 0) return [`No grading breakdown is available for ${course.code}, so ${list(prefs.map(p => `“${p.label}”`))} could not be credited. Unknown is not zero.`];
+  if (s.status === "historical") {
+    const exam = s.examPercent == null ? "unknown exam weight" : `${s.examPercent}% exams`;
+    const project = s.projectPercent == null ? "unknown project weight" : `${s.projectPercent}% projects`;
+    return [`${course.code}'s ${sourceOf(course)} lists ${exam} and ${project}. This describes a past offering and was not used to score assessment preferences; confirm the Spring 2027 policy.`];
+  }
   const out: string[] = [];
   for (const p of prefs) {
     if (p.kind === "prefer_projects") out.push(`${course.code} weights projects ${s.projectPercent}% and exams ${s.examPercent}% (${sourceOf(course)})${(s.projectPercent ?? 0) >= 50 ? ", which matches “" + p.label + "”" : ""}.`);
@@ -171,7 +186,7 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
         });
         facts.push(`${oc.code} could also cover “${req.title}”, but no section fits: ${why.join("; ")}.`);
       } else {
-        const hint = enabled(input).some(c => c.kind === "prefer_projects") && oc.syllabus.status !== "unknown" && course.syllabus.status !== "unknown"
+        const hint = enabled(input).some(c => c.kind === "prefer_projects") && oc.syllabus.status === "synthetic" && course.syllabus.status === "synthetic" && oc.syllabus.projectPercent != null && course.syllabus.projectPercent != null
           ? ` (projects ${oc.syllabus.projectPercent}% vs ${course.syllabus.projectPercent}% for ${course.code})` : "";
         facts.push(`${oc.code} could also cover “${req.title}”${hint}; the best-scoring plan under your preferences uses ${course.code}.`);
       }
@@ -195,8 +210,8 @@ function metrics(picked: Picked[], input: PlannerInput): Metrics {
     hours: Math.round(meetings.reduce((n, m) => n + m.end - m.start, 0) / 6) / 10,
     earliest: meetings.length ? Math.min(...meetings.map(m => m.start)) : 0,
     gaps, softBroken,
-    projectHeavy: picked.filter(([c]) => c.syllabus.status !== "unknown" && (c.syllabus.projectPercent ?? 0) >= 50).length,
-    examHeavy: picked.filter(([c]) => c.syllabus.status !== "unknown" && (c.syllabus.examPercent ?? 0) >= 50).length,
+    projectHeavy: picked.filter(([c]) => c.syllabus.status === "synthetic" && (c.syllabus.projectPercent ?? 0) >= 50).length,
+    examHeavy: picked.filter(([c]) => c.syllabus.status === "synthetic" && (c.syllabus.examPercent ?? 0) >= 50).length,
   };
 }
 
@@ -219,8 +234,8 @@ export function explainCompare(input: PlannerInput, refsA: Ref[], refsB: Ref[]):
   cmp("Class hours per week", ma.hours.toFixed(1), mb.hours.toFixed(1));
   cmp("First class", fmt(ma.earliest), fmt(mb.earliest));
   cmp("Time between classes", `${ma.gaps} min`, `${mb.gaps} min`);
-  cmp("Project-weighted courses", String(ma.projectHeavy), String(mb.projectHeavy));
-  cmp("Exam-weighted courses", String(ma.examHeavy), String(mb.examHeavy));
+  cmp("Mock project-weighted courses", String(ma.projectHeavy), String(mb.projectHeavy));
+  cmp("Mock exam-weighted courses", String(ma.examHeavy), String(mb.examHeavy));
   const broken = (m: Metrics) => m.softBroken.length ? `breaks ${list(m.softBroken.map(l => `“${l}”`))}` : "keeps every soft preference";
   if (ma.softBroken.join() !== mb.softBroken.join()) facts.push(`This option ${broken(ma)}; the other ${broken(mb)}.`);
   if (!facts.length) facts.push("Both options have the same courses, meeting times, and preference results.");
@@ -229,14 +244,36 @@ export function explainCompare(input: PlannerInput, refsA: Ref[], refsB: Ref[]):
 
 export function explainConflict(input: PlannerInput): string[] {
   const facts: string[] = [];
+  const usableCourses: Course[] = [];
+  const groups: { title: string; options: Picked[] }[] = [];
   const check = (course: Course) => {
     const blocker = courseBlocker(course, input);
     if (blocker) return { ok: false, why: blocker };
     const per = course.sections.map(s => ({ s, r: sectionBlockers(course, s, input) }));
-    if (per.every(x => x.r.length)) return { ok: false, why: `every ${course.code} section is blocked (${per.map(x => `${meetingText(x.s)} ${x.r.join(", ")}`).join("; ")})` };
+    if (per.every(x => x.r.length)) return { ok: false, why: `every ${course.code} section is blocked (${[...new Set(per.map(x => `${meetingText(x.s)} ${x.r.join(", ")}`))].join("; ")})` };
+    usableCourses.push(course);
     return { ok: true, why: "" };
   };
-  // Goals are soft (the solver covers as many as the units allow), so only hard rules and units can cause a conflict.
+  // Goals are hard only when the units leave room for all of them; otherwise only hard rules and units can conflict.
+  for (const id of goalsFit(input) ? input.requirementIds : []) {
+    const req = catalog.requirements.find(r => r.id === id);
+    if (!req) continue;
+    const results = req.courseIds.map(cid => catalog.courses.find(c => c.id === cid)).filter((c): c is Course => !!c).map(c => check(c));
+    const done = req.courseIds.filter(c => input.completedCourses.includes(c)).length;
+    const usable = results.filter(r => r.ok).length;
+    if (done + usable < req.needed) facts.push(`“${req.title}” cannot be met: ${results.map(r => r.why).filter(Boolean).join("; ")}.`);
+    else if (!done) groups.push({ title: req.title, options: usableCourses.filter(c => req.courseIds.includes(c.id))
+      .flatMap(c => c.sections.filter(s => !sectionBlockers(c, s, input).length).map(s => [c, s] as Picked)) });
+  }
+  // Exact pairwise check: every remaining option of one group overlaps every remaining option of another.
+  for (let i = 0; i < groups.length; i++) for (let j = i + 1; j < groups.length; j++) {
+    const a = groups[i]!, b = groups[j]!;
+    if (!a.options.length || !b.options.length) continue;
+    if (a.options.every(([, x]) => b.options.every(([, y]) => overlapDay(x, y)))) {
+      const name = (o: Picked[]) => list(o.map(([c, s]) => `${c.code} (${meetingText(s)})`));
+      facts.push(`Every remaining “${a.title}” option (${name(a.options)}) overlaps every remaining “${b.title}” option (${name(b.options)}).`);
+    }
+  }
   for (const rule of enabled(input).filter(c => c.hard && c.kind === "require_course")) {
     const course = catalog.courses.find(c => c.id === rule.value);
     if (!course) continue;
@@ -246,10 +283,10 @@ export function explainConflict(input: PlannerInput): string[] {
   const reachable = catalog.courses.filter(c => !input.completedCourses.includes(c.id) && check(c).ok).reduce((n, c) => n + c.units, 0);
   if (reachable < input.minUnits) facts.push(`Only ${reachable} units have a usable section under your hard rules, below your ${input.minUnits}-unit minimum.`);
   for (const rule of hardTime(input)) {
-    const hit = catalog.courses.flatMap(c => c.sections.filter(s => !satisfies(s, rule)).map(s => `${c.code} (${meetingText(s)})`));
+    const hit = [...new Set(catalog.courses.flatMap(c => c.sections.filter(s => !satisfies(s, rule)).map(s => `${c.code} (${meetingText(s)})`)))];
     if (hit.length) facts.push(`“${rule.label}” rules out ${plural(hit.length, "section")}: ${list(hit)}.`);
   }
-  if (!facts.some(f => f.includes("cannot be met") || f.startsWith("Only"))) {
+  if (!facts.some(f => f.includes("cannot be met") || f.startsWith("Only") || f.startsWith("Every remaining"))) {
     facts.unshift("Each course still has a usable section on its own, so the clash comes from combining them: the remaining sections overlap in time or do not add up to your unit target.");
   }
   return facts;

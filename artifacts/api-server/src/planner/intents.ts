@@ -83,8 +83,8 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
     const e = c.syllabus.evidence.find(x => x.label === label);
     return e ? [{ courseId: c.id, label: e.label, excerpt: e.excerpt, sourceUrl: c.syllabus.sourceUrl }] : [];
   };
-  const unknown = courses.filter(c => c.syllabus.status === "unknown");
-  const known = courses.filter(c => c.syllabus.status !== "unknown");
+  const unknown = courses.filter(c => c.syllabus.status === "unknown" || c.syllabus.grading.length === 0);
+  const known = courses.filter(c => c.syllabus.status !== "unknown" && c.syllabus.grading.length > 0);
   const lines: string[] = [];
   const citations: Citation[] = [];
   if (!topics.length) {
@@ -97,10 +97,10 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
     const withIt = known.filter(c => c.syllabus.grading.some(i => i.kind === kind));
     const without = known.filter(c => !withIt.includes(c));
     const bare = phrase.replace(/^an? /, "");
-    if (known.length === 1) lines.push(withIt.length ? `${known[0]!.code} has ${phrase}:` : `${known[0]!.code} has no ${bare}.`);
+    if (known.length === 1) lines.push(withIt.length ? `${known[0]!.code}'s dated breakdown lists ${phrase}:` : `${known[0]!.code}'s dated breakdown does not list ${bare}.`);
     else if (known.length) lines.push(withIt.length
-      ? `${withIt.length} of the ${known.length} courses${scope ? ` ${scope}` : ""} ${withIt.length === 1 ? "has" : "have"} ${phrase}:`
-      : `None of the ${known.length} courses${scope ? ` ${scope}` : ""} has ${phrase}.`);
+      ? `${withIt.length} of the ${known.length} dated breakdowns${scope ? ` ${scope}` : ""} list ${phrase}:`
+      : `None of the ${known.length} dated breakdowns${scope ? ` ${scope}` : ""} lists ${phrase}.`);
     for (const c of withIt) {
       const items = c.syllabus.grading.filter(i => i.kind === kind);
       lines.push(...items.map(i => `• ${c.code} ${i.item}: ${i.percent}% of the grade${i.when ? `, ${i.when}` : ""}`));
@@ -110,7 +110,7 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
     const unlabeled = kind === "midterm" || kind === "final" ? without.filter(c => c.syllabus.grading.some(i => i.kind === "exam")) : [];
     for (const c of unlabeled) lines.push(`• ${c.code}: ${c.syllabus.grading.filter(i => i.kind === "exam").map(i => `${i.item} ${i.percent}%`).join(", ")} (not labeled midterm or final in the syllabus)`);
     const none = without.filter(c => !unlabeled.includes(c));
-    if (withIt.length && none.length) lines.push(`No ${bare}: ${none.map(c => c.code).join(", ")}.`);
+    if (withIt.length && none.length) lines.push(`No ${bare} listed in the dated breakdown: ${none.map(c => c.code).join(", ")}.`);
     // Flag exams that fall in the same week, the usual crunch point.
     if (kind === "midterm") {
       const byWeek = new Map<string, string[]>();
@@ -121,7 +121,7 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
       for (const [week, codes] of byWeek) if (codes.length > 1) lines.push(`Heads-up: ${codes.join(" and ")} both have a midterm in ${week}.`);
     }
   }
-  if (unknown.length) lines.push(`${unknown.map(c => c.code).join(", ")}: no syllabus on file, so this is unknown (not zero).`);
+  if (unknown.length) lines.push(`${unknown.map(c => c.code).join(", ")}: no grading breakdown on file, so this is unknown (not zero).`);
   return { kind: "answer", message: lines.join("\n"), citations, warnings: ["From past-term USC syllabi or labeled mocks. Check the Spring 2027 syllabus before deciding."] };
 }
 
@@ -184,6 +184,15 @@ const METRICS: { pattern: RegExp; pick: (o: Option) => number; best: "min" | "ma
 
 export function selectIntent(message: string, options: Option[], chosenId: string | undefined): Reply | null {
   if (options.length < 2 || !/\b(show|switch|pick|choose|go with|use|which|option|one with|the one)\b/i.test(message)) return null;
+  // "the second option", "option 3", or an option's own name ("No midterms").
+  const ordinal = message.match(/\b(first|second|third|1st|2nd|3rd)\b|\boption\s*([1-3])\b/i);
+  const index = ordinal ? (ordinal[2] ? Number(ordinal[2]) : ["first", "second", "third"].indexOf(ordinal[1]!.toLowerCase().replace(/^(1st|2nd|3rd)$/, m => ({ "1st": "first", "2nd": "second", "3rd": "third" })[m]!)) + 1) - 1 : -1;
+  const named = options[index] ?? [...options].sort((a, b) => b.title.length - a.title.length).find(o => message.toLowerCase().includes(o.title.toLowerCase()));
+  if (named) {
+    if (named.id === (chosenId ?? options[0]!.id)) return { kind: "answer", message: `You're already viewing "${named.title}".` };
+    return { kind: "select", selectScheduleId: named.id,
+      message: `Switched to "${named.title}": ${named.units} units, ${named.campusDays} campus days, first class ${fmt(named.earliestStart)}.` };
+  }
   const metric = METRICS.find(m => m.pattern.test(message));
   if (!metric) return null;
   const sorted = [...options].sort((a, b) => metric.best === "min" ? metric.pick(a) - metric.pick(b) : metric.pick(b) - metric.pick(a));

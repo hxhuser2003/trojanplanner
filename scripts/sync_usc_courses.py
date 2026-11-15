@@ -12,7 +12,11 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 TERM = "20271"
-COURSES = ("CSCI-544", "CSCI-546", "CSCI-561", "CSCI-570", "CSCI-571", "CSCI-572", "CSCI-585")
+COURSES = (
+    "CSCI-530", "CSCI-531", "CSCI-544", "CSCI-545", "CSCI-546",
+    "CSCI-551", "CSCI-561", "CSCI-566", "CSCI-567", "CSCI-570",
+    "CSCI-571", "CSCI-572", "CSCI-580", "CSCI-585", "CSCI-587",
+)
 OUTPUT = Path(__file__).resolve().parents[1] / "artifacts/api-server/src/planner/usc-spring-2027.json"
 DAY = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4}
 

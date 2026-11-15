@@ -8,6 +8,20 @@ from ortools.sat.python import cp_model
 GOAL_REWARD = 5000
 
 
+def goals_fit(catalog, request):
+    """True when the smallest courses that cover every selected goal fit within the unit target."""
+    completed = set(request["completedCourses"])
+    total = 0
+    for requirement in catalog["requirements"]:
+        if requirement["id"] not in request["requirementIds"]:
+            continue
+        needed = max(0, requirement["needed"] - len(completed.intersection(requirement["courseIds"])))
+        sizes = [c["units"] for c in catalog["courses"] if c["id"] in requirement["courseIds"] and c["id"] not in completed]
+        if needed and sizes:
+            total += needed * min(sizes)
+    return total <= request["maxUnits"]
+
+
 def overlaps(a, b):
     return a["day"] == b["day"] and a["start"] < b["end"] and b["start"] < a["end"]
 
@@ -65,8 +79,10 @@ def run_solver(catalog, request, excluded=None):
     units = sum(c["units"] * variables[i] for i, (c, _) in enumerate(rows))
     model.add(units >= request["minUnits"])
     model.add(units <= request["maxUnits"])
-    # Goals are strongly preferred, not required: with a small unit target the plan covers as many
-    # goals as fit instead of failing. GOAL_REWARD outweighs any single course's cost.
+    # Goals are required when the unit target leaves room for all of them, so a hard rule that blocks
+    # a goal is reported as a conflict. With fewer units (say 8 units and three goals) they become
+    # strongly preferred and the plan covers as many as fit. GOAL_REWARD outweighs any course's cost.
+    hard_goals = goals_fit(catalog, request)
     goals = []
     for requirement in catalog["requirements"]:
         if requirement["id"] in request["requirementIds"]:
@@ -74,9 +90,12 @@ def run_solver(catalog, request, excluded=None):
             needed = max(0, requirement["needed"] - satisfied)
             if needed == 0:
                 continue
+            covered = sum(variables[i] for i, (c, _) in enumerate(rows) if c["id"] in requirement["courseIds"]) >= needed
+            if hard_goals:
+                model.add(covered)
+                continue
             met = model.new_bool_var(f"goal-{requirement['id']}")
-            model.add(sum(variables[i] for i, (c, _) in enumerate(rows)
-                          if c["id"] in requirement["courseIds"]) >= needed).only_enforce_if(met)
+            model.add(covered).only_enforce_if(met)
             goals.append(met)
     # Two sections of one course with identical meetings give the same week, so alternatives
     # must differ in courses or meeting times, not just in section numbers.
@@ -114,7 +133,8 @@ def run_solver(catalog, request, excluded=None):
             if kind == "lock_section" and section["id"] == constraint["value"]:
                 cost -= 150
             syllabus = course["syllabus"]
-            known = syllabus["status"] != "unknown"
+            # Past-term grading is visible for comparison but cannot score a future offering.
+            known = syllabus["status"] == "synthetic"
             # "Exam 1 / Exam 2" rows are not labeled midterm or final, so they never count as "no midterm".
             exam_kinds = {g["kind"] for g in syllabus["grading"]}
             # Neutral missing values must not outperform positively evidenced matches.

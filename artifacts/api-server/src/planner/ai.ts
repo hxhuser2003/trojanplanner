@@ -91,7 +91,7 @@ export function catalogLookup(message: string): ChatResult | null {
   if (!named.length) return null;
   const citations = named.flatMap(c => c.syllabus.evidence.map(e => evidenceFor(c.id, e.label)!));
   const lines = named.map(c => c.syllabus.status !== "unknown"
-    ? `${c.code}: exams ${c.syllabus.examPercent}%, projects ${c.syllabus.projectPercent}% (${c.syllabus.projectMode}), ${c.syllabus.cadence.toLowerCase()}. Sections: ${c.sections.map(s => `${s.id}: ${meetingText(s)}`).join("; ")}.`
+    ? `${c.code}: ${c.syllabus.term} ${c.syllabus.status === "synthetic" ? "mock" : "historical"} source lists exams ${c.syllabus.examPercent == null ? "unknown" : `${c.syllabus.examPercent}%`}, projects ${c.syllabus.projectPercent == null ? "unknown" : `${c.syllabus.projectPercent}%`} (${c.syllabus.projectMode}), ${c.syllabus.cadence.toLowerCase()}. Sections: ${c.sections.map(s => `${s.id}: ${meetingText(s)}`).join("; ")}.`
     : `${c.code}: no syllabus evidence is loaded. Unknown is not zero. Sections: ${c.sections.map(s => `${s.id}: ${meetingText(s)}`).join("; ")}.`);
   return { kind: "answer", message: lines.join(" "), proposedConstraints: [], removeConstraintIds: [], updatedConstraints: [], options: [], citations,
     warnings: ["AI is unavailable, so this is a direct catalog lookup. Grading comes from past-term USC syllabi or labeled mocks; confirm Spring 2027 policy."], provider: "Catalog lookup" };

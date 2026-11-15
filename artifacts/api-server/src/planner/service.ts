@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { SolvePlannerBody, SolvePlannerResponse } from "@workspace/api-zod";
 import type { z } from "zod";
 import { catalog } from "./catalog";
+import { goalsFit } from "./explain";
 
 export type PlannerInput = z.infer<typeof SolvePlannerBody>;
 export type Constraint = PlannerInput["constraints"][number];
@@ -81,6 +82,11 @@ function validateSolution(raw: RawSolution, input: PlannerInput): [Course, Secti
       if (!satisfies(s, rule)) throw new Error("Hard time constraint violated.");
     }
   }
+  if (goalsFit(input)) for (const id of input.requirementIds) {
+    const req = catalog.requirements.find(r => r.id === id)!;
+    const covered = req.courseIds.filter(c => completed.has(c) || selected.some(([x]) => x.id === c)).length;
+    if (covered < req.needed) throw new Error("Requirement missing.");
+  }
   for (const rule of input.constraints.filter(x => x.enabled && x.hard)) {
     if (rule.kind === "require_course" && !selected.some(([c]) => c.id === rule.value)) throw new Error("Required course missing.");
     if (rule.kind === "exclude_course" && selected.some(([c]) => c.id === rule.value)) throw new Error("Excluded course selected.");
@@ -96,15 +102,16 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     const list = meetings.filter(m => m.day === day).sort((a, b) => a.start - b.start);
     for (let i = 1; i < list.length; i++) gapMinutes += list[i]!.start - list[i - 1]!.end;
   }
-  // Historical USC syllabi and labeled mock syllabi both count as known; only "unknown" is excluded.
-  const known = selected.filter(([c]) => c.syllabus.status !== "unknown");
-  const individual = known.filter(([c]) => c.syllabus.projectMode === "individual").length;
-  const projectHeavy = known.filter(([c]) => (c.syllabus.projectPercent ?? -1) >= 50).length;
-  const examHeavy = known.filter(([c]) => (c.syllabus.examPercent ?? -1) >= 50).length;
-  const quizCourses = known.filter(([c]) => (c.syllabus.quizPercent ?? 0) > 0).length;
-  const attendanceCourses = known.filter(([c]) => (c.syllabus.attendancePercent ?? 0) > 0).length;
-  const midtermCourses = known.filter(([c]) => c.syllabus.grading.some(i => i.kind === "midterm")).length;
-  const finalCourses = known.filter(([c]) => c.syllabus.grading.some(i => i.kind === "final")).length;
+  // Historical tables are displayed, but only labeled mocks contribute assessment counts.
+  const known = selected.filter(([c]) => c.syllabus.grading.length > 0);
+  const scored = known.filter(([c]) => c.syllabus.status === "synthetic");
+  const individual = scored.filter(([c]) => c.syllabus.projectMode === "individual").length;
+  const projectHeavy = scored.filter(([c]) => (c.syllabus.projectPercent ?? -1) >= 50).length;
+  const examHeavy = scored.filter(([c]) => (c.syllabus.examPercent ?? -1) >= 50).length;
+  const quizCourses = scored.filter(([c]) => (c.syllabus.quizPercent ?? 0) > 0).length;
+  const attendanceCourses = scored.filter(([c]) => (c.syllabus.attendancePercent ?? 0) > 0).length;
+  const midtermCourses = scored.filter(([c]) => c.syllabus.grading.some(i => i.kind === "midterm")).length;
+  const finalCourses = scored.filter(([c]) => c.syllabus.grading.some(i => i.kind === "final")).length;
   const days = new Set(meetings.map(m => m.day)).size;
   const earliest = meetings.length ? Math.min(...meetings.map(m => m.start)) : 0;
   return {
@@ -112,7 +119,7 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
     title: index === 0 ? "Best preference fit" : `Alternative ${index}`,
     selections: selected.map(([c, s]) => ({
       courseId: c.id, sectionId: s.id,
-      reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. Published linked meeting times checked. ${c.syllabus.status === "unknown" ? "Assessment information not specified." : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (${c.syllabus.status === "synthetic" ? "illustrative mock" : `historical ${c.syllabus.term}`}; verify current policy).`}`,
+      reason: `${catalog.requirements.find(r => r.id === c.requirement)?.title ?? "Additional course"} · ${c.units} units. Published linked meeting times checked. ${c.syllabus.examPercent == null || c.syllabus.projectPercent == null ? `Assessment weights are partly or fully unknown in the ${c.syllabus.status === "synthetic" ? "mock" : `historical ${c.syllabus.term}`} source; verify current policy.` : `${c.syllabus.projectPercent}% projects, ${c.syllabus.examPercent}% exams (${c.syllabus.status === "synthetic" ? "illustrative mock" : `historical ${c.syllabus.term}`}; verify current policy).`}`,
     })),
     units: selected.reduce((sum, [c]) => sum + c.units, 0), campusDays: days,
     classHours: Math.round(meetings.reduce((sum, m) => sum + m.end - m.start, 0) / 6) / 10,
@@ -125,11 +132,12 @@ function summarize(raw: RawSolution, input: PlannerInput, index = 0) {
           && r.courseIds.filter(id => input.completedCourses.includes(id) || selected.some(([c]) => c.id === id)).length < r.needed);
         return missed.length ? [`${unitText(input.minUnits, input.maxUnits)} leaves room for only some of your goals; not covered this semester: ${missed.map(r => r.title).join(", ")}.`] : [];
       })(),
+      ...(selected.length > 2 ? ["USC's MS student guide says traditional MS students who started in Spring 2020 or later are limited to two four-unit CSCI/DSCI courses per term. Check your individual program and registration eligibility."] : []),
       ...selected.filter(([, s]) => s.unknownScheduleComponents.length > 0).map(([c, s]) => `${c.code}: ${s.unknownScheduleComponents.map(u => u.replace(/ \d{5}\b/, "")).join(", ")}; full conflict check is not possible.`),
-      ...(selected.some(([c]) => c.syllabus.status === "historical") ? ["Grading for some courses comes from a past term's USC syllabus; Spring 2027 grading may differ, so confirm with the instructor."] : []),
+      ...(selected.some(([c]) => c.syllabus.status === "historical") ? ["Historical USC syllabi describe past sections and are not used to score assessment preferences; confirm Spring 2027 grading with instructors."] : []),
       ...(selected.some(([c]) => c.syllabus.status === "synthetic") ? ["Some grading tables are illustrative mocks, not published by USC."] : []),
-      ...(known.length < selected.length ? ["Some syllabi are missing; absence of evidence does not mean fewer exams or projects."] : [])],
-    assessmentSummary: `${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses; ${quizCourses} with graded quizzes; ${attendanceCourses} with graded attendance or participation; ${midtermCourses} with a midterm; ${finalCourses} with a final exam. Syllabus coverage: ${known.length}/${selected.length}. No difficulty estimate.`,
+      ...(selected.some(([c]) => c.syllabus.examPercent == null || c.syllabus.projectPercent == null || c.syllabus.otherPercent == null) ? ["Some historical assessment weights are unspecified; absence of evidence does not mean fewer exams or projects."] : [])],
+    assessmentSummary: `Mock-based counts only: ${projectHeavy} project-weighted courses (projects ≥50%); ${examHeavy} exam-weighted (exams ≥50%); ${individual} individual-project courses; ${quizCourses} with graded quizzes; ${attendanceCourses} with graded attendance or participation; ${midtermCourses} with a midterm; ${finalCourses} with a final exam. Dated grading tables: ${known.length}/${selected.length}; historical USC sources are viewable separately. No difficulty estimate.`,
   };
 }
 let activeSolves = 0;
