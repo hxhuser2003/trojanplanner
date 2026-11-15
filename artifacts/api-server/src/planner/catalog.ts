@@ -58,11 +58,23 @@ const syllabus = (id: string, exams: number | null, projects: number | null, mod
   ],
   };
 };
+// What each synthetic course covers, so topic questions ("anything on machine learning?") have something to match.
+const TOPICS: Record<string, string> = {
+  "CSCI-270": "Algorithm design and analysis: greedy algorithms, divide and conquer, dynamic programming, graph algorithms, network flow, and NP-completeness.",
+  "CSCI-271": "Applying algorithms to practical problems: graph search, optimization, approximation and randomized algorithms, with implementation milestones.",
+  "CSCI-201": "Object-oriented design in Java, multithreading and concurrency, networking, databases, and team software development.",
+  "CSCI-202": "Systems programming in C and C++: memory management, processes, files, sockets, debugging, and performance tools.",
+  "CSCI-310": "Software lifecycle, requirements, design patterns, testing, agile teamwork, and a semester-long team project.",
+  "CSCI-360": "Search, game playing, logic, probabilistic reasoning and Bayesian networks, plus an introduction to machine learning (supervised learning, neural networks) and reinforcement learning.",
+  "CSCI-350": "Processes and threads, synchronization, CPU scheduling, virtual memory, file systems, and kernel programming projects.",
+  "CSCI-380": "Generative art, interactive media, procedural graphics, and creative coding.",
+  "WRIT-340": "Advanced writing for engineers: technical documents, proposals, audience analysis, and revision.",
+};
 const course = (id: string, title: string, requirement: string, prerequisites: string[], sections: ReturnType<typeof section>[], exams: number | null, projects: number | null, mode: string, color: string, cadence?: string) => ({
   id, code: id.replace("-", " "), title, units: 4, requirement, prerequisites, sections,
   syllabus: syllabus(id, exams, projects, mode, cadence),
   color: ({ amber: "#9B641C", blue: "#315A8C", purple: "#75528D", green: "#3C755F", rose: "#A34D63", teal: "#2F7478", orange: "#B0683E" } as Record<string, string>)[color] ?? "#315A8C",
-  description: `Synthetic ${title.toLowerCase()} offering for demonstrating planning and assessment trade-offs. Not official USC course information.`,
+  description: `${TOPICS[id] ?? `Synthetic ${title.toLowerCase()} offering.`} (Synthetic demo description, not official USC course information.)`,
   sourceUrl: `/api/planner/sources/${id}`,
 });
 export const catalog: z.infer<typeof CatalogSchema> = CatalogSchema.parse({
