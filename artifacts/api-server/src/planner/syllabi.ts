@@ -61,7 +61,7 @@ const SPECS: Record<string, Spec> = {
     grading: [g("Reading responses", "homework", 10, "Weekly"), g("Participation", "participation", 10, "Design discussions"),
       g("Team implementation project", "project", 60, "Proposal, prototype, fault-injection demo, final report"),
       g("Midterm exam", "midterm", 10, "Week 8, in class"), g("Final exam", "final", 10, "Finals week")],
-    notes: [{ label: "Mock notice", value: "Not published by USC", excerpt: "Created for this demo; these weights have not been published by USC.", page: 1 }],
+    notes: [{ label: "Source note", value: "Illustrative, not published by USC", excerpt: "Illustrative grading created for this demo; these weights have not been published by USC.", page: 1 }],
   },
   "CSCI-551": {
     term: "Fall 2025", status: "historical", sourceUrl: "https://ant.isi.edu/~johnh/TEACHING/CS651/FA2025/csci551_csci651_fa2025_syllabus_251110.pdf", page: 3,
@@ -119,7 +119,7 @@ const SPECS: Record<string, Spec> = {
     attendance: "Illustrative expectation: attend class and present the final demo; no published USC attendance policy is represented.",
     grading: [g("Short exercises", "quiz", 10, "Weekly, online"), g("Reading responses", "homework", 10, "Weekly"),
       g("Individual search project", "project", 50, "Indexing, ranking, evaluation, and demo milestones"), g("Midterm exam", "midterm", 30, "Week 9, in class")],
-    notes: [{ label: "Mock notice", value: "Not published by USC", excerpt: "Created for this demo; these weights have not been published by USC.", page: 1 }],
+    notes: [{ label: "Source note", value: "Illustrative, not published by USC", excerpt: "Illustrative grading created for this demo; these weights have not been published by USC.", page: 1 }],
   },
   "CSCI-580": {
     term: "Spring 2021", status: "historical", sourceUrl: "https://web-app.usc.edu/soc/syllabus/20211/30390.pdf", page: 1,
@@ -155,7 +155,7 @@ function build(id: string, spec: Spec) {
   if (grading.length > 0 && sum(grading, "attendance", "participation", "quiz", "homework", "project", "midterm", "final", "exam", "other") !== 100) throw new Error(`Grading table for ${id} does not total 100%.`);
   const examPercent = grading.length ? sum(grading, "midterm", "final", "exam") : null;
   const projectPercent = grading.length && !spec.projectUnknown ? sum(grading, "project") : null;
-  const source = spec.status === "historical" ? `${spec.term} USC syllabus source` : "Mock syllabus";
+  const source = spec.status === "historical" ? `${spec.term} USC syllabus source` : "Illustrative syllabus";
   return {
     term: spec.term, status: spec.status, examPercent, projectPercent,
     otherPercent: examPercent == null || projectPercent == null ? null : 100 - examPercent - projectPercent,

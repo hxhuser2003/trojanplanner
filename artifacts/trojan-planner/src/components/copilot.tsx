@@ -30,9 +30,9 @@ interface Props {
 
 let seq = 0;
 
-/** Names a citation's document honestly: a dated USC syllabus, or a labeled mock. */
+/** Names a citation's document as a dated USC syllabus or an illustrative source. */
 const sourceLabel = (course?: Catalog['courses'][number]) =>
-  !course ? 'Source' : course.syllabus.status === 'synthetic' ? 'Mock syllabus (made for this demo)' : `${course.syllabus.term} USC syllabus`;
+  !course ? 'Source' : course.syllabus.status === 'synthetic' ? 'Illustrative syllabus' : `${course.syllabus.term} USC syllabus`;
 
 export function Copilot({ catalog, input, selections, schedules, chosenId, onApply, onSelect }: Props) {
   const chat = useChatCopilot();

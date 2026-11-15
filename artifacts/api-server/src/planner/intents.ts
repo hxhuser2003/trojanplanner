@@ -75,10 +75,6 @@ const TOPICS: [GradeKind, RegExp, string][] = [
 ];
 
 /** "Which of my classes have a midterm?", "When is the CSCI 561 final?", "How is CSCI 570 graded?" — answered from grading tables. */
-/** Where a grading table came from, so a mock is never read as a USC syllabus. */
-const sourceText = (c: (typeof catalog.courses)[number]) =>
-  c.syllabus.status === "synthetic" ? "labeled mock syllabus" : `${c.syllabus.term} USC syllabus`;
-
 export function gradingIntent(message: string, selections: Ref[]): Reply | null {
   // Only questions; "I don't want midterms" is a preference and goes to the rule handlers.
   if (/\b(want|avoid|prefer|hate|rather|don'?t like|no more)\b/i.test(message)) return null;
@@ -114,7 +110,7 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
       : `None of the ${known.length} grading tables${scope ? ` ${scope}` : ""} lists ${phrase}.`);
     for (const c of withIt) {
       const items = c.syllabus.grading.filter(i => i.kind === kind);
-      lines.push(...items.map(i => `• ${c.code} ${i.item}: ${i.percent}% of the grade${i.when ? `, ${i.when}` : ""} (${sourceText(c)})`));
+      lines.push(...items.map(i => `• ${c.code} ${i.item}: ${i.percent}% of the grade${i.when ? `, ${i.when}` : ""}`));
       citations.push(...items.flatMap(i => cite(c, i.item)));
     }
     // "Exam 1 / Exam 2" rows are not labeled midterm or final, so those courses are reported separately.
