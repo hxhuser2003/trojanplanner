@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info, X } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Clock, RefreshCw, Wrench, ListChecks, Info } from 'lucide-react';
 import type { Catalog, Constraint, PlannerInput, Repair } from '@workspace/api-client-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,7 +13,7 @@ import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
 import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
-import { fmtHours, fmtTime, sectionWhen, formatSectionMeetings, latestEndTime, emptyScheduleStat, type ScheduleDiff } from '@/lib/format';
+import { fmtHours, fmtTime, sectionWhen, latestEndTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -121,8 +121,6 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4 min-w-0">
-          {p.lastChange && !stale && !solving && <WhatChanged diff={p.lastChange} catalog={catalog} onDismiss={p.dismissChange} />}
-
           {result && result.schedules.length > 1 && !infeasible && (
             <div className="inline-flex flex-wrap max-w-full rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
               {result.schedules.map((s) => (
@@ -227,67 +225,6 @@ function SolveStatus() {
       <span className={cn('size-1.5 rounded-full', bad ? 'bg-destructive' : solveState === 'solving' ? 'bg-muted-foreground animate-pulse' : 'bg-emerald-500')} />
       {label}{result && solveState !== 'solving' && ` · ${result.elapsedMs} ms`}
     </p>
-  );
-}
-
-function WhatChanged({ diff, catalog, onDismiss }: { diff: ScheduleDiff; catalog: Catalog; onDismiss: () => void }) {
-  const code = (id: string) => catalog.courses.find((c) => c.id === id)?.code ?? id;
-  const formatMeetings = (courseId: string, sectionId: string) => formatSectionMeetings(catalog, courseId, sectionId);
-  const courseChanges = [
-    ...diff.added.map((x) => ({ title: `${code(x.courseId)} — added`, removed: false, meetings: formatMeetings(x.courseId, x.sectionId) })),
-    ...diff.removed.map((x) => ({ title: `${code(x.courseId)} — removed`, removed: true, meetings: formatMeetings(x.courseId, x.sectionId).map((meeting) => ({ ...meeting, time: `removed: ${meeting.time}` })) })),
-    ...diff.moved.map((x) => {
-      const before = formatMeetings(x.courseId, x.from);
-      const after = formatMeetings(x.courseId, x.to);
-      const timesChanged = JSON.stringify(before) !== JSON.stringify(after);
-      const summarize = (meetings: { kind: string; time: string }[]) => {
-        const byKind = new Map<string, string[]>();
-        meetings.forEach(({ kind, time }) => byKind.set(kind, [...(byKind.get(kind) ?? []), time]));
-        return new Map([...byKind].map(([kind, times]) => [kind, times.join('; ')]));
-      };
-      const beforeByKind = summarize(before);
-      const afterByKind = summarize(after);
-      const kinds = [...new Set([...beforeByKind.keys(), ...afterByKind.keys()])];
-      return {
-        title: `${code(x.courseId)} — ${timesChanged ? 'meeting time changed' : 'section changed; meeting times unchanged'}`,
-        removed: false,
-        meetings: kinds.map((kind) => {
-          const oldTime = beforeByKind.get(kind);
-          const newTime = afterByKind.get(kind);
-          return {
-            kind,
-            time: oldTime && newTime && oldTime !== newTime
-              ? `${newTime} (was ${oldTime})`
-              : newTime ?? `removed: ${oldTime}`,
-          };
-        }),
-      };
-    }),
-  ];
-  return (
-    <div className="rounded-lg border bg-secondary/60 px-3 py-2 text-sm flex items-start gap-2 rise" data-testid="status-what-changed">
-      <Info className="size-4 text-muted-foreground shrink-0 mt-0.5" />
-      <div className="flex-1">
-        <p className="font-medium">{diff.same ? 'Your schedule stayed the same.' : 'What changed:'}</p>
-        {!diff.same && (
-          <ul className="mt-1 space-y-2">
-            {courseChanges.map((change, index) => (
-              <li key={`${index}-${change.title}`}>
-                <p className={cn(change.removed && 'text-destructive')}>{change.title}</p>
-                <ul className="ml-5 list-disc space-y-0.5 text-muted-foreground">
-                  {change.meetings.map((meeting, meetingIndex) => {
-                    const removed = change.removed || meeting.time.startsWith('removed:');
-                    return <li key={`${meeting.kind}-${meetingIndex}`} className={cn(removed && 'text-destructive')}><span className={cn('font-medium', !removed && 'text-foreground')}>{meeting.kind}:</span> {meeting.time}</li>;
-                  })}
-                </ul>
-              </li>
-            ))}
-            {diff.stats.map((change) => <li key={change.label}>{change.label}: {change.before === '—' ? emptyScheduleStat(change.label) : change.before} → {change.after === '—' ? emptyScheduleStat(change.label) : change.after}</li>)}
-          </ul>
-        )}
-      </div>
-      <button onClick={onDismiss} className="p-0.5 rounded hover:bg-background" aria-label="Dismiss"><X className="size-3.5" /></button>
-    </div>
   );
 }
 
