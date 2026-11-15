@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DAYS, KIND_META, autoLabel, describeConstraint, fromHHMM, newConstraint, toHHMM } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
+const isPreference = (k: ConstraintKind) => k.startsWith('prefer_');
+const PREFERENCE_KINDS = (Object.keys(KIND_META) as ConstraintKind[]).filter(isPreference);
+
 interface Props {
   catalog: Catalog;
   constraints: Constraint[];
@@ -44,10 +47,13 @@ export function ConstraintEditor({ catalog, constraints, onChange }: Props) {
         <p className="text-sm font-medium truncate">{c.label}</p>
         <p className="text-xs text-muted-foreground truncate font-mono">{describeConstraint(c, catalog)}</p>
       </div>
-      <button className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded border hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={c.kind.startsWith('prefer_')} title={c.kind.startsWith('prefer_') ? 'Preferences are always soft' : undefined}
-        onClick={() => onChange((cs) => cs.map((x) => (x.id === c.id ? { ...x, hard: !x.hard } : x)))}
-        aria-label={`Make ${c.hard ? 'soft' : 'hard'}`} data-testid={`button-hardness-${c.id}`}>{c.hard ? 'Hard' : 'Soft'}</button>
+      {isPreference(c.kind) ? (
+        <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded border cursor-default" title="Preferences are always soft: the solver favors them but never fails because of them">Soft</span>
+      ) : (
+        <button className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded border hover:bg-secondary transition-colors"
+          onClick={() => onChange((cs) => cs.map((x) => (x.id === c.id ? { ...x, hard: !x.hard } : x)))}
+          aria-label={`Make ${c.hard ? 'soft' : 'hard'}`} data-testid={`button-hardness-${c.id}`}>{c.hard ? 'Hard' : 'Soft'}</button>
+      )}
       <button className="p-1.5 rounded hover:bg-secondary" aria-label={`Edit ${c.label}`} onClick={() => open({ ...c }, false)} data-testid={`button-edit-${c.id}`}><Pencil className="size-3.5" /></button>
       <button className="p-1.5 rounded hover:bg-destructive/10 text-destructive" aria-label={`Delete ${c.label}`} onClick={() => onChange((cs) => cs.filter((x) => x.id !== c.id))} data-testid={`button-delete-${c.id}`}><Trash2 className="size-3.5" /></button>
     </li>
@@ -90,10 +96,20 @@ export function ConstraintEditor({ catalog, constraints, onChange }: Props) {
                   <Label htmlFor="c-label">Label</Label>
                   <Input id="c-label" maxLength={200} value={editing.label} onChange={(e) => { setLabelTouched(true); setEditing({ ...editing, label: e.target.value }); }} data-testid="input-constraint-label" />
                 </div>
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div><p className="text-sm font-medium">Hard rule</p><p className="text-xs text-muted-foreground">Hard rules are never relaxed without your approval.</p></div>
-                  <Switch checked={editing.hard} disabled={editing.kind.startsWith('prefer_')} onCheckedChange={(v) => update({ hard: v })} data-testid="switch-constraint-hard" />
-                </div>
+                {isPreference(editing.kind) ? (
+                  <div className="space-y-1.5"><Label>Preference</Label>
+                    <Select value={editing.kind} onValueChange={(k) => update({ kind: k as ConstraintKind })}>
+                      <SelectTrigger data-testid="select-preference-kind"><SelectValue /></SelectTrigger>
+                      <SelectContent>{PREFERENCE_KINDS.map((k) => <SelectItem key={k} value={k}>{KIND_META[k].label}</SelectItem>)}</SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Preferences are soft: the solver favors them but never fails because of them.</p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div><p className="text-sm font-medium">Hard rule</p><p className="text-xs text-muted-foreground">Hard rules are never relaxed without your approval.</p></div>
+                    <Switch checked={editing.hard} onCheckedChange={(v) => update({ hard: v })} data-testid="switch-constraint-hard" />
+                  </div>
+                )}
                 {uses.includes('days') && (
                   <div className="space-y-1.5">
                     <Label>Days</Label>
