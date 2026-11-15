@@ -20,7 +20,7 @@ The chatbot never changes your rules by itself. Rule changes appear as a proposa
 ## A. Answered by code (no API key needed)
 
 ### Degree progress
-- [ ] `what do I still need?` → each goal marked done / in this plan / still needed, with options and the plan's units.
+- [ ] `what do I still need?` / `what do I need for graduation?` → the goals you picked plus any done or in this plan (done / in this plan / not covered), the other optional goals in one line, and the plan's units. It says these are planning goals, not USC graduation requirements.
 
 ### Why is a course in my plan
 - [ ] `why is CSCI 570 in my plan?` → which goal it covers, when its section meets, whether it overlaps anything, which preferences it fits or breaks, and other sections that were ruled out or are equal swaps (described by meeting time, never by section number).
