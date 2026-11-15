@@ -35,7 +35,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
   const toggleCompleted = (id: string) => set({ completedCourses: completed.has(id) ? input.completedCourses.filter((x) => x !== id) : [...input.completedCourses, id].slice(0, 100) });
   const addManual = () => {
     const codes = manual.split(/[,\n]/).map((s) => norm(s.trim())).filter((s) => /^[A-Z]{2,5}-\d{2,4}[A-Z]?$/.test(s));
-    if (!codes.length) { toast({ title: 'Use a code like CSCI-201 or WRIT 150', variant: 'destructive' }); return; }
+    if (!codes.length) { toast({ title: 'Use a code like CSCI-570 or CSCI 585', variant: 'destructive' }); return; }
     set({ completedCourses: Array.from(new Set([...input.completedCourses, ...codes])).slice(0, 100) });
     setManual('');
   };
@@ -48,7 +48,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
 
       <div className="rounded-xl border-l-4 border-primary bg-card p-4 mb-6 flex gap-3" data-testid="text-audit-disclaimer">
         <ShieldAlert className="size-5 text-primary shrink-0 mt-0.5" />
-        <p className="text-sm">This is a <strong>synthetic undergraduate demo</strong>. It does not reproduce, replace, or certify your USC degree audit (STARS). Confirm requirements with your advisor and the official report.</p>
+        <p className="text-sm">Course offerings are from a cached USC listing. The <strong>student profile and planning goals are illustrative</strong>. This does not reproduce, replace, or certify your USC degree audit (STARS). Confirm requirements with your advisor and the official report.</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -90,13 +90,13 @@ function Degree({ catalog }: { catalog: Catalog }) {
             <div className="mt-4">
               <Label htmlFor="manual">Add a course code not listed</Label>
               <div className="flex gap-2 mt-1">
-                <Input id="manual" value={manual} onChange={(e) => setManual(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addManual()} placeholder="e.g. WRIT 150, MATH-226" data-testid="input-manual-course" />
+                <Input id="manual" value={manual} onChange={(e) => setManual(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && addManual()} placeholder="e.g. CSCI 567, EE 559" data-testid="input-manual-course" />
                 <Button variant="outline" onClick={addManual} data-testid="button-add-manual"><Plus className="size-4" />Add</Button>
               </div>
             </div>
             {outside.length > 0 && (
               <div className="mt-3 rounded-lg bg-accent/20 border border-accent/50 p-3" data-testid="list-outside-demo">
-                <p className="text-xs font-semibold mb-2">Outside this demo's catalog — recorded, but the synthetic solver can't check them against real requirements.</p>
+                <p className="text-xs font-semibold mb-2">Outside this selected course subset — recorded for prerequisite checks, but not offered as a planning option here.</p>
                 <div className="flex flex-wrap gap-1.5">
                   {outside.map((c) => (
                     <span key={c} className="inline-flex items-center gap-1 text-xs font-mono bg-card border rounded-full pl-2.5 pr-1 py-0.5">{c}

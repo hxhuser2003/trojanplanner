@@ -16,7 +16,7 @@ Promise: **Conflict-free against the loaded data and confirmed constraints.** No
 
 Students must reconcile course offerings, degree progress, work hours, and assessment preferences across multiple sources. The core problem is not merely creating a timetable: it is understanding and repairing incompatible requests without silently sacrificing something important.
 
-Initial scope: **one major, one catalog year, one semester, and a verified course/section subset**. Use one synthetic student profile or manual completed-course selection. Broader undergraduate/graduate coverage is future work. Academic advisors are potential pilot partners, not assumed endorsers.
+Initial scope: **one graduate program example, one semester, and a selected course/section subset**. Use an illustrative profile or manual completed-course selection. Broader program coverage is future work. Academic advisors are potential pilot partners, not assumed endorsers.
 
 Before building broadly, ask three students to walk through their last registration experience. Establish whether choosing courses, interpreting requirements, or repairing conflicts is the strongest pain point.
 
@@ -189,7 +189,7 @@ The supplied event brief requires a working prototype link, public GitHub reposi
 
 | Risk | Mitigation |
 |---|---|
-| Missing course or syllabus access | Verify early; reduce the supported subset rather than fabricate evidence |
+| Missing course or syllabus access | Verify early; use a visibly labeled mock syllabus only for demo behavior, never as USC evidence |
 | Incomplete eligibility/degree rules | Bound claims, show unknowns, seek advisor review |
 | Solver complexity or slow search | Small dataset, time limits, honest status handling, validated incumbents |
 | Misparsed preferences | Editable chips and confirmation before use |
@@ -199,35 +199,10 @@ The supplied event brief requires a working prototype link, public GitHub reposi
 
 Pilot with one department and advisor-reviewed requirements. Measure time to a usable schedule, manual corrections required, and whether students understand the trade-offs. Seek Registrar/advising collaboration for maintained official data rather than assuming access or endorsement. Expand majors, advisor sharing, multi-semester reasoning, and integrations only after validating the core workflow.
 
-## 16. Next step: real courses, synthetic student, synthetic syllabi
+## 16. Current data status
 
-Status: planned. Finish the core features on the current synthetic catalog first; do this swap afterwards.
+Seven graduate Spring 2027 CSCI courses are cached in `artifacts/api-server/src/planner/usc-spring-2027.json` from USC's public Schedule of Classes course API. Run `python scripts/sync_usc_courses.py` to refresh them. The snapshot records a UTC retrieval timestamp and each course links to its official listing.
 
-The current prototype runs entirely on synthetic fixtures. That works for the demo, but real course data strengthens the feasibility story and avoids pairing real USC course codes (e.g. CSCI 270, CSCI 201) with invented times and instructors. Target mix:
+The loader creates complete lecture/lab/discussion/quiz combinations for matching USC link codes and sessions, and the solver checks their published meeting times. TBA components remain attached to each combination and are disclosed as unchecked times. Prerequisite alternatives are modeled as groups in which at least one listed course must be completed. Seat counts are deliberately not treated as enrollment guarantees.
 
-| Data | Source | Notes |
-|---|---|---|
-| Courses and sections | Real: USC Schedule of Classes public JSON API, Spring 2027 (term code `20271`) | Fetch once, cache as JSON, record the retrieval timestamp; never call the API live during the demo |
-| Student profile | Synthetic | Protects privacy; designed to trigger a real conflict |
-| Syllabi | Synthetic, clearly labeled | Spring 2027 syllabi are not yet published |
-| Degree rules | Real if switching to the CS General MS; otherwise keep the labeled synthetic rules | See below |
-
-Endpoints (public, no login):
-- All CSCI courses: `https://classes.usc.edu/api/Courses/CoursesByTermSchoolProgram?termCode=20271&school=ENGV&program=CSCI`
-- One course: `https://classes.usc.edu/api/Courses/Course?termCode=20271&courseCode=CSCI-570`
-
-Field mapping to `catalog.ts`:
-- `sections[].sisSectionId` → section ID; `rnrMode` → meeting kind (Lecture, Discussion, Quiz, Lab).
-- `schedule[].days`, `startTime`, `endTime` → meetings (day 0–4, minutes after midnight).
-- `linkCode` → sections that must be taken together (same letter); `notes` states the link in plain text.
-- `instructors[]` → instructor names (may be empty).
-- `units`, `prerequisiteCourseCodes`, `corequisiteCourseCodes`, `majorRestrictions`, `courseRestrictions`, `hasDClearance`, `isCancelled` → units and eligibility flags.
-- `syllabus` → official Simple Syllabus link (content may be unpublished).
-
-Candidate real conflict: in CSCI 570 link group B, the lecture meets Wednesday but the linked quiz meets Friday 6:00–7:50 PM, which clashes with "Keep Fridays free." Verify the other link groups before using it in the demo.
-
-Optional degree switch to the CS General MS (source: https://www.cs.usc.edu/academic-programs/masters/computer-science-general/): 32 units; CSCI 570 required; remaining units from 500-level CSCI courses; at most 4 units of 400-level, two 600-level courses, and one non-CS course; GPA of at least 3.0. Official pages disagree on some limits, so cite the source and confirm against the USC Catalogue.
-
-Minimum fallback if time runs out: rename synthetic courses to codes that clearly do not exist at USC (e.g. DEMO 101) so fixtures are not mistaken for real offerings.
-
-Estimated effort: 1–2 hours (fetch-and-convert script plus a catalog loader); the solver and UI should not need changes.
+The default planning goals are illustrative and clearly labeled. No official degree requirement has been encoded. Five courses link to dated USC-hosted historical syllabi; two have clearly labeled mock syllabus pages. The solver excludes historical assessment weights from preference scoring and uses mock weights only for demonstration. Before a campus pilot, confirm degree rules, registration eligibility, and current syllabi with the relevant USC offices.

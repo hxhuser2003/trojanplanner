@@ -66,11 +66,14 @@ export const GetCatalogResponse = zod.object({
   "description": zod.string(),
   "color": zod.string(),
   "sourceUrl": zod.string(),
-  "prerequisites": zod.array(zod.string()),
+  "prerequisiteGroups": zod.array(zod.array(zod.string())),
   "sections": zod.array(zod.object({
   "id": zod.string(),
+  "componentIds": zod.array(zod.string()),
   "instructor": zod.string(),
   "eligibility": zod.string(),
+  "syllabusUrl": zod.string(),
+  "unknownScheduleComponents": zod.array(zod.string()),
   "meetings": zod.array(zod.object({
   "day": zod.number().int().min(getCatalogResponseCoursesItemSectionsItemMeetingsItemDayMin).max(getCatalogResponseCoursesItemSectionsItemMeetingsItemDayMax),
   "start": zod.number().int().min(getCatalogResponseCoursesItemSectionsItemMeetingsItemStartMin).max(getCatalogResponseCoursesItemSectionsItemMeetingsItemStartMax),
@@ -89,7 +92,7 @@ export const GetCatalogResponse = zod.object({
   "attendancePercent": zod.number().nullish(),
   "grading": zod.array(zod.object({
   "item": zod.string(),
-  "kind": zod.enum(['attendance', 'participation', 'quiz', 'homework', 'project', 'midterm', 'final']),
+  "kind": zod.enum(['attendance', 'participation', 'quiz', 'homework', 'project', 'midterm', 'final', 'exam', 'other']),
   "percent": zod.number(),
   "when": zod.string().optional()
 })),

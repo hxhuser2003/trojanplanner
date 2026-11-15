@@ -56,6 +56,8 @@ export const GradingItemKind = {
   project: 'project',
   midterm: 'midterm',
   final: 'final',
+  exam: 'exam',
+  other: 'other',
 } as const;
 
 export interface GradingItem {
@@ -107,8 +109,11 @@ export interface Syllabus {
 
 export interface Section {
   id: string;
+  componentIds: string[];
   instructor: string;
   eligibility: string;
+  syllabusUrl: string;
+  unknownScheduleComponents: string[];
   meetings: Meeting[];
 }
 
@@ -121,7 +126,7 @@ export interface Course {
   description: string;
   color: string;
   sourceUrl: string;
-  prerequisites: string[];
+  prerequisiteGroups: string[][];
   sections: Section[];
   syllabus: Syllabus;
 }

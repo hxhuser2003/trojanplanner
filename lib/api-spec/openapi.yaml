@@ -19,7 +19,7 @@ paths:
       operationId: getCatalog
       responses:
         "200":
-          description: Synthetic course catalog and default profile
+          description: Cached USC course offerings and illustrative planning profile
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Catalog" }
@@ -123,7 +123,7 @@ components:
       required: [item, kind, percent]
       properties:
         item: { type: string }
-        kind: { type: string, enum: [attendance, participation, quiz, homework, project, midterm, final] }
+        kind: { type: string, enum: [attendance, participation, quiz, homework, project, midterm, final, exam, other] }
         percent: { type: number }
         when: { type: string }
     Syllabus:
@@ -149,17 +149,24 @@ components:
           items: { $ref: "#/components/schemas/Evidence" }
     Section:
       type: object
-      required: [id, instructor, meetings, eligibility]
+      required: [id, componentIds, instructor, meetings, unknownScheduleComponents, eligibility, syllabusUrl]
       properties:
         id: { type: string }
+        componentIds:
+          type: array
+          items: { type: string }
         instructor: { type: string }
         eligibility: { type: string }
+        syllabusUrl: { type: string }
+        unknownScheduleComponents:
+          type: array
+          items: { type: string }
         meetings:
           type: array
           items: { $ref: "#/components/schemas/Meeting" }
     Course:
       type: object
-      required: [id, code, title, units, requirement, description, prerequisites, sections, syllabus, color, sourceUrl]
+      required: [id, code, title, units, requirement, description, prerequisiteGroups, sections, syllabus, color, sourceUrl]
       properties:
         id: { type: string }
         code: { type: string }
@@ -169,9 +176,11 @@ components:
         description: { type: string }
         color: { type: string }
         sourceUrl: { type: string }
-        prerequisites:
+        prerequisiteGroups:
           type: array
-          items: { type: string }
+          items:
+            type: array
+            items: { type: string }
         sections:
           type: array
           items: { $ref: "#/components/schemas/Section" }

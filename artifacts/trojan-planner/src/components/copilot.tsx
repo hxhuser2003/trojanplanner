@@ -87,7 +87,7 @@ export function Copilot({ catalog, input, selections, schedules, chosenId, onApp
       <div className="relative">
         <Textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} rows={3}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(text); } }}
-          placeholder="e.g. I work Tue/Thu 2–6pm, or: does CSCI 310 have group projects?" aria-label="Message the copilot" data-testid="input-copilot" className="resize-none pr-11" />
+          placeholder="e.g. I work Tue/Thu 2–6pm, or: which of my classes have a midterm?" aria-label="Message the copilot" data-testid="input-copilot" className="resize-none pr-11" />
         {/* Positioned wrapper: the button's hover-elevate style forces position: relative. */}
         <div className="absolute right-2 bottom-2">
           <Button size="icon" className="size-7" onClick={() => void send(text)} disabled={!text.trim() || chat.isPending} aria-label="Send" data-testid="button-copilot-ask">

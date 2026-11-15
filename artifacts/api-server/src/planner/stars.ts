@@ -20,7 +20,7 @@ export function parseStarsText(text: string) {
       "Candidate extraction only—not an official degree audit. Review every course before applying.",
       "In-progress/current registration (IP/RG), missing grades, failed courses, and requirement mentions are never automatically counted as completed.",
       "OCR can misread codes and grades. Transfer credit, repeats, exceptions, courses not applied to the degree, and minimum-grade policies require advisor review.",
-      "The synthetic undergraduate catalog does not reproduce the rules of a graduate report.",
+      "Illustrative graduate planning goals do not reproduce USC degree requirements.",
       ...(completed.size === 0 ? ["No confidently recognizable completed rows found. Paste one course row per line or enter completed courses manually."] : []),
     ],
   };

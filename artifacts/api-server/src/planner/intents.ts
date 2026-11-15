@@ -57,7 +57,7 @@ const TOPICS: [GradeKind, RegExp, string][] = [
   ["attendance", /\battendance\b/i, "graded attendance"], ["participation", /\bparticipation\b/i, "graded participation"], ["homework", /\bhomeworks?\b/i, "graded homework"],
 ];
 
-/** "Which of my classes have a midterm?", "When is the CSCI 350 final?", "How is CSCI 201 graded?" — answered from grading tables. */
+/** "Which of my classes have a midterm?", "When is the CSCI 561 final?", "How is CSCI 570 graded?" — answered from grading tables. */
 export function gradingIntent(message: string, selections: Ref[]): Reply | null {
   // Only questions; "I don't want midterms" is a preference and goes to the rule handlers.
   if (/\b(want|avoid|prefer|hate|rather|don'?t like|no more)\b/i.test(message)) return null;
@@ -73,8 +73,8 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
     const e = c.syllabus.evidence.find(x => x.label === label);
     return e ? [{ courseId: c.id, label: e.label, excerpt: e.excerpt, sourceUrl: c.syllabus.sourceUrl }] : [];
   };
-  const unknown = courses.filter(c => c.syllabus.status !== "synthetic");
-  const known = courses.filter(c => c.syllabus.status === "synthetic");
+  const unknown = courses.filter(c => c.syllabus.status === "unknown");
+  const known = courses.filter(c => c.syllabus.status !== "unknown");
   const lines: string[] = [];
   const citations: Citation[] = [];
   if (!topics.length) {
@@ -96,7 +96,11 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
       lines.push(...items.map(i => `• ${c.code} ${i.item}: ${i.percent}% of the grade${i.when ? `, ${i.when}` : ""}`));
       citations.push(...items.flatMap(i => cite(c, i.item)));
     }
-    if (withIt.length && without.length) lines.push(`No ${bare}: ${without.map(c => c.code).join(", ")}.`);
+    // "Exam 1 / Exam 2" rows are not labeled midterm or final, so those courses are reported separately.
+    const unlabeled = kind === "midterm" || kind === "final" ? without.filter(c => c.syllabus.grading.some(i => i.kind === "exam")) : [];
+    for (const c of unlabeled) lines.push(`• ${c.code}: ${c.syllabus.grading.filter(i => i.kind === "exam").map(i => `${i.item} ${i.percent}%`).join(", ")} (not labeled midterm or final in the syllabus)`);
+    const none = without.filter(c => !unlabeled.includes(c));
+    if (withIt.length && none.length) lines.push(`No ${bare}: ${none.map(c => c.code).join(", ")}.`);
     // Flag exams that fall in the same week, the usual crunch point.
     if (kind === "midterm") {
       const byWeek = new Map<string, string[]>();
@@ -108,7 +112,7 @@ export function gradingIntent(message: string, selections: Ref[]): Reply | null 
     }
   }
   if (unknown.length) lines.push(`${unknown.map(c => c.code).join(", ")}: no syllabus on file, so this is unknown (not zero).`);
-  return { kind: "answer", message: lines.join("\n"), citations, warnings: ["From synthetic demo syllabi. Check the real syllabus before deciding."] };
+  return { kind: "answer", message: lines.join("\n"), citations, warnings: ["From past-term USC syllabi or labeled mocks. Check the Spring 2027 syllabus before deciding."] };
 }
 
 const AVOIDABLE: [Constraint["kind"], RegExp, string][] = [

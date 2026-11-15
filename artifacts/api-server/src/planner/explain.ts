@@ -59,31 +59,39 @@ function sectionBlockers(course: Course, section: Section, input: PlannerInput):
   if (lock && lock !== section.id) reasons.push(`you locked §${lock}`);
   return reasons;
 }
+/** Each prerequisite group is "any one of"; returns the unmet groups as readable text. */
+function unmetPrereqs(course: Course, input: PlannerInput): string[] {
+  return course.prerequisiteGroups.filter(group => !group.some(id => input.completedCourses.includes(id))).map(group => group.join(" or "));
+}
 function courseBlocker(course: Course, input: PlannerInput): string | null {
   if (input.completedCourses.includes(course.id)) return `${course.code} is already in your completed courses`;
   const excluded = enabled(input).find(c => c.hard && c.kind === "exclude_course" && c.value === course.id);
   if (excluded) return `your rule “${excluded.label}” excludes ${course.code}`;
-  const missing = course.prerequisites.filter(p => !input.completedCourses.includes(p));
+  const missing = unmetPrereqs(course, input);
   if (missing.length) return `${course.code} needs ${list(missing)} first`;
   return null;
 }
 
+const sourceOf = (course: Course) => course.syllabus.status === "historical" ? `${course.syllabus.term} USC syllabus` : "mock syllabus";
 function assessmentFacts(course: Course, input: PlannerInput): string[] {
   const prefs = enabled(input).filter(c => c.kind === "prefer_projects" || c.kind === "prefer_exams" || c.kind === "prefer_individual" || c.kind === "prefer_less_frequent" || c.kind === "prefer_no_quizzes" || c.kind === "prefer_no_attendance" || c.kind === "prefer_no_midterm" || c.kind === "prefer_no_final");
   if (!prefs.length) return [];
   const s = course.syllabus;
-  if (s.status !== "synthetic") return [`No syllabus evidence for ${course.code}, so ${list(prefs.map(p => `“${p.label}”`))} could not be credited. Unknown is not zero.`];
+  if (s.status === "unknown") return [`No syllabus evidence for ${course.code}, so ${list(prefs.map(p => `“${p.label}”`))} could not be credited. Unknown is not zero.`];
   const out: string[] = [];
   for (const p of prefs) {
-    if (p.kind === "prefer_projects") out.push(`${course.code} weights projects ${s.projectPercent}% and exams ${s.examPercent}% (synthetic syllabus)${(s.projectPercent ?? 0) >= 50 ? ", which matches “" + p.label + "”" : ""}.`);
-    if (p.kind === "prefer_exams") out.push(`${course.code} weights exams ${s.examPercent}% and projects ${s.projectPercent}% (synthetic syllabus)${(s.examPercent ?? 0) >= 50 ? ", which matches “" + p.label + "”" : ""}.`);
+    if (p.kind === "prefer_projects") out.push(`${course.code} weights projects ${s.projectPercent}% and exams ${s.examPercent}% (${sourceOf(course)})${(s.projectPercent ?? 0) >= 50 ? ", which matches “" + p.label + "”" : ""}.`);
+    if (p.kind === "prefer_exams") out.push(`${course.code} weights exams ${s.examPercent}% and projects ${s.projectPercent}% (${sourceOf(course)})${(s.examPercent ?? 0) >= 50 ? ", which matches “" + p.label + "”" : ""}.`);
     if (p.kind === "prefer_individual") out.push(`${course.code} projects are ${s.projectMode}${s.projectMode === "individual" ? ", which matches “" + p.label + "”" : ""}.`);
     if (p.kind === "prefer_no_quizzes") out.push(s.quizPercent ? `${course.code} has graded quizzes (${s.quizPercent}% of the grade), which works against “${p.label}”.` : `${course.code} has no graded quizzes, which matches “${p.label}”.`);
     if (p.kind === "prefer_no_attendance") out.push(s.attendancePercent ? `${course.code} grades attendance (${s.attendancePercent}% of the grade), which works against “${p.label}”.` : `${course.code} does not grade attendance, which matches “${p.label}”.`);
     for (const [kind, name] of [["prefer_no_midterm", "midterm"], ["prefer_no_final", "final"]] as const) {
       if (p.kind !== kind) continue;
       const exam = s.grading.find(i => i.kind === name);
-      out.push(exam ? `${course.code} has a ${exam.item.toLowerCase()} (${exam.percent}%${exam.when ? `, ${exam.when}` : ""}), which works against “${p.label}”.` : `${course.code} has no ${name === "final" ? "final exam" : "midterm"}, which matches “${p.label}”.`);
+      const unlabeled = s.grading.filter(i => i.kind === "exam");
+      out.push(exam ? `${course.code} has a ${exam.item.toLowerCase()} (${exam.percent}%${exam.when ? `, ${exam.when}` : ""}), which works against “${p.label}”.`
+        : unlabeled.length ? `${course.code} has ${list(unlabeled.map(i => `${i.item} (${i.percent}%)`))}; the syllabus does not say whether these are midterms or a final, so “${p.label}” was not credited.`
+        : `${course.code} has no ${name === "final" ? "final exam" : "midterm"}, which matches “${p.label}”.`);
     }
     if (p.kind === "prefer_less_frequent") out.push(`${course.code} cadence: ${s.cadence.toLowerCase()}${s.cadence.toLowerCase().includes("milestone") ? ", which matches “" + p.label + "”" : ""}.`);
   }
@@ -112,9 +120,9 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
   facts.push(clashes.length
     ? `§${section.id} meets ${meetingText(section)} and overlaps ${list(clashes)}.`
     : `§${section.id} meets ${meetingText(section)}, with no overlap against the other ${plural(others.length, "course")} in this plan.`);
-  const missing = course.prerequisites.filter(p => !input.completedCourses.includes(p));
+  const missing = unmetPrereqs(course, input);
   if (missing.length) facts.push(`Prerequisite${missing.length > 1 ? "s" : ""} ${list(missing)} ${missing.length > 1 ? "are" : "is"} not in your completed courses.`);
-  else if (course.prerequisites.length) facts.push(`Prerequisite${course.prerequisites.length > 1 ? "s" : ""} ${list(course.prerequisites)} ${course.prerequisites.length > 1 ? "are" : "is"} in your completed courses.`);
+  else if (course.prerequisiteGroups.length) facts.push(`Published prerequisites (${course.prerequisiteGroups.map(gr => gr.join(" or ")).join("; ")}) are met by your completed courses.`);
 
   for (const rule of softTime(input)) {
     facts.push(satisfies(section, rule)
@@ -158,7 +166,7 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
         });
         facts.push(`${oc.code} could also cover “${req.title}”, but no section fits: ${why.join("; ")}.`);
       } else {
-        const hint = enabled(input).some(c => c.kind === "prefer_projects") && oc.syllabus.status === "synthetic" && course.syllabus.status === "synthetic"
+        const hint = enabled(input).some(c => c.kind === "prefer_projects") && oc.syllabus.status !== "unknown" && course.syllabus.status !== "unknown"
           ? ` (projects ${oc.syllabus.projectPercent}% vs ${course.syllabus.projectPercent}% for ${course.code})` : "";
         facts.push(`${oc.code} could also cover “${req.title}”${hint}; the best-scoring plan under your preferences uses ${course.code}.`);
       }
@@ -182,8 +190,8 @@ function metrics(picked: Picked[], input: PlannerInput): Metrics {
     hours: Math.round(meetings.reduce((n, m) => n + m.end - m.start, 0) / 6) / 10,
     earliest: meetings.length ? Math.min(...meetings.map(m => m.start)) : 0,
     gaps, softBroken,
-    projectHeavy: picked.filter(([c]) => c.syllabus.status === "synthetic" && (c.syllabus.projectPercent ?? 0) >= 50).length,
-    examHeavy: picked.filter(([c]) => c.syllabus.status === "synthetic" && (c.syllabus.examPercent ?? 0) >= 50).length,
+    projectHeavy: picked.filter(([c]) => c.syllabus.status !== "unknown" && (c.syllabus.projectPercent ?? 0) >= 50).length,
+    examHeavy: picked.filter(([c]) => c.syllabus.status !== "unknown" && (c.syllabus.examPercent ?? 0) >= 50).length,
   };
 }
 

@@ -16,4 +16,6 @@ export const GradingItemKind = {
   project: 'project',
   midterm: 'midterm',
   final: 'final',
+  exam: 'exam',
+  other: 'other',
 } as const;
