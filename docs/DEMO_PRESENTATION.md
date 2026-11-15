@@ -26,7 +26,7 @@ Maya is a made-up student. The courses, sections, times and syllabi are real USC
 
 ## Before recording
 
-- [ ] Replit is on the latest `main`, and `ANTHROPIC_API_KEY` is set in Secrets (needed only for step 5c).
+- [ ] Replit is on the latest `main`, and `ANTHROPIC_API_KEY` is set in Secrets (needed only for the optional AI moment).
 - [ ] Press **Reset** (top-right), then **Keep demo rules** in the setup dialog. Rules: *Work Tue/Thu · 9 AM–1 PM* (hard), *Prefer Fridays free*, *Prefer starts after 10 AM*.
 - [ ] Copy this fake STARS text to the clipboard (never use a real transcript):
 
@@ -36,7 +36,7 @@ Maya is a made-up student. The courses, sections, times and syllabi are real USC
 ```
 
 - [ ] Browser at 1440×900, zoom 110%, dark mode off, other tabs closed.
-- [ ] Test step 5c once with the key. If the AI reply is slow or odd, use the fallback.
+- [ ] Test the optional AI moment once with the key. If the AI reply is slow or odd, use the fallback.
 - [ ] Do one full rehearsal with a timer. Narration is about 400 words; speak at a calm pace.
 
 ## Script
