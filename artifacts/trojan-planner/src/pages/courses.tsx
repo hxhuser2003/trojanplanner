@@ -191,13 +191,14 @@ function CourseDetail({ course, catalog }: { course: Course; catalog: Catalog })
       </div>
 
       <h3 className="text-base font-semibold mt-6 mb-2">Registration combinations</h3>
+      <p className="text-xs text-muted-foreground mb-2">This demo plans for an on-campus student. DEN@Viterbi sections are shown for reference but excluded from schedules.</p>
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider"><tr><th className="p-2.5">Section</th><th className="p-2.5">Meets</th><th className="p-2.5">Instructor</th></tr></thead>
           <tbody>
             {course.sections.map((sec) => (
               <tr key={sec.id} className="border-t" data-testid={`row-section-${sec.id}`}>
-                <td className="p-2.5 align-top"><div className="flex flex-col items-start gap-1"><SectionDelivery section={sec} /><span className="font-mono text-xs text-muted-foreground">{sec.componentIds.join(' + ')}</span></div></td>
+                <td className="p-2.5 align-top"><div className="flex flex-col items-start gap-1"><SectionDelivery section={sec} />{sec.deliveryMode === 'den' && <span className="text-[11px] text-muted-foreground">Not in this plan</span>}<span className="font-mono text-xs text-muted-foreground">{sec.componentIds.join(' + ')}</span></div></td>
                 <td className="p-2.5 text-xs">
                   {sectionParts(sec).map((part) => (
                     <div key={part.id} className="flex gap-2"><span className="w-20 shrink-0 text-muted-foreground">{part.kind}</span>

@@ -125,6 +125,15 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (booted.current || !catalogQ.data) return;
     booted.current = true;
+    const denIds = new Set(catalogQ.data.courses.flatMap((course) => course.sections.filter((section) => section.deliveryMode === 'den').map((section) => section.id)));
+    const savedHasDen = state.result && [...state.result.schedules, ...state.result.repairs.map((repair) => repair.preview)]
+      .some((schedule) => schedule.selections.some((selection) => denIds.has(selection.sectionId)));
+    if (savedHasDen) {
+      const input = state.input ?? catalogQ.data.defaultInput;
+      setState((saved) => ({ ...saved, input, result: null, chosenScheduleId: null, solvedInputJson: null, checklist: {} }));
+      void solveRef.current(input);
+      return;
+    }
     if (!state.input) {
       const input = catalogQ.data.defaultInput;
       setState((s) => ({ ...s, input }));

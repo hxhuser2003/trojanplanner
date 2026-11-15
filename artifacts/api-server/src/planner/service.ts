@@ -41,7 +41,11 @@ export function validateInput(input: PlannerInput): string | null {
   if (input.completedCourses.some(id => !/^[A-Z]{2,8}-\d{3}[A-Z]?$/i.test(id))) return "Use course codes such as CSCI-103.";
   for (const c of input.constraints) {
     if ((c.kind === "require_course" || c.kind === "exclude_course") && !catalog.courses.some(course => course.id === c.value)) return `Unknown course in ${c.label}.`;
-    if (c.kind === "lock_section" && !catalog.courses.some(course => course.sections.some(s => s.id === c.value))) return `Unknown section in ${c.label}.`;
+    if (c.kind === "lock_section") {
+      const section = catalog.courses.flatMap(course => course.sections).find(s => s.id === c.value);
+      if (!section) return `Unknown section in ${c.label}.`;
+      if (section.deliveryMode !== "on_campus") return `DEN sections cannot be locked in this on-campus plan: ${c.label}.`;
+    }
     if ((c.kind === "blocked" || c.kind === "no_day") && c.days.length === 0) return `Select at least one weekday for ${c.label}.`;
     if (c.kind === "blocked" && c.start >= c.end) return `End time must be after start time for ${c.label}.`;
     if (c.hard && c.kind.startsWith("prefer_")) return `Assessment and campus-day preferences must be soft: ${c.label}.`;
@@ -64,6 +68,7 @@ function validateSolution(raw: RawSolution, input: PlannerInput): [Course, Secti
     const course = catalog.courses.find(x => x.id === c.id);
     const section = course?.sections.find(x => x.id === s.id);
     if (!course || !section) throw new Error("Solver returned an unknown selection.");
+    if (section.deliveryMode !== "on_campus") throw new Error("DEN section selected for an on-campus plan.");
     return [course, section];
   });
   if (new Set(selected.map(([c]) => c.id)).size !== selected.length) throw new Error("Duplicate course.");

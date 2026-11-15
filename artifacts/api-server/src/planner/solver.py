@@ -46,7 +46,10 @@ def matches(section, constraint):
 
 def run_solver(catalog, request, excluded=None):
     model = cp_model.CpModel()
-    rows = [(c, s) for c in catalog["courses"] for s in c["sections"]]
+    # This demo models an on-campus student; DEN sections are visible in the catalog
+    # but cannot be selected in a schedule or repair preview.
+    rows = [(c, s) for c in catalog["courses"] for s in c["sections"]
+            if s["deliveryMode"] == "on_campus"]
     variables = [model.new_bool_var(s["id"]) for _, s in rows]
     completed = set(request["completedCourses"])
     active = [c for c in request["constraints"] if c["enabled"]]

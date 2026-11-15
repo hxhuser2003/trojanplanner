@@ -29,9 +29,10 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
   const height = (END - START) * PX;
   const top = (m: number) => (Math.max(Math.min(m, END), START) - START) * PX;
 
-  const blocks = constraints.filter((c) => c.enabled && (c.kind === 'blocked' || c.kind === 'no_day'));
-  const earliest = constraints.find((c) => c.enabled && c.kind === 'earliest');
-  const latest = constraints.find((c) => c.enabled && c.kind === 'latest');
+  const active = constraints.filter((c) => c.enabled);
+  const blocks = active.filter((c) => c.kind === 'blocked' || c.kind === 'no_day');
+  const startRules = active.filter((c) => c.kind === 'earliest');
+  const endRules = active.filter((c) => c.kind === 'latest');
 
   return (
     <div className={cn('rounded-lg border bg-card overflow-x-auto transition-opacity', dim && 'opacity-50')} data-testid="calendar-week">
@@ -43,9 +44,13 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
         )}
         <div className="grid grid-cols-[52px_repeat(5,1fr)] border-b sticky top-0 bg-card z-10">
           <div />
-          {DAYS.map((d) => (
-            <div key={d} className="py-2 text-center text-xs font-medium text-muted-foreground border-l">{d}</div>
-          ))}
+          {DAYS.map((d, day) => {
+            const preferredOff = blocks.filter((c) => c.kind === 'no_day' && !c.hard && c.days.includes(day));
+            return <div key={d} className="flex flex-col items-center justify-center gap-1 py-1.5 text-center text-xs font-medium text-muted-foreground border-l">
+              <span>{d}</span>
+              {preferredOff.length > 0 && <span className="rounded-full border border-sky-300 bg-sky-50 px-1.5 py-0.5 text-[10px] leading-tight text-sky-800 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200" title={`${preferredOff.map((c) => c.label).join('; ')} — soft preference; classes can still be scheduled`} data-testid={`calendar-soft-day-${day}`}>Prefer free · soft</span>}
+            </div>;
+          })}
         </div>
         <div className="grid grid-cols-[52px_repeat(5,1fr)] relative" style={{ height }}>
           <div className="relative">
@@ -58,16 +63,16 @@ export function WeekCalendar({ catalog, schedule, constraints, lockedSectionIds,
           {DAYS.map((_, day) => (
             <div key={day} className="relative border-l">
               {hours.map((h) => <div key={h} className="absolute inset-x-0 border-t border-border/60" style={{ top: top(h) }} />)}
-              {earliest && earliest.start > START && (
-                <div className="absolute inset-x-0 hatch" style={{ top: 0, height: top(earliest.start) }} title={`Before ${fmtTime(earliest.start)}`} />
-              )}
-              {latest && latest.end < END && (
-                <div className="absolute inset-x-0 hatch" style={{ top: top(latest.end), bottom: 0 }} title={`After ${fmtTime(latest.end)}`} />
-              )}
-              {blocks.filter((b) => b.days.includes(day)).map((b) => (
-                <div key={b.id} className={cn('absolute inset-x-0.5 rounded-md hatch border border-dashed flex items-start p-1.5', b.hard ? 'border-foreground/40' : 'border-foreground/20')}
-                  style={b.kind === 'no_day' ? { top: 0, height } : { top: top(b.start), height: Math.max(top(b.end) - top(b.start), 14) }}>
-                  <span className="text-[10px] text-muted-foreground leading-tight">{b.label}{b.hard ? '' : ' (soft)'}</span>
+              {startRules.filter((rule) => rule.start > START && (!rule.days.length || rule.days.includes(day))).map((rule) => rule.hard
+                ? <div key={rule.id} className="absolute inset-x-0 hatch" style={{ top: 0, height: top(rule.start) }} title={`No class before ${fmtTime(rule.start)}`} />
+                : <div key={rule.id} className="pointer-events-none absolute inset-x-1 border-t-2 border-dashed border-sky-500" style={{ top: top(rule.start) }} title={`Prefer classes after ${fmtTime(rule.start)}`} />)}
+              {endRules.filter((rule) => rule.end < END && (!rule.days.length || rule.days.includes(day))).map((rule) => rule.hard
+                ? <div key={rule.id} className="absolute inset-x-0 hatch" style={{ top: top(rule.end), bottom: 0 }} title={`No class after ${fmtTime(rule.end)}`} />
+                : <div key={rule.id} className="pointer-events-none absolute inset-x-1 border-t-2 border-dashed border-sky-500" style={{ top: top(rule.end) }} title={`Prefer classes ending by ${fmtTime(rule.end)}`} />)}
+              {blocks.filter((rule) => rule.days.includes(day) && (rule.hard || rule.kind === 'blocked')).map((rule) => (
+                <div key={rule.id} className={cn('pointer-events-none absolute inset-x-0.5 rounded-md border border-dashed flex items-start p-1.5', rule.hard ? 'hatch border-foreground/40' : 'border-sky-500 bg-sky-50/40 text-sky-800 dark:bg-sky-950/20 dark:text-sky-200')}
+                  style={rule.kind === 'no_day' ? { top: 0, height } : { top: top(rule.start), height: Math.max(top(rule.end) - top(rule.start), 14) }}>
+                  <span className="text-[10px] leading-tight">{rule.label}{rule.hard ? '' : ' · soft preference'}</span>
                 </div>
               ))}
               {schedule?.selections.map((sel) => {

@@ -65,7 +65,7 @@ export function ConstraintEditor({ catalog, constraints, onChange }: Props) {
   );
 
   const uses = editing ? KIND_META[editing.kind].uses : [];
-  const sectionOptions = catalog.courses.flatMap((c) => c.sections.map((s) => ({ c, s })));
+  const sectionOptions = catalog.courses.flatMap((c) => c.sections.filter((s) => s.deliveryMode === 'on_campus').map((s) => ({ c, s })));
 
   return (
     <div className="space-y-4">

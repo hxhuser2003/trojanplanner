@@ -20,6 +20,8 @@ Three moments carry the video:
 
 **Maya, a second-semester USC MS in Computer Science (General) student.** In her first semester (Fall 2026) she took CSCI 561 and CSCI 567. For Spring 2027 she wants 8 units, is interested in **CSCI 566 Deep Learning**, and wants a Web/search course. She works Monday and Wednesday 3–6 PM, would like Thursdays free, and prefers projects.
 
+Maya is an on-campus student, so DEN@Viterbi sections are visible for reference but never offered as schedule choices.
+
 Maya is a made-up student. Courses, sections and times are real USC Spring 2027 data. Grading comes from dated past-term USC syllabi, except CSCI 572, whose grading table is a labeled mock (the app says so everywhere it appears).
 
 ## Before recording
@@ -49,7 +51,7 @@ Maya is a made-up student. Courses, sections and times are real USC Spring 2027 
 | **1:35–1:50** | Planner: **Optimal**, CSCI 570 + 572. Briefly show an alternative schedule, then return to the best fit. | "The solver now shows a valid eight-unit week and the trade-offs between its course and section options." |
 | **1:50–2:05** | **Ask**: `I'm interested in natural language processing. What should I take next semester?` Point at the course recommendation; do not apply a rule. | "The setup handles scheduling preferences. For an open course question, the copilot looks at the loaded course descriptions and suggests a relevant next course, such as 544." |
 | **2:05–2:20** | **Ask**: `which classes in my schedule have a midterm?` Point at the source tags under the answer. | "The answer lists 570's 36% first exam and 572's 30% midterm, with a source link for each." |
-| **2:20–2:35** | **Ask**: `I don't want to take CSCI 572` → **Apply & update**. Calendar swaps to CSCI 571 while keeping CSCI 570. | "When she wants a different Web/search class, the copilot proposes a course rule. Only after she approves it does the solver re-plan around 571." |
+| **2:20–2:35** | **Ask**: `I don't want to take CSCI 572` → **Apply & update**. Calendar swaps to CSCI 571 while keeping CSCI 570. Point at the soft Thursday preference in the day header and the Thursday class. | "When she wants a different Web/search class, the copilot proposes a course rule. Once she approves it, the solver re-plans around 571. Thursday off was a preference, so a class can still be scheduled there." |
 | **2:35–3:00** | **Checklist**: section numbers → **Download .txt**. | "Finally, the section numbers for registration. Three answers to start, a solver to check the plan, and sources behind its facts. That's TrojanPlanner." |
 
 ### AI fallback for 1:50–2:05 (no key, or a slow reply)

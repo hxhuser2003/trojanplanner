@@ -20,7 +20,7 @@ export function resolveRefs(refs: Ref[]): Picked[] {
   return refs.map(r => {
     const course = catalog.courses.find(c => c.id === r.courseId);
     const section = course?.sections.find(s => s.id === r.sectionId);
-    if (!course || !section) throw new Error("UNKNOWN_SELECTION");
+    if (!course || !section || section.deliveryMode !== "on_campus") throw new Error("UNKNOWN_SELECTION");
     return [course, section] as Picked;
   });
 }
@@ -76,6 +76,7 @@ function lockedSection(course: Course, input: PlannerInput): string | null {
 /** Why a section cannot be used at all, independent of the other courses in the plan. */
 function sectionBlockers(course: Course, section: Section, input: PlannerInput): string[] {
   const reasons = breaks(section, hardTime(input)).map(l => `breaks “${l}”`);
+  if (section.deliveryMode !== "on_campus") reasons.push("DEN enrollment is unavailable in this on-campus plan");
   const lock = lockedSection(course, input);
   const locked = lock && lock !== section.id ? course.sections.find(s => s.id === lock) : undefined;
   if (locked) reasons.push(`you locked the section meeting ${meetingText(locked)}`);
@@ -290,7 +291,7 @@ export function explainConflict(input: PlannerInput): string[] {
   const reachable = catalog.courses.filter(c => !input.completedCourses.includes(c.id) && check(c).ok).reduce((n, c) => n + c.units, 0);
   if (reachable < input.minUnits) facts.push(`Only ${reachable} units have a usable section under your hard rules, below your ${input.minUnits}-unit minimum.`);
   for (const rule of hardTime(input)) {
-    const hit = [...new Set(catalog.courses.flatMap(c => c.sections.filter(s => !satisfies(s, rule)).map(s => `${c.code} (${meetingText(s)})`)))];
+    const hit = [...new Set(catalog.courses.flatMap(c => c.sections.filter(s => s.deliveryMode === "on_campus" && !satisfies(s, rule)).map(s => `${c.code} (${meetingText(s)})`)))];
     if (hit.length) facts.push(`“${rule.label}” rules out ${plural(hit.length, "section")}: ${list(hit)}.`);
   }
   if (!facts.some(f => f.includes("cannot be met") || f.startsWith("Only") || f.startsWith("Every remaining"))) {
