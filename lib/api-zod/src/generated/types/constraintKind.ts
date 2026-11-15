@@ -14,9 +14,13 @@ export const ConstraintKind = {
   latest: 'latest',
   blocked: 'blocked',
   require_course: 'require_course',
+  exclude_course: 'exclude_course',
   lock_section: 'lock_section',
   prefer_projects: 'prefer_projects',
+  prefer_exams: 'prefer_exams',
   prefer_individual: 'prefer_individual',
   prefer_fewer_days: 'prefer_fewer_days',
   prefer_less_frequent: 'prefer_less_frequent',
+  prefer_no_quizzes: 'prefer_no_quizzes',
+  prefer_no_attendance: 'prefer_no_attendance',
 } as const;

@@ -52,6 +52,10 @@ def run_solver(catalog, request, excluded=None):
             ids = [i for i, (c, s) in enumerate(rows)
                    if (c["id"] if constraint["kind"] == "require_course" else s["id"]) == target]
             model.add(sum(variables[i] for i in ids) == 1)
+        if constraint["hard"] and constraint["kind"] == "exclude_course":
+            for i, (c, _) in enumerate(rows):
+                if c["id"] == constraint["value"]:
+                    model.add(variables[i] == 0)
     units = sum(c["units"] * variables[i] for i, (c, _) in enumerate(rows))
     model.add(units >= request["minUnits"])
     model.add(units <= request["maxUnits"])
@@ -87,6 +91,8 @@ def run_solver(catalog, request, excluded=None):
                 cost += 120
             if kind == "require_course" and course["id"] == constraint["value"]:
                 cost -= 150
+            if kind == "exclude_course" and course["id"] == constraint["value"]:
+                cost += 200
             if kind == "lock_section" and section["id"] == constraint["value"]:
                 cost -= 150
             syllabus = course["syllabus"]
@@ -94,10 +100,16 @@ def run_solver(catalog, request, excluded=None):
             # Neutral missing values must not outperform positively evidenced matches.
             if kind == "prefer_projects" and known:
                 cost -= int((syllabus.get("projectPercent") or 0) / 2)
+            if kind == "prefer_exams" and known:
+                cost -= int((syllabus.get("examPercent") or 0) / 2)
             if kind == "prefer_individual" and known and syllabus["projectMode"] == "individual":
                 cost -= 45
             if kind == "prefer_less_frequent" and known and "milestone" in syllabus["cadence"].lower():
                 cost -= 35
+            if kind == "prefer_no_quizzes" and known and not syllabus.get("quizPercent"):
+                cost -= 30
+            if kind == "prefer_no_attendance" and known and not syllabus.get("attendancePercent"):
+                cost -= 30
         costs.append(cost * variables[i])
     day_weight = 40 if any(c["kind"] == "prefer_fewer_days" for c in active) else 4
     model.minimize(sum(costs) + day_weight * sum(campus))

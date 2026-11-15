@@ -73,6 +73,10 @@ export interface Syllabus {
   projectPercent?: number | null;
   /** @nullable */
   otherPercent?: number | null;
+  /** @nullable */
+  quizPercent?: number | null;
+  /** @nullable */
+  attendancePercent?: number | null;
   projectMode: SyllabusProjectMode;
   cadence: string;
   attendance: string;
@@ -118,11 +122,15 @@ export const ConstraintKind = {
   latest: 'latest',
   blocked: 'blocked',
   require_course: 'require_course',
+  exclude_course: 'exclude_course',
   lock_section: 'lock_section',
   prefer_projects: 'prefer_projects',
+  prefer_exams: 'prefer_exams',
   prefer_individual: 'prefer_individual',
   prefer_fewer_days: 'prefer_fewer_days',
   prefer_less_frequent: 'prefer_less_frequent',
+  prefer_no_quizzes: 'prefer_no_quizzes',
+  prefer_no_attendance: 'prefer_no_attendance',
 } as const;
 
 export interface Constraint {
@@ -251,6 +259,113 @@ export interface PreferenceResult {
   message: string;
   provider: string;
   proposedConstraints: Constraint[];
+  warnings: string[];
+}
+
+export interface SectionRef {
+  /** @maxLength 40 */
+  courseId: string;
+  /** @maxLength 40 */
+  sectionId: string;
+}
+
+export type ExplainInputMode = typeof ExplainInputMode[keyof typeof ExplainInputMode];
+
+
+export const ExplainInputMode = {
+  section: 'section',
+  compare: 'compare',
+  conflict: 'conflict',
+} as const;
+
+export interface ExplainInput {
+  mode: ExplainInputMode;
+  input: PlannerInput;
+  /** @maxItems 10 */
+  selections: SectionRef[];
+  /** @maxItems 10 */
+  otherSelections?: SectionRef[];
+  /** @maxLength 40 */
+  courseId?: string;
+  useAi?: boolean;
+}
+
+export interface ExplainResult {
+  summary: string;
+  provider: string;
+  facts: string[];
+}
+
+export type ChatTurnRole = typeof ChatTurnRole[keyof typeof ChatTurnRole];
+
+
+export const ChatTurnRole = {
+  user: 'user',
+  assistant: 'assistant',
+} as const;
+
+export interface ChatTurn {
+  role: ChatTurnRole;
+  /** @maxLength 2000 */
+  text: string;
+}
+
+export interface Citation {
+  courseId: string;
+  label: string;
+  excerpt: string;
+  sourceUrl: string;
+}
+
+export interface ScheduleOption {
+  /** @maxLength 40 */
+  id: string;
+  /** @maxLength 200 */
+  title: string;
+  units: number;
+  campusDays: number;
+  classHours: number;
+  earliestStart: number;
+  gapMinutes: number;
+}
+
+export interface ChatInput {
+  /**
+     * @minLength 1
+     * @maxLength 2000
+     */
+  message: string;
+  /** @maxItems 8 */
+  history: ChatTurn[];
+  current: PlannerInput;
+  /** @maxItems 10 */
+  selections?: SectionRef[];
+  /** @maxItems 5 */
+  scheduleOptions?: ScheduleOption[];
+  /** @maxLength 40 */
+  chosenScheduleId?: string;
+}
+
+export type ChatResultKind = typeof ChatResultKind[keyof typeof ChatResultKind];
+
+
+export const ChatResultKind = {
+  rules: 'rules',
+  clarify: 'clarify',
+  answer: 'answer',
+  select: 'select',
+} as const;
+
+export interface ChatResult {
+  kind: ChatResultKind;
+  message: string;
+  provider: string;
+  selectScheduleId?: string;
+  proposedConstraints: Constraint[];
+  removeConstraintIds: string[];
+  updatedConstraints: Constraint[];
+  options: string[];
+  citations: Citation[];
   warnings: string[];
 }
 

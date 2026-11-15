@@ -54,7 +54,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="space-y-6">
           <div className="rounded-xl border bg-card p-5">
-            <h2 className="font-display text-xl font-bold">Requirements to work on</h2>
+            <h2 className="text-base font-semibold">Requirements to work on</h2>
             <p className="text-xs text-muted-foreground mb-3">The solver picks courses that advance the selected buckets.</p>
             <ul className="space-y-2">
               {catalog.requirements.map((r) => {
@@ -78,7 +78,7 @@ function Degree({ catalog }: { catalog: Catalog }) {
           </div>
 
           <div className="rounded-xl border bg-card p-5">
-            <h2 className="font-display text-xl font-bold">Completed courses</h2>
+            <h2 className="text-base font-semibold">Completed courses</h2>
             <p className="text-xs text-muted-foreground mb-3">Used for prerequisites. Only check courses with a final grade.</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {catalog.completedOptions.map((id) => (
@@ -156,7 +156,7 @@ function StarsImport({ catalogKnown, onApply }: { catalogKnown: Set<string>; onA
 
   return (
     <section className="rounded-xl border bg-card p-5 self-start" data-testid="panel-stars">
-      <div className="flex items-center gap-2"><FileSearch className="size-5 text-primary" /><h2 className="font-display text-xl font-bold">Import from a STARS report</h2></div>
+      <div className="flex items-center gap-2"><FileSearch className="size-5 text-primary" /><h2 className="text-base font-semibold">Import from a STARS report</h2></div>
       <p className="text-xs text-muted-foreground mt-1">Your PDF file stays in this browser. When you click Find course candidates, the extracted text is sent to the TrojanPlanner backend parser; it is not saved here or there by this app. Results are candidates for you to confirm.</p>
 
       <div className="mt-4 rounded-lg border-2 border-dashed p-5 text-center hover:border-primary/50 transition-colors">

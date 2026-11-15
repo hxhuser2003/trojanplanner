@@ -1,4 +1,4 @@
-import type { Catalog, Constraint, ConstraintKind, Course, Section } from '@workspace/api-client-react';
+import type { Catalog, Constraint, ConstraintKind, Course, Schedule, Section } from '@workspace/api-client-react';
 
 export const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 export const DAYS_LONG = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -27,11 +27,15 @@ export const KIND_META: Record<ConstraintKind, { label: string; hint: string; us
   latest: { label: 'Latest end', hint: 'Nothing after this time', uses: ['end'] },
   blocked: { label: 'Time block', hint: 'Work, practice, commute, life', uses: ['days', 'time'] },
   require_course: { label: 'Require course', hint: 'This course must be in the plan', uses: ['course'] },
+  exclude_course: { label: 'Exclude course', hint: 'Keep this course out of the plan', uses: ['course'] },
   lock_section: { label: 'Lock section', hint: 'Keep this exact section', uses: ['section'] },
   prefer_projects: { label: 'Prefer project-weighted', hint: 'Favor syllabi with project weight at or above 50%', uses: [] },
+  prefer_exams: { label: 'Prefer exam-weighted', hint: 'Favor syllabi with exam weight at or above 50%', uses: [] },
   prefer_individual: { label: 'Prefer individual work', hint: 'Favor individually graded projects', uses: [] },
   prefer_fewer_days: { label: 'Fewer campus days', hint: 'Compress the week', uses: [] },
   prefer_less_frequent: { label: 'Less frequent meetings', hint: 'Favor 2x/week over 3x/week', uses: [] },
+  prefer_no_quizzes: { label: 'Avoid graded quizzes', hint: 'Favor courses without graded quizzes', uses: [] },
+  prefer_no_attendance: { label: 'Avoid graded attendance', hint: 'Favor courses that do not grade attendance', uses: [] },
 };
 
 export function describeConstraint(c: Constraint, catalog?: Catalog): string {
@@ -41,7 +45,7 @@ export function describeConstraint(c: Constraint, catalog?: Catalog): string {
     case 'earliest': return `Start at or after ${fmtTime(c.start)}`;
     case 'latest': return `Finish by ${fmtTime(c.end)}`;
     case 'blocked': return `${days || 'No days'} · ${fmtTime(c.start)}–${fmtTime(c.end)}`;
-    case 'require_course': return courseCode(catalog, c.value) ?? c.value;
+    case 'require_course': case 'exclude_course': return courseCode(catalog, c.value) ?? c.value;
     case 'lock_section': {
       const f = findSection(catalog, c.value);
       return f ? `${f.course.code} §${f.section.id}` : c.value;
@@ -79,6 +83,32 @@ export function newConstraint(kind: ConstraintKind, hard = true): Constraint {
 }
 
 export function errMessage(e: unknown): string {
-  if (e instanceof Error) return e.message;
-  return String(e);
+  // Drop the transport prefix ("HTTP 503 Service Unavailable: ") so users see only the server's message.
+  const msg = e instanceof Error ? e.message : String(e);
+  return msg.replace(/^HTTP \d{3}[^:]*: /, '');
+}
+
+export interface ScheduleDiff {
+  added: { courseId: string; sectionId: string }[];
+  removed: { courseId: string; sectionId: string }[];
+  moved: { courseId: string; from: string; to: string }[];
+  stats: { label: string; before: string; after: string }[];
+  same: boolean;
+}
+
+/** Deterministic before/after comparison of two validated schedules. */
+export function diffSchedules(before: Schedule | null, after: Schedule | null): ScheduleDiff {
+  const a = new Map((before?.selections ?? []).map((s) => [s.courseId, s.sectionId]));
+  const b = new Map((after?.selections ?? []).map((s) => [s.courseId, s.sectionId]));
+  const added = [...b].filter(([c]) => !a.has(c)).map(([courseId, sectionId]) => ({ courseId, sectionId }));
+  const removed = [...a].filter(([c]) => !b.has(c)).map(([courseId, sectionId]) => ({ courseId, sectionId }));
+  const moved = [...b].filter(([c, s]) => a.has(c) && a.get(c) !== s).map(([courseId, to]) => ({ courseId, from: a.get(courseId)!, to }));
+  const stat = (label: string, f: (s: Schedule) => string) => ({ label, before: before ? f(before) : '—', after: after ? f(after) : '—' });
+  const stats = [
+    stat('Units', (s) => String(s.units)),
+    stat('Campus days', (s) => String(s.campusDays)),
+    stat('Class hours', (s) => s.classHours.toFixed(1)),
+    stat('First class', (s) => (s.selections.length ? fmtTime(s.earliestStart) : '—')),
+  ].filter((x) => x.before !== x.after);
+  return { added, removed, moved, stats, same: !added.length && !removed.length && !moved.length && !stats.length };
 }
