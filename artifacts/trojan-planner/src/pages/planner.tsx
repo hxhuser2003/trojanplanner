@@ -13,7 +13,7 @@ import { ExplainButton } from '@/components/explain';
 import { OptionCompare } from '@/components/compare';
 import { Onboarding } from '@/components/quick-rules';
 import { usePlanner } from '@/lib/planner-store';
-import { fmtHours, fmtTime, sectionWhen } from '@/lib/format';
+import { fmtHours, fmtTime, sectionWhen, latestEndTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -121,7 +121,6 @@ function Planner({ catalog }: { catalog: Catalog }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="space-y-4 min-w-0">
-
           {result && result.schedules.length > 1 && !infeasible && (
             // Full width, like the stats row below, however many options there are.
             <div className="flex flex-wrap w-full rounded-lg bg-secondary p-1 gap-1" role="tablist" aria-label="Schedule options">
@@ -135,12 +134,13 @@ function Planner({ catalog }: { catalog: Catalog }) {
           )}
 
           {sched && !infeasible && (
-            <dl className="grid w-full grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 px-1" data-testid="stats-schedule">
+            <dl className="grid w-full grid-cols-2 sm:grid-cols-5 gap-x-4 gap-y-2 px-1" data-testid="stats-schedule">
               {[
                 ['Units', sched.units],
                 ['Campus days', sched.campusDays],
                 ['Class time / week', fmtHours(sched.classHours)],
                 ['First class', fmtTime(sched.earliestStart)],
+                ['Latest scheduled end', latestEndTime(catalog, sched) === null ? '—' : fmtTime(latestEndTime(catalog, sched)!)],
               ].map(([k, v]) => (
                 <div key={k}><dt className="text-xs text-muted-foreground">{k}</dt><dd className="text-lg font-semibold tabular-nums">{v}</dd></div>
               ))}
@@ -228,7 +228,6 @@ function SolveStatus() {
     </p>
   );
 }
-
 
 function Conflicts({ result, catalog, input, solvedInput, onApprove, solving, stale }: { result: NonNullable<ReturnType<typeof usePlanner>['result']>; catalog: Catalog; input: PlannerInput; solvedInput: PlannerInput | null; onApprove: (r: Repair) => void; solving: boolean; stale: boolean }) {
   return (

@@ -13,7 +13,7 @@ A USC course-planning demo that turns preferences into checked schedules, explai
 - Thirteen courses link to real USC-hosted syllabi or instructor course pages from earlier terms (CSCI 530, 531, 544, 545, 551, 561, 566, 567, 570, 571, 580, 585, and 587). Their grading details are displayed as historical and do not affect assessment preference scores. Missing or ambiguous grading weights stay unknown.
 - CSCI 546 and 572 have course-specific mock syllabus pages for the demo. Their grading details are visibly synthetic and may affect illustrative assessment preference scores. No syllabus here certifies Spring 2027 grading.
 - The default example uses two four-unit courses. USC's [MS CS new student guide](https://www.cs.usc.edu/ms-cs-new-student-guide/) limits traditional MS students who started in Spring 2020 or later to two four-unit CSCI/DSCI courses per semester, with stated exceptions. Check your own program and start term before using this as a registration rule.
-- Paste STARS course rows to find completed-course candidates; the student confirms each one, and current registrations are never counted as completed.
+- Paste STARS course rows to find completed and in-progress course candidates; the student confirms each one. In-progress (IP/RG) courses count as taken for planning, so they are not scheduled again.
 - Browser-local saved planner state, stale-result safeguards, reset, printable checklist, and text export.
 
 ## Course and syllabus sources

@@ -2,6 +2,7 @@
 // the student's confirmed rules, and the submitted selections. Nothing is inferred.
 import { catalog } from "./catalog";
 import { satisfies, type Constraint, type Course, type PlannerInput, type Section } from "./service";
+import { formatPrerequisiteGroups, unmetPrerequisiteGroups } from "./prerequisites";
 
 type Ref = { courseId: string; sectionId: string };
 type Picked = [Course, Section];
@@ -15,7 +16,6 @@ export function fmt(min: number) {
 }
 const list = (xs: string[]) => xs.length <= 1 ? (xs[0] ?? "") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`;
 const plural = (n: number, w: string) => `${n} ${w}${n === 1 ? "" : "s"}`;
-
 export function resolveRefs(refs: Ref[]): Picked[] {
   return refs.map(r => {
     const course = catalog.courses.find(c => c.id === r.courseId);
@@ -80,16 +80,12 @@ function sectionBlockers(course: Course, section: Section, input: PlannerInput):
   if (locked) reasons.push(`you locked the section meeting ${meetingText(locked)}`);
   return reasons;
 }
-/** Each prerequisite group is "any one of"; returns the unmet groups as readable text. */
-function unmetPrereqs(course: Course, input: PlannerInput): string[] {
-  return course.prerequisiteGroups.filter(group => !group.some(id => input.completedCourses.includes(id))).map(group => group.join(" or "));
-}
 function courseBlocker(course: Course, input: PlannerInput): string | null {
   if (input.completedCourses.includes(course.id)) return `${course.code} is already in your completed courses`;
   const excluded = enabled(input).find(c => c.hard && c.kind === "exclude_course" && c.value === course.id);
   if (excluded) return `your rule “${excluded.label}” excludes ${course.code}`;
-  const missing = unmetPrereqs(course, input);
-  if (missing.length) return `${course.code} needs ${list(missing)} first`;
+  const missing = unmetPrerequisiteGroups(course.prerequisiteGroups, input.completedCourses);
+  if (missing.length) return `${course.code} needs ${formatPrerequisiteGroups(missing)} first`;
   return null;
 }
 
@@ -146,9 +142,9 @@ export function explainSection(input: PlannerInput, refs: Ref[], courseId: strin
   facts.push(clashes.length
     ? `This section meets ${meetingText(section)} and overlaps ${list(clashes)}.`
     : `This section meets ${meetingText(section)}, with no overlap against the other ${plural(others.length, "course")} in this plan.`);
-  const missing = unmetPrereqs(course, input);
-  if (missing.length) facts.push(`Prerequisite${missing.length > 1 ? "s" : ""} ${list(missing)} ${missing.length > 1 ? "are" : "is"} not in your completed courses.`);
-  else if (course.prerequisiteGroups.length) facts.push(`Published prerequisites (${course.prerequisiteGroups.map(gr => gr.join(" or ")).join("; ")}) are met by your completed courses.`);
+  const missing = unmetPrerequisiteGroups(course.prerequisiteGroups, input.completedCourses);
+  if (missing.length) facts.push(`Unmet prerequisite groups: ${formatPrerequisiteGroups(missing)}.`);
+  else if (course.prerequisiteGroups.length) facts.push(`Published prerequisite groups (${formatPrerequisiteGroups(course.prerequisiteGroups)}) are met by your completed courses.`);
 
   for (const rule of softTime(input)) {
     facts.push(satisfies(section, rule)

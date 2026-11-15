@@ -19,12 +19,16 @@ function Courses({ catalog }: { catalog: Catalog }) {
   const search = useSearch();
   const initial = new URLSearchParams(search).get('c');
   const [q, setQ] = useState('');
-  const [req, setReq] = useState('all');
+  const [department, setDepartment] = useState('all');
   const [selId, setSelId] = useState<string | null>(initial ?? catalog.courses[0]?.id ?? null);
+  const departments = useMemo(
+    () => [...new Set(catalog.courses.map((course) => course.code.trim().split(/\s+/)[0]).filter((code): code is string => Boolean(code)))].sort(),
+    [catalog.courses],
+  );
   const list = useMemo(() => {
     const t = q.toLowerCase();
-    return catalog.courses.filter((c) => (req === 'all' || c.requirement === req) && (!t || `${c.code} ${c.title} ${c.description} ${c.sections.map((s) => s.instructor).join(' ')}`.toLowerCase().includes(t)));
-  }, [catalog.courses, q, req]);
+    return catalog.courses.filter((c) => (department === 'all' || c.code.trim().split(/\s+/)[0] === department) && (!t || `${c.code} ${c.title} ${c.description} ${c.sections.map((s) => s.instructor).join(' ')}`.toLowerCase().includes(t)));
+  }, [catalog.courses, q, department]);
   const sel = catalog.courses.find((c) => c.id === selId);
 
   return (
@@ -36,10 +40,10 @@ function Courses({ catalog }: { catalog: Catalog }) {
             <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search code, title, instructor" className="pl-9 bg-card" aria-label="Search courses" data-testid="input-search-courses" />
           </div>
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by requirement">
-            {[{ id: 'all', title: 'All' }, ...catalog.requirements].map((r) => (
-              <button key={r.id} onClick={() => setReq(r.id)} aria-pressed={req === r.id} data-testid={`filter-req-${r.id}`}
-                className={cn('text-xs px-2.5 py-1 rounded-full border transition-colors', req === r.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-card hover:border-primary/50')}>{r.title}</button>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by department">
+            {[{ id: 'all', title: 'All' }, ...departments.map((code) => ({ id: code, title: code }))].map((filter) => (
+              <button key={filter.id} onClick={() => setDepartment(filter.id)} aria-pressed={department === filter.id} data-testid={`filter-department-${filter.id}`}
+                className={cn('text-xs px-2.5 py-1 rounded-full border transition-colors', department === filter.id ? 'bg-primary text-primary-foreground border-primary' : 'bg-card hover:border-primary/50')}>{filter.title}</button>
             ))}
           </div>
           <ul className="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1">

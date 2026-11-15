@@ -22,7 +22,6 @@ interface Persisted {
   checklist: Record<string, boolean>;
   solvedInputJson: string | null;
   onboarded: boolean;
-  /** What moved between the schedule before and after the latest re-solve. */
 }
 
 interface Ctx {
@@ -57,7 +56,11 @@ const PlannerCtx = createContext<Ctx | null>(null);
 function load(): Persisted {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...EMPTY, ...JSON.parse(raw) };
+    if (raw) {
+      const saved = JSON.parse(raw) as Persisted & { lastChange?: unknown };
+      delete saved.lastChange;
+      return { ...EMPTY, ...saved };
+    }
   } catch {
     /* ignore corrupt storage */
   }
@@ -98,7 +101,8 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
       ]);
       if (id !== reqId.current) return;
       setState((s) => {
-        return { ...s, input, result: res, chosenScheduleId: res.schedules[0]?.id ?? null, solvedInputJson: JSON.stringify(input) };
+        const after = res.schedules[0] ?? null;
+        return { ...s, input, result: res, chosenScheduleId: after?.id ?? null, solvedInputJson: JSON.stringify(input) };
       });
       setSolveState(res.status === 'unknown' ? 'timeout' : 'done');
     } catch (e) {
@@ -112,7 +116,7 @@ export function PlannerProvider({ children }: { children: ReactNode }) {
         setSolveError(msg);
       }
     }
-  }, [state.input]);
+  }, [state.input, catalogQ.data]);
 
   const solveRef = useRef(solve);
   solveRef.current = solve;
